@@ -14,9 +14,10 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Waves, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
+import { Logo } from '@/components/Logo'
 
 const registerSchema = z
   .object({
@@ -75,13 +76,8 @@ export default function Registro() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4 animate-fade-in">
       <Card className="w-full max-w-md border-border/50 shadow-lg">
         <CardHeader className="space-y-2 text-center pb-6">
-          <div className="flex justify-center mb-2">
-            <Link
-              to="/"
-              className="bg-primary/20 p-3 rounded-xl text-primary hover:bg-primary/30 transition-colors"
-            >
-              <Waves className="w-8 h-8" />
-            </Link>
+          <div className="flex justify-center mb-4">
+            <Logo imageClassName="h-16 sm:h-20 w-auto drop-shadow-sm" />
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">Criar Conta</CardTitle>
           <CardDescription>Comece sua jornada para a independência financeira</CardDescription>

@@ -21,20 +21,20 @@ import Registro from './pages/Registro'
 import Landing from './pages/Landing'
 import { ThemeProvider } from './components/ThemeProvider'
 import { SyncData } from './components/SyncData'
+import logoImg from './assets/copia-de-logo-drowp-horizontal-3e587.png'
 
 function SyncSystemState() {
   const { logoUrl } = useAppStore()
 
   useEffect(() => {
-    if (logoUrl) {
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
-      if (!link) {
-        link = document.createElement('link')
-        link.rel = 'icon'
-        document.head.appendChild(link)
-      }
-      link.href = logoUrl
+    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
+    if (!link) {
+      link = document.createElement('link')
+      link.rel = 'icon'
+      document.head.appendChild(link)
     }
+    // Restore application icon (favicon) globally, falling back to local logo asset
+    link.href = logoUrl || logoImg
   }, [logoUrl])
 
   return null
