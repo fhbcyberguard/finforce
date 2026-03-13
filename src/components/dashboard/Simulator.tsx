@@ -108,7 +108,7 @@ export default function Simulator() {
   }
 
   return (
-    <Card className="border-border/50 h-full flex flex-col">
+    <Card className="border-border/50">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
@@ -123,7 +123,7 @@ export default function Simulator() {
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col gap-6">
+      <CardContent className="flex flex-col gap-6">
         <div
           className={`bg-primary/5 border p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isStalled ? 'border-amber-500/50 bg-amber-500/5' : 'border-primary/20'}`}
         >
@@ -150,8 +150,8 @@ export default function Simulator() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start flex-1">
-          <div className="md:col-span-4 h-full flex flex-col">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          <div className="md:col-span-4 flex flex-col">
             <SimulatorControls
               aporte={aporte}
               setAporte={setAporte}
@@ -185,7 +185,7 @@ export default function Simulator() {
           </div>
         </div>
 
-        <div className="mt-auto p-4 rounded-lg bg-secondary/10 border border-secondary/20">
+        <div className="p-4 rounded-lg bg-secondary/10 border border-secondary/20">
           <div className="flex gap-3 items-start">
             <Lightbulb className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
             <p className="text-sm font-medium text-foreground/80 leading-relaxed min-h-[40px]">

@@ -1,10 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Wallet, TrendingUp, DollarSign, Clock, Activity, Target } from 'lucide-react'
+import { Wallet, TrendingUp, DollarSign, Activity, Target } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 
 export default function KpiCards() {
-  const { assets, accounts, transactions, timeframe, simulatorSettings, selectedYear } =
-    useAppStore()
+  const { assets, accounts, transactions, timeframe, selectedYear } = useAppStore()
 
   const now = new Date()
   const yearToUse = selectedYear || now.getFullYear().toString()
@@ -56,24 +55,6 @@ export default function KpiCards() {
   // Monthly Result = Revenue - Fixed - Variable
   const resultadoMes = rendaMensal - fixedExpenses - variableExpenses
 
-  // Time to freedom calculation
-  const totalMonthlyExpenses = isAnnual
-    ? (fixedExpenses + variableExpenses) / 12
-    : fixedExpenses + variableExpenses
-  const targetPatrimony = (totalMonthlyExpenses > 0 ? totalMonthlyExpenses : 1000) * 300
-  const shortfall = targetPatrimony - patrimony
-  const averageMonthlyAporte = simulatorSettings?.aporte || 0
-
-  let yearsToFreedomStr = 'N/A'
-
-  if (shortfall <= 0) {
-    yearsToFreedomStr = 'Alcançado'
-  } else if (averageMonthlyAporte > 0) {
-    yearsToFreedomStr = (shortfall / averageMonthlyAporte / 12).toFixed(1) + ' Anos'
-  } else {
-    yearsToFreedomStr = 'Aporte Zero'
-  }
-
   const kpis = [
     {
       title: 'Patrimônio Total',
@@ -112,19 +93,10 @@ export default function KpiCards() {
       color: resultadoMes >= 0 ? 'text-[#03f2ff]' : 'text-rose-500',
       desc: 'sobra livre no caixa',
     },
-    {
-      title: 'Tempo p/ Liberdade',
-      value: yearsToFreedomStr,
-      icon: Clock,
-      desc:
-        averageMonthlyAporte > 0
-          ? `com aporte de R$ ${averageMonthlyAporte}`
-          : 'configure seu plano',
-    },
   ]
 
   return (
-    <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
       {kpis.map((kpi, i) => (
         <Card
           key={i}
@@ -137,9 +109,7 @@ export default function KpiCards() {
             <kpi.icon className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
           <CardContent>
-            <div
-              className={`text-xl lg:text-2xl font-bold truncate ${kpi.value === 'Aporte Zero' ? 'text-muted-foreground/50 text-lg' : ''} ${kpi.color || ''}`}
-            >
+            <div className={`text-xl lg:text-2xl font-bold truncate ${kpi.color || ''}`}>
               {kpi.value}
             </div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 truncate">
