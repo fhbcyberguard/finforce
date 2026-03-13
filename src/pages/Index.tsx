@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/select'
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Button } from '@/components/ui/button'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, ChevronLeft, ChevronRight } from 'lucide-react'
 import KpiCards from '../components/dashboard/KpiCards'
 import Simulator from '../components/dashboard/Simulator'
 import AlertsPanel from '../components/dashboard/AlertsPanel'
@@ -21,8 +21,16 @@ import { SpendingByPersonChart } from '../components/dashboard/SpendingByPersonC
 import { HistoricalComparison } from '../components/dashboard/HistoricalComparison'
 
 export default function Index() {
-  const { timeframe, setTimeframe, currentContext, selectedYear, setSelectedYear, transactions } =
-    useAppStore()
+  const {
+    timeframe,
+    setTimeframe,
+    currentContext,
+    selectedYear,
+    setSelectedYear,
+    selectedMonth,
+    setSelectedMonth,
+    transactions,
+  } = useAppStore()
   const [showComparison, setShowComparison] = useState(false)
 
   const isBusiness = currentContext === 'business'
@@ -38,6 +46,21 @@ export default function Index() {
     }
     return years
   }, [transactions])
+
+  const months = [
+    'Jan',
+    'Fev',
+    'Mar',
+    'Abr',
+    'Mai',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Set',
+    'Out',
+    'Nov',
+    'Dez',
+  ]
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -62,8 +85,45 @@ export default function Index() {
             <BarChart3 className="w-4 h-4 mr-2" />
             Comparar
           </Button>
+
+          {timeframe === 'monthly' && (
+            <div className="flex items-center bg-muted/50 rounded-md p-0.5">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-sm"
+                onClick={() => setSelectedMonth(selectedMonth === 0 ? 11 : selectedMonth - 1)}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Select
+                value={selectedMonth.toString()}
+                onValueChange={(v) => setSelectedMonth(Number(v))}
+              >
+                <SelectTrigger className="h-8 w-[80px] text-xs bg-transparent border-0 focus:ring-0">
+                  <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {months.map((m, i) => (
+                    <SelectItem key={i} value={i.toString()}>
+                      {m}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-sm"
+                onClick={() => setSelectedMonth(selectedMonth === 11 ? 0 : selectedMonth + 1)}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="h-9 w-[100px] text-xs bg-muted/50 border-0 focus:ring-1">
+            <SelectTrigger className="h-9 w-[90px] text-xs bg-muted/50 border-0 focus:ring-1">
               <SelectValue placeholder="Ano" />
             </SelectTrigger>
             <SelectContent>
@@ -74,6 +134,7 @@ export default function Index() {
               ))}
             </SelectContent>
           </Select>
+
           <ToggleGroup
             type="single"
             value={timeframe}

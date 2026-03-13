@@ -100,6 +100,7 @@ interface AppState {
   searchQuery: string
   timeframe: 'monthly' | 'annual'
   selectedYear: string
+  selectedMonth: number
   simulatorSettings: SimulatorSettings
   currentContext: ContextType
   subscriptionPlan: 'basic' | 'medium' | 'top' | 'master'
@@ -135,6 +136,10 @@ const getInitialState = (): AppState => ({
   searchQuery: '',
   timeframe: 'monthly',
   selectedYear: new Date().getFullYear().toString(),
+  selectedMonth: parseInt(
+    localStorage.getItem('finforce_month') || new Date().getMonth().toString(),
+    10,
+  ),
   currentContext: (localStorage.getItem('finforce_context') as ContextType) || 'personal',
   subscriptionPlan: (localStorage.getItem('finforce_plan') as any) || 'basic',
   categoryColors: loadData('finforce_category_colors', {}),
@@ -168,6 +173,8 @@ function updateState(partial: Partial<AppState>) {
   if (partial.subscriptionPlan) localStorage.setItem('finforce_plan', partial.subscriptionPlan)
   if (partial.categoryColors)
     localStorage.setItem('finforce_category_colors', JSON.stringify(partial.categoryColors))
+  if (partial.selectedMonth !== undefined)
+    localStorage.setItem('finforce_month', partial.selectedMonth.toString())
   emit()
 }
 
@@ -269,6 +276,7 @@ export default function useAppStore() {
   const setSearchQuery = useCallback((q: string) => updateState({ searchQuery: q }), [])
   const setTimeframe = useCallback((t: 'monthly' | 'annual') => updateState({ timeframe: t }), [])
   const setSelectedYear = useCallback((y: string) => updateState({ selectedYear: y }), [])
+  const setSelectedMonth = useCallback((m: number) => updateState({ selectedMonth: m }), [])
   const setCurrentContext = useCallback((c: ContextType) => updateState({ currentContext: c }), [])
   const setSubscriptionPlan = useCallback(
     (p: 'basic' | 'medium' | 'top' | 'master') => updateState({ subscriptionPlan: p }),
@@ -308,6 +316,8 @@ export default function useAppStore() {
       setSearchQuery,
       setTimeframe,
       setSelectedYear,
+      selectedMonth: store.selectedMonth,
+      setSelectedMonth,
       setCurrentContext,
       setSubscriptionPlan,
       setCategoryColor,
@@ -339,6 +349,7 @@ export default function useAppStore() {
       setSearchQuery,
       setTimeframe,
       setSelectedYear,
+      setSelectedMonth,
       setCurrentContext,
       setSubscriptionPlan,
       setCategoryColor,

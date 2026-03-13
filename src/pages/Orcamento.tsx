@@ -5,12 +5,12 @@ import { Progress } from '@/components/ui/progress'
 import { PieChart, AlertCircle } from 'lucide-react'
 
 export default function Orcamento() {
-  const { profiles, transactions, selectedYear, timeframe } = useAppStore()
+  const { profiles, transactions, selectedYear, selectedMonth, timeframe } = useAppStore()
 
   const profileSpending = useMemo(() => {
     const now = new Date()
     const yearToUse = selectedYear || now.getFullYear().toString()
-    const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
+    const currentMonth = `${yearToUse}-${(selectedMonth + 1).toString().padStart(2, '0')}`
 
     const currentExpenses = transactions.filter((t) => {
       // Exclude gains and transfers from budget calculation
@@ -29,7 +29,7 @@ export default function Orcamento() {
 
       return { ...profile, spent, limit, percent }
     })
-  }, [profiles, transactions, selectedYear, timeframe])
+  }, [profiles, transactions, selectedYear, selectedMonth, timeframe])
 
   return (
     <div className="space-y-6 animate-slide-in-up">

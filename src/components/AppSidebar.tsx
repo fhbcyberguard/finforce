@@ -27,7 +27,7 @@ import { useAuth } from '@/hooks/use-auth'
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
   { icon: Wallet, label: 'Contas', href: '/contas' },
-  { icon: ArrowLeftRight, label: 'Fluxo de Caixa', href: '/fluxo-caixa' },
+  { icon: ArrowLeftRight, label: 'Fluxo de Caixa', href: '/transacoes' },
   { icon: PieChart, label: 'Orçamento', href: '/orcamento' },
   { icon: Landmark, label: 'Patrimônio', href: '/patrimonio' },
   { icon: Target, label: 'Metas', href: '/metas' },
