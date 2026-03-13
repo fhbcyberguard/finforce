@@ -12,13 +12,19 @@ export type Category = {
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'def-1', name: 'Renda Principal', type: 'Revenue', icon: 'Wallet', color: '#10b981' },
-  { id: 'def-2', name: 'Alimentação', type: 'Expense', icon: 'Utensils', color: '#f59e0b' },
-  { id: 'def-3', name: 'Moradia', type: 'Expense', icon: 'Home', color: '#3b82f6' },
-  { id: 'def-4', name: 'Transporte', type: 'Expense', icon: 'Car', color: '#6366f1' },
-  { id: 'def-5', name: 'Saúde', type: 'Expense', icon: 'HeartPulse', color: '#ec4899' },
-  { id: 'def-6', name: 'Lazer', type: 'Expense', icon: 'Tv', color: '#8b5cf6' },
-  { id: 'def-7', name: 'Outros', type: 'Expense', icon: 'CircleDashed', color: '#64748b' },
+  { id: 'def-1', name: 'Salário', type: 'Revenue', icon: 'Wallet', color: '#22c55e' },
+  { id: 'def-2', name: 'Moradia', type: 'Expense', icon: 'Home', color: '#ef4444' },
+  { id: 'def-3', name: 'Alimentação', type: 'Expense', icon: 'Utensils', color: '#f97316' },
+  { id: 'def-4', name: 'Transporte', type: 'Expense', icon: 'Car', color: '#f59e0b' },
+  { id: 'def-5', name: 'Saúde', type: 'Expense', icon: 'HeartPulse', color: '#10b981' },
+  {
+    id: 'def-6',
+    name: 'Reserva de Emergência',
+    type: 'Investment',
+    icon: 'PiggyBank',
+    color: '#22c55e',
+  },
+  { id: 'def-7', name: 'Ações', type: 'Investment', icon: 'TrendingUp', color: '#3b82f6' },
 ]
 
 export type Profile = {
