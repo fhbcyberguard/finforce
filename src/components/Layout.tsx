@@ -5,9 +5,26 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import useAppStore from '@/stores/useAppStore'
+import { useEffect } from 'react'
 
 export default function Layout() {
   const isMobile = useIsMobile()
+  const { profile } = useAuth()
+  const { profiles, setProfiles } = useAppStore()
+
+  useEffect(() => {
+    if (profile?.full_name) {
+      const mainProfile = profiles.find((p) => p.id === '1')
+      if (mainProfile && mainProfile.name !== profile.full_name) {
+        const updatedProfiles = profiles.map((p) =>
+          p.id === '1' ? { ...p, name: profile.full_name! } : p,
+        )
+        setProfiles(updatedProfiles)
+      }
+    }
+  }, [profile?.full_name, profiles, setProfiles])
 
   return (
     <SidebarProvider>

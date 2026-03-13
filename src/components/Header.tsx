@@ -26,11 +26,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ThemeToggle } from './ThemeToggle'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore from '@/stores/useAppStore'
+import { useAuth } from '@/hooks/use-auth'
 
 export function Header() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { user, profile, signOut } = useAuth()
 
   const {
     logoUrl,
@@ -47,9 +49,10 @@ export function Header() {
   const urgentAlerts = alerts.filter((a) => a.type === 'urgent').length
   const mainProfile = profiles[0]
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut()
     toast({ title: 'Sessão encerrada', description: 'Você saiu da sua conta com sucesso.' })
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const handleContextSwitch = () => {
@@ -74,6 +77,10 @@ export function Header() {
       description: 'O contexto empresarial foi ativado com sucesso.',
     })
   }
+
+  const displayUser =
+    profile?.full_name || user?.email?.split('@')[0] || mainProfile?.name || 'Usuário'
+  const displayEmail = user?.email || 'conta@familia.com'
 
   return (
     <>
@@ -177,16 +184,16 @@ export function Header() {
                   }
                   alt="User"
                 />
-                <AvatarFallback>{mainProfile?.name?.charAt(0) || 'U'}</AvatarFallback>
+                <AvatarFallback>{displayUser.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 mt-1">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">
-                    {mainProfile?.name || 'Usuário'}
+                  <p className="text-sm font-medium leading-none truncate">{displayUser}</p>
+                  <p className="text-xs leading-none text-muted-foreground truncate">
+                    {displayEmail}
                   </p>
-                  <p className="text-xs leading-none text-muted-foreground">conta@familia.com</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

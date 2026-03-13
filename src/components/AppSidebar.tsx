@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore from '@/stores/useAppStore'
+import { useAuth } from '@/hooks/use-auth'
 
 const navigation = [
   { title: 'Visão Geral', url: '/dashboard', icon: LayoutDashboard },
@@ -48,13 +49,15 @@ export function AppSidebar() {
   const navigate = useNavigate()
   const { toast } = useToast()
   const { logoUrl, currentContext, setCurrentContext } = useAppStore()
+  const { signOut } = useAuth()
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut()
     toast({
       title: 'Sessão encerrada',
       description: 'Você saiu da sua conta com sucesso.',
     })
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (

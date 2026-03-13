@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -13,8 +14,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form'
-import { Waves } from 'lucide-react'
+import { Waves, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 
 const registerSchema = z
   .object({
@@ -41,18 +43,32 @@ type RegisterFormValues = z.infer<typeof registerSchema>
 export default function Registro() {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { signUp } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
   })
 
-  const onSubmit = (data: RegisterFormValues) => {
-    toast({
-      title: 'Conta criada com sucesso!',
-      description: 'Bem-vindo ao FinFlow.',
-    })
-    navigate('/dashboard')
+  const onSubmit = async (data: RegisterFormValues) => {
+    setIsLoading(true)
+    const { error } = await signUp(data.email, data.password, data.name)
+    setIsLoading(false)
+
+    if (error) {
+      toast({
+        title: 'Erro ao criar conta',
+        description: error.message,
+        variant: 'destructive',
+      })
+    } else {
+      toast({
+        title: 'Conta criada com sucesso!',
+        description: 'Bem-vindo ao FinFlow.',
+      })
+      navigate('/dashboard')
+    }
   }
 
   return (
@@ -125,7 +141,8 @@ export default function Registro() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full mt-2">
+              <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+                {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Criar Conta
               </Button>
             </form>

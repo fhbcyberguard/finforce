@@ -11,23 +11,38 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Waves } from 'lucide-react'
+import { Waves, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { signIn } = useAuth()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (email && password) {
-      toast({
-        title: 'Login realizado com sucesso',
-        description: 'Bem-vindo de volta ao FinFlow.',
-      })
-      navigate('/dashboard')
+      setIsLoading(true)
+      const { error } = await signIn(email, password)
+      setIsLoading(false)
+
+      if (error) {
+        toast({
+          title: 'Erro no login',
+          description: error.message,
+          variant: 'destructive',
+        })
+      } else {
+        toast({
+          title: 'Login realizado com sucesso',
+          description: 'Bem-vindo de volta ao FinFlow.',
+        })
+        navigate('/dashboard')
+      }
     }
   }
 
@@ -75,7 +90,8 @@ export default function Login() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full mt-4">
+            <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Entrar na Conta
             </Button>
           </form>

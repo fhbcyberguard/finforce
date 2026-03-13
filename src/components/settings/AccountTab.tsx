@@ -6,11 +6,13 @@ import { Badge } from '@/components/ui/badge'
 import { LogOut } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore from '@/stores/useAppStore'
+import { useAuth } from '@/hooks/use-auth'
 
 export function AccountTab() {
   const { profiles } = useAppStore()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { user, profile, signOut } = useAuth()
 
   const mainProfile = profiles[0] || {
     id: '0',
@@ -19,10 +21,15 @@ export function AccountTab() {
     avatar: '',
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut()
     toast({ title: 'Sessão encerrada', description: 'Você saiu da sua conta.' })
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
+
+  const displayUser =
+    profile?.full_name || user?.email?.split('@')[0] || mainProfile?.name || 'Usuário'
+  const displayEmail = user?.email || 'conta@familia.com'
 
   return (
     <div className="space-y-6">
@@ -33,11 +40,11 @@ export function AccountTab() {
         <CardContent className="flex items-center gap-6">
           <Avatar className="w-24 h-24 ring-2 ring-primary/20">
             <AvatarImage src={mainProfile.avatar} />
-            <AvatarFallback>AD</AvatarFallback>
+            <AvatarFallback>{displayUser.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <div className="space-y-2 flex-1">
-            <h3 className="font-semibold text-lg">{mainProfile.name}</h3>
-            <p className="text-sm text-muted-foreground">carlos@familia.com</p>
+          <div className="space-y-2 flex-1 overflow-hidden">
+            <h3 className="font-semibold text-lg truncate">{displayUser}</h3>
+            <p className="text-sm text-muted-foreground truncate">{displayEmail}</p>
             <Badge variant="secondary">{mainProfile.role}</Badge>
           </div>
           <Button variant="outline" asChild>
