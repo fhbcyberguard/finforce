@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Table,
@@ -72,6 +73,7 @@ type PostSaveAction = {
 export default function FluxoCaixa() {
   const { user } = useAuth()
   const {
+    isSyncing,
     transactions,
     setTransactions,
     profiles,
@@ -160,6 +162,23 @@ export default function FluxoCaixa() {
       }
     }
   }, [openAdd, editingTx, accounts, goals])
+
+  if (isSyncing) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-1/3" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
+  }
 
   const handleCardChange = (cardId: string) => {
     setSelectedCard(cardId)

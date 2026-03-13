@@ -15,6 +15,7 @@ export function SyncData() {
     setAccountsFromDB,
     setCreditCardsFromDB,
     setAssetsFromDB,
+    setIsSyncing,
   } = useAppStore()
 
   const prevProfileType = useRef<string | null>(null)
@@ -30,40 +31,43 @@ export function SyncData() {
   }, [profile?.profile_type, currentContext, setCurrentContext])
 
   useEffect(() => {
-    if (!user) return
+    if (!user) {
+      setIsSyncing(false)
+      return
+    }
 
     const fetchData = async () => {
-      // 1. Fetch profiles
-      const { data: familyMembers } = await supabase.from('members').select(`
-          id,
-          name,
-          email,
-          role,
-          profile:profiles(id, full_name, avatar_url, profile_type)
-        `)
+      const [resMembers, resTxs, resGoals, resCats, resAccounts, resCards] = await Promise.all([
+        supabase
+          .from('members')
+          .select(
+            'id, name, email, role, is_archived, birth_date, profile:profiles(id, full_name, avatar_url, profile_type)',
+          ),
+        supabase.from('transactions').select('*').order('date', { ascending: false }),
+        supabase.from('goals').select('*').order('created_at', { ascending: false }),
+        supabase.from('categories').select('*').order('created_at', { ascending: true }),
+        supabase.from('accounts').select('*').order('created_at', { ascending: true }),
+        supabase.from('cards').select('*').order('created_at', { ascending: true }),
+      ])
 
-      if (familyMembers) {
-        const mappedProfiles = familyMembers.map((m: any) => ({
+      if (resMembers.data) {
+        const mappedProfiles = resMembers.data.map((m: any) => ({
           id: m.id,
           name: m.name,
-          email: m.email || m.profile?.email,
+          email: m.email || m.profile?.email || '',
           role: m.role,
+          birthDate: m.birth_date || null,
           avatar: m.profile?.avatar_url || null,
           profile_id: m.profile?.id || null,
           limit: 0,
+          isArchived: m.is_archived || false,
           context: m.profile?.profile_type === 'enterprise' ? 'business' : 'personal',
         }))
         setProfilesFromDB(mappedProfiles)
       }
 
-      // 2. Fetch transactions
-      const { data: txs } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('date', { ascending: false })
-
-      if (txs) {
-        const mappedTxs = txs.map((t: any) => ({
+      if (resTxs.data) {
+        const mappedTxs = resTxs.data.map((t: any) => ({
           id: t.id,
           date: new Date(t.date).toISOString().split('T')[0],
           description: t.description,
@@ -83,7 +87,7 @@ export function SyncData() {
         }))
         setTransactionsFromDB(mappedTxs)
 
-        const mappedAssets = txs
+        const mappedAssets = resTxs.data
           .filter((t: any) => t.type === 'Asset')
           .map((t: any) => ({
             id: t.id,
@@ -97,14 +101,8 @@ export function SyncData() {
         setAssetsFromDB(mappedAssets)
       }
 
-      // 3. Fetch goals
-      const { data: dbGoals } = await supabase
-        .from('goals')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (dbGoals) {
-        const mappedGoals = dbGoals.map((g: any) => ({
+      if (resGoals.data) {
+        const mappedGoals = resGoals.data.map((g: any) => ({
           id: g.id,
           name: g.name,
           targetValue: Number(g.target_value),
@@ -117,14 +115,8 @@ export function SyncData() {
         setGoalsFromDB(mappedGoals)
       }
 
-      // 4. Fetch categories
-      const { data: dbCats } = await supabase
-        .from('categories')
-        .select('*')
-        .order('created_at', { ascending: true })
-
-      if (dbCats && dbCats.length > 0) {
-        const mappedCats: Category[] = dbCats.map((c: any) => ({
+      if (resCats.data && resCats.data.length > 0) {
+        const mappedCats: Category[] = resCats.data.map((c: any) => ({
           id: c.id,
           name: c.name,
           type: c.type,
@@ -134,19 +126,16 @@ export function SyncData() {
         setCategoriesFromDB(mappedCats)
       }
 
-      // 5. Fetch accounts
-      const { data: dbAccounts } = await supabase
-        .from('accounts')
-        .select('*')
-        .order('created_at', { ascending: true })
-      if (dbAccounts) {
-        const mappedAccounts = dbAccounts.map((a: any) => ({
+      if (resAccounts.data) {
+        const mappedAccounts = resAccounts.data.map((a: any) => ({
           id: a.id,
           name: a.name,
+          bank: a.name,
           balance: Number(a.balance),
           type: a.type || 'Conta Corrente',
           agency: a.agency || '',
           account_number: a.account_number || '',
+          account: a.account_number || '',
           color: a.color || '',
           connected: a.connected || false,
           context: a.context || 'personal',
@@ -154,61 +143,42 @@ export function SyncData() {
         setAccountsFromDB(mappedAccounts)
       }
 
-      // 6. Fetch cards
-      const { data: dbCards } = await supabase
-        .from('cards')
-        .select('*')
-        .order('created_at', { ascending: true })
-      if (dbCards) {
-        const mappedCards = dbCards.map((c: any) => ({
+      if (resCards.data) {
+        const mappedCards = resCards.data.map((c: any) => ({
           id: c.id,
           name: c.name,
           bank: c.name,
+          brand: c.brand || '',
+          lastDigits: c.last_digits || '',
           totalLimit: Number(c.limit),
           availableLimit: Number(c.limit),
           dueDate: c.due_day || 1,
           closingDate: c.closing_day || 1,
+          bestPurchaseDay: c.closing_day || 1,
           accountId: c.account_id || 'none',
+          isArchived: c.is_archived || false,
           context: c.context || 'personal',
         }))
         setCreditCardsFromDB(mappedCards)
       }
+
+      setIsSyncing(false)
     }
 
     fetchData()
 
-    // Subscriptions
-    const txSub = supabase
-      .channel('public:transactions')
+    const channel = supabase
+      .channel('public:all')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, fetchData)
-      .subscribe()
-
-    const goalsSub = supabase
-      .channel('public:goals')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, fetchData)
-      .subscribe()
-
-    const catSub = supabase
-      .channel('public:categories')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, fetchData)
-      .subscribe()
-
-    const accSub = supabase
-      .channel('public:accounts')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, fetchData)
-      .subscribe()
-
-    const cardsSub = supabase
-      .channel('public:cards')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, fetchData)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, fetchData)
       .subscribe()
 
     return () => {
-      supabase.removeChannel(txSub)
-      supabase.removeChannel(goalsSub)
-      supabase.removeChannel(catSub)
-      supabase.removeChannel(accSub)
-      supabase.removeChannel(cardsSub)
+      supabase.removeChannel(channel)
     }
   }, [
     user,
@@ -219,6 +189,7 @@ export function SyncData() {
     setAccountsFromDB,
     setCreditCardsFromDB,
     setAssetsFromDB,
+    setIsSyncing,
   ])
 
   return null

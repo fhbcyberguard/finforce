@@ -50,11 +50,14 @@ export type Account = {
 export type CreditCard = {
   id: string
   name: string
+  brand?: string
+  lastDigits?: string
   bank?: string
   totalLimit: number
   availableLimit: number
-  dueDate?: string | number
-  lastDigits?: string
+  dueDate?: number
+  closingDate?: number
+  bestPurchaseDay?: number
   isArchived?: boolean
   context?: ContextType
   accountId?: string
@@ -115,9 +118,11 @@ interface SimulatorSettings {
   aporte: number
   retorno: number
   rendaDesejada: number
+  idade?: number
 }
 
 interface AppState {
+  isSyncing: boolean
   profiles: Profile[]
   accounts: Account[]
   creditCards: CreditCard[]
@@ -150,22 +155,24 @@ const defaultSimulator: SimulatorSettings = {
   aporte: 2000,
   retorno: 8.5,
   rendaDesejada: 10000,
+  idade: 60,
 }
 
 const getInitialState = (): AppState => ({
-  profiles: loadData('finforce_profiles', [] as Profile[]),
-  accounts: loadData('finforce_accounts', [] as Account[]),
-  creditCards: loadData('finforce_credit_cards', [] as CreditCard[]),
-  assets: loadData('finforce_assets', [] as Asset[]),
-  goals: loadData('finforce_goals', [] as Goal[]),
-  transactions: loadData('finforce_transactions', [] as Transaction[]),
-  alerts: loadData('finforce_alerts', [] as Alert[]),
-  categories: loadData('finforce_categories', []),
+  isSyncing: true,
+  profiles: [],
+  accounts: [],
+  creditCards: [],
+  assets: [],
+  goals: [],
+  transactions: [],
+  alerts: loadData('finforce_alerts', []),
+  categories: [],
   simulatorSettings: loadData('finforce_simulator', defaultSimulator),
   logoUrl: localStorage.getItem('finforce_logo') || '',
   searchQuery: '',
-  timeframe: 'monthly',
-  selectedYear: new Date().getFullYear().toString(),
+  timeframe: (localStorage.getItem('finforce_timeframe') as any) || 'monthly',
+  selectedYear: localStorage.getItem('finforce_year') || new Date().getFullYear().toString(),
   selectedMonth: parseInt(
     localStorage.getItem('finforce_month') || new Date().getMonth().toString(),
     10,
@@ -185,17 +192,7 @@ function emit() {
 
 function updateState(partial: Partial<AppState>) {
   state = { ...state, ...partial }
-  if (partial.profiles) localStorage.setItem('finforce_profiles', JSON.stringify(partial.profiles))
-  if (partial.accounts) localStorage.setItem('finforce_accounts', JSON.stringify(partial.accounts))
-  if (partial.creditCards)
-    localStorage.setItem('finforce_credit_cards', JSON.stringify(partial.creditCards))
-  if (partial.assets) localStorage.setItem('finforce_assets', JSON.stringify(partial.assets))
-  if (partial.goals) localStorage.setItem('finforce_goals', JSON.stringify(partial.goals))
-  if (partial.transactions)
-    localStorage.setItem('finforce_transactions', JSON.stringify(partial.transactions))
   if (partial.alerts) localStorage.setItem('finforce_alerts', JSON.stringify(partial.alerts))
-  if (partial.categories)
-    localStorage.setItem('finforce_categories', JSON.stringify(partial.categories))
   if (partial.simulatorSettings)
     localStorage.setItem('finforce_simulator', JSON.stringify(partial.simulatorSettings))
   if (partial.logoUrl !== undefined) localStorage.setItem('finforce_logo', partial.logoUrl)
@@ -205,6 +202,9 @@ function updateState(partial: Partial<AppState>) {
     localStorage.setItem('finforce_category_colors', JSON.stringify(partial.categoryColors))
   if (partial.selectedMonth !== undefined)
     localStorage.setItem('finforce_month', partial.selectedMonth.toString())
+  if (partial.selectedYear !== undefined)
+    localStorage.setItem('finforce_year', partial.selectedYear.toString())
+  if (partial.timeframe !== undefined) localStorage.setItem('finforce_timeframe', partial.timeframe)
   emit()
 }
 
@@ -257,6 +257,8 @@ export default function useAppStore() {
     () => store.categories.filter((a) => (a.context || 'personal') === ctx),
     [store.categories, ctx],
   )
+
+  const setIsSyncing = useCallback((v: boolean) => updateState({ isSyncing: v }), [])
 
   const setProfiles = useCallback(
     (p: Profile[]) => updateState({ profiles: mergeCtx(state.profiles, p, ctx) }),
@@ -325,6 +327,7 @@ export default function useAppStore() {
   return useMemo(
     () => ({
       ...store,
+      isSyncing: store.isSyncing,
       profiles,
       accounts,
       creditCards,
@@ -333,6 +336,7 @@ export default function useAppStore() {
       transactions,
       alerts,
       categories,
+      setIsSyncing,
       setProfiles,
       setProfilesFromDB,
       setTransactionsFromDB,
@@ -369,6 +373,7 @@ export default function useAppStore() {
       transactions,
       alerts,
       categories,
+      setIsSyncing,
       setProfiles,
       setProfilesFromDB,
       setTransactionsFromDB,

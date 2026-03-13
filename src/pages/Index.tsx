@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { BarChart3, ChevronLeft, ChevronRight } from 'lucide-react'
 import KpiCards from '../components/dashboard/KpiCards'
 import Simulator from '../components/dashboard/Simulator'
@@ -23,6 +24,7 @@ import { HistoricalComparison } from '../components/dashboard/HistoricalComparis
 
 export default function Index() {
   const {
+    isSyncing,
     timeframe,
     setTimeframe,
     currentContext,
@@ -37,7 +39,6 @@ export default function Index() {
   const isBusiness = currentContext === 'business'
   const hasTransactions = transactions.length > 0
 
-  // Memoize to prevent Radix Select from recreating internal refs unnecessarily
   const availableYears = useMemo(() => {
     const years = Array.from(new Set(transactions.map((t) => t.date.substring(0, 4)))).sort(
       (a, b) => b.localeCompare(a),
@@ -63,6 +64,21 @@ export default function Index() {
     'Nov',
     'Dez',
   ]
+
+  if (isSyncing) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+        <Skeleton className="h-[400px] w-full" />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 animate-slide-in-up">

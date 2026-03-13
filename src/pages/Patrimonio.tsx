@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
-import useAppStore, { Transaction } from '@/stores/useAppStore'
+import useAppStore from '@/stores/useAppStore'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Target, User, Plus, TrendingUp, Trash2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Target, User, Plus, TrendingUp, Trash2, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ import { Badge } from '@/components/ui/badge'
 export default function Patrimonio() {
   const { user } = useAuth()
   const {
+    isSyncing,
     profiles,
     simulatorSettings,
     assets,
@@ -121,6 +123,20 @@ export default function Patrimonio() {
     setAssetToDelete(null)
   }
 
+  if (isSyncing) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-32 w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-[200px]" />
+          <Skeleton className="h-[200px]" />
+          <Skeleton className="h-[200px]" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8 animate-slide-in-up pb-12">
       <div>
@@ -188,6 +204,7 @@ export default function Patrimonio() {
                   </div>
                   <DialogFooter>
                     <Button type="submit" className="w-full" disabled={isSaving}>
+                      {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                       {isSaving ? 'Salvando...' : 'Salvar Ativo'}
                     </Button>
                   </DialogFooter>

@@ -1,245 +1,73 @@
-import { useState } from 'react'
-import { CreditCard as CardIcon, Calendar, Edit2, Archive, Trash2 } from 'lucide-react'
+import useAppStore from '@/stores/useAppStore'
 import { Card, CardContent } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Trash2, CreditCard as CreditCardIcon } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
-import useAppStore, { CreditCard } from '@/stores/useAppStore'
 
 export function CreditCardList() {
   const { creditCards, setCreditCards, accounts } = useAppStore()
   const { toast } = useToast()
-  const [editingCard, setEditingCard] = useState<CreditCard | null>(null)
 
-  const activeCards = creditCards.filter((c) => !c.isArchived)
-
-  const archiveCard = (id: string) => {
-    setCreditCards(creditCards.map((c) => (c.id === id ? { ...c, isArchived: true } : c)))
-    toast({
-      title: 'Cartão Arquivado',
-      description: 'O cartão foi ocultado das visões principais.',
-    })
-  }
-
-  const deleteCard = (id: string) => {
-    setCreditCards(creditCards.filter((c) => c.id !== id))
-    toast({
-      title: 'Cartão Excluído',
-      description: 'Cartão, faturas pendentes e alertas associados foram removidos.',
-      variant: 'destructive',
-    })
-  }
-
-  const saveEdit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (!editingCard) return
-    const fd = new FormData(e.currentTarget)
-    const updated = {
-      ...editingCard,
-      name: fd.get('name') as string,
-      bank: fd.get('bank') as string,
-      brand: fd.get('brand') as string,
-      accountId: fd.get('accountId') as string,
-      totalLimit: Number(fd.get('limit')),
-      dueDate: Number(fd.get('dueDate')),
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('cards').delete().eq('id', id)
+    if (!error) {
+      setCreditCards(creditCards.filter((c) => c.id !== id))
+      toast({ title: 'Cartão removido', description: 'O cartão foi excluído com sucesso.' })
+    } else {
+      toast({
+        title: 'Erro ao remover',
+        description: error.message,
+        variant: 'destructive',
+      })
     }
-    setCreditCards(creditCards.map((c) => (c.id === updated.id ? updated : c)))
-    setEditingCard(null)
-    toast({ title: 'Cartão Atualizado' })
-  }
-
-  if (activeCards.length === 0) {
-    return (
-      <Card className="border-dashed border-2 bg-muted/10 h-full min-h-[200px] flex items-center justify-center">
-        <CardContent className="flex flex-col items-center text-center p-6">
-          <CardIcon className="w-10 h-10 text-muted-foreground mb-4 opacity-50" />
-          <p className="font-medium text-foreground">Nenhum cartão ativo registrado</p>
-          <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-            Cadastre seus cartões para acompanhar limites e melhor dia de compra.
-          </p>
-        </CardContent>
-      </Card>
-    )
   }
 
   return (
-    <>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {activeCards.map((card) => {
-          const usedLimit = card.totalLimit - card.availableLimit
-          const percent = card.totalLimit > 0 ? (usedLimit / card.totalLimit) * 100 : 0
-          const linkedAcc = accounts.find((a) => a.id === card.accountId)
-
-          return (
-            <Card
-              key={card.id}
-              className="border-border/50 hover:border-[#126eda]/20 transition-colors relative group"
-            >
-              <CardContent className="p-5">
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                    onClick={() => setEditingCard(card)}
-                  >
-                    <Edit2 className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-muted-foreground hover:text-amber-500"
-                    onClick={() => archiveCard(card.id)}
-                  >
-                    <Archive className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                    onClick={() => deleteCard(card.id)}
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-semibold flex items-center gap-2">
-                      <CardIcon className="w-4 h-4 text-[#126eda]" />
-                      {card.name || card.bank}
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {card.brand} •••• {card.lastDigits}
-                      {linkedAcc && (
-                        <span className="ml-2 bg-muted px-1.5 py-0.5 rounded text-foreground/80">
-                          Vinculado: {linkedAcc.bank}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="bg-secondary/20 px-2 py-1 rounded text-xs font-medium mr-16">
-                    Vence dia {card.dueDate}
-                  </div>
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Limite Disponível</span>
-                    <span className="font-medium">
-                      R$ {card.availableLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <Progress value={percent} className="h-2 [&>div]:bg-[#126eda]" />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>
-                      Usado: R$ {usedLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                    <span>
-                      Total: R${' '}
-                      {card.totalLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 text-xs text-emerald-500 font-medium bg-emerald-500/10 w-fit px-2 py-1 rounded-md">
-                  <Calendar className="w-3.5 h-3.5" />
-                  Melhor dia para compra: dia {card.bestPurchaseDay}
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      <Dialog open={!!editingCard} onOpenChange={(o) => !o && setEditingCard(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar Cartão de Crédito</DialogTitle>
-          </DialogHeader>
-          {editingCard && (
-            <form className="space-y-4" onSubmit={saveEdit}>
-              <div className="space-y-2">
-                <Label>Identificação</Label>
-                <Input name="name" defaultValue={editingCard.name || editingCard.bank} required />
+    <div className="space-y-4">
+      {creditCards.map((card) => (
+        <Card
+          key={card.id}
+          className="border-border/50 hover:bg-muted/50 transition-colors group relative"
+        >
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="bg-[#126eda]/10 p-3 rounded-full">
+                <CreditCardIcon className="w-5 h-5 text-[#126eda]" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Banco Emissor</Label>
-                  <Input name="bank" defaultValue={editingCard.bank} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>Bandeira</Label>
-                  <Input name="brand" defaultValue={editingCard.brand} required />
-                </div>
+              <div>
+                <p className="font-medium">{card.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  Vencimento: dia {card.dueDate} • Fechamento: dia {card.closingDate}
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label>Conta Vinculada</Label>
-                <Select name="accountId" defaultValue={editingCard.accountId || 'none'}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Independente (Sem vínculo)</SelectItem>
-                    {accounts.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
-                        {a.bank}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Limite Global (R$)</Label>
-                  <Input
-                    name="limit"
-                    type="number"
-                    step="0.01"
-                    defaultValue={editingCard.totalLimit}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Dia de Vencimento</Label>
-                  <Input
-                    name="dueDate"
-                    type="number"
-                    min="1"
-                    max="31"
-                    defaultValue={editingCard.dueDate}
-                    required
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  className="w-full bg-[#126eda] text-white hover:bg-[#126eda]/90"
-                >
-                  Salvar Alterações
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+            </div>
+            <div className="text-right mr-8 md:mr-0 transition-transform group-hover:md:-translate-x-12">
+              <p className="font-mono font-medium text-sm">
+                Limite: R$ {card.totalLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Conta: {accounts.find((a) => a.id === card.accountId)?.name || 'Nenhuma'}
+              </p>
+            </div>
+            <div className="absolute right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                onClick={() => handleDelete(card.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      {creditCards.length === 0 && (
+        <div className="text-center p-8 text-sm text-muted-foreground border border-dashed rounded-md bg-muted/10">
+          Nenhum cartão de crédito cadastrado no momento.
+        </div>
+      )}
+    </div>
   )
 }

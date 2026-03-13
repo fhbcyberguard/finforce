@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Camera, Target } from 'lucide-react'
+import { Camera, Target, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -54,6 +54,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
   const { profiles, setProfiles, currentContext, simulatorSettings } = useAppStore()
   const { toast } = useToast()
   const { user } = useAuth()
+  const [isSaving, setIsSaving] = useState(false)
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -81,6 +82,8 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
   const isNew = !profile.id
 
   const onSubmit = async (data: any) => {
+    setIsSaving(true)
+
     if (isNew) {
       let newId = Math.random().toString(36).substring(2, 9)
       if (user) {
@@ -89,8 +92,9 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
           .select('id')
           .eq('owner_id', user.id)
           .single()
+
         if (family) {
-          const { data: dbMember } = await supabase
+          const { data: dbMember, error } = await supabase
             .from('members')
             .insert({
               family_id: family.id,
@@ -101,7 +105,14 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
             })
             .select()
             .single()
-          if (dbMember) newId = dbMember.id
+
+          if (dbMember) {
+            newId = dbMember.id
+          } else if (error) {
+            toast({ title: 'Erro ao criar', description: error.message, variant: 'destructive' })
+            setIsSaving(false)
+            return
+          }
         }
       }
       const newProfile = {
@@ -113,8 +124,8 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       setProfiles([...profiles, newProfile])
       toast({ title: 'Perfil criado', description: 'Membro adicionado com sucesso.' })
     } else {
-      if (user && profile.id.length > 10) {
-        await supabase
+      if (user && profile.id && profile.id.length > 10) {
+        const { error } = await supabase
           .from('members')
           .update({
             name: data.name,
@@ -123,6 +134,12 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
             birth_date: data.birthDate || null,
           })
           .eq('id', profile.id)
+
+        if (error) {
+          toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' })
+          setIsSaving(false)
+          return
+        }
 
         if (data.avatar !== profile.avatar && profile.profile_id) {
           await supabase
@@ -134,6 +151,8 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       setProfiles(profiles.map((p) => (p.id === profile.id ? { ...p, ...data } : p)))
       toast({ title: 'Perfil atualizado', description: 'Dados salvos com sucesso.' })
     }
+
+    setIsSaving(false)
     onOpenChange(false)
   }
 
@@ -267,10 +286,18 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
             </div>
 
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isSaving}
+              >
                 Cancelar
               </Button>
-              <Button type="submit">Salvar</Button>
+              <Button type="submit" disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Salvar
+              </Button>
             </DialogFooter>
           </form>
         </Form>

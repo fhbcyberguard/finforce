@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Plus, Trash2, Calendar as CalIcon, Calculator, Edit2 } from 'lucide-react'
+import { Plus, Trash2, Calendar as CalIcon, Calculator, Edit2, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { differenceInMonths, addMonths, format, differenceInYears } from 'date-fns'
@@ -27,7 +28,7 @@ import { GOAL_DELETION_PHRASES, ADD_GOAL_PHRASES, getRandomPhrase } from '@/lib/
 
 export default function Metas() {
   const { user, profile } = useAuth()
-  const { goals, setGoals, currentContext } = useAppStore()
+  const { goals, setGoals, currentContext, isSyncing } = useAppStore()
   const [open, setOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null)
@@ -37,6 +38,7 @@ export default function Metas() {
     description: string
     reflection: string
   } | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
   const [calcMode, setCalcMode] = useState<'date' | 'deposit'>('date')
@@ -91,6 +93,8 @@ export default function Metas() {
     e.preventDefault()
     if (!user) return
 
+    setIsSaving(true)
+
     const calculatedTargetDate =
       calcMode === 'date'
         ? targetDate
@@ -108,41 +112,56 @@ export default function Metas() {
         : (Number(targetVal) - Number(currentVal)) /
           Math.max(1, differenceInMonths(new Date(targetDate), new Date()))
 
-    const newGoal = {
-      id: editingGoal ? editingGoal.id : Math.random().toString(),
-      name,
-      targetValue: Number(targetVal),
-      currentValue: Number(currentVal),
-      targetDate: calculatedTargetDate,
-      monthlyDeposit: calculatedMonthlyDep,
-      icon,
-      context: currentContext,
-    }
-
     const payload: any = {
       user_id: user.id,
-      name: newGoal.name,
-      target_value: newGoal.targetValue,
-      current_value: newGoal.currentValue,
-      target_date: newGoal.targetDate,
-      monthly_contribution: newGoal.monthlyDeposit,
-      icon: newGoal.icon,
+      name,
+      target_value: Number(targetVal),
+      current_value: Number(currentVal),
+      target_date: calculatedTargetDate,
+      monthly_contribution: calculatedMonthlyDep,
+      icon,
     }
 
     if (editingGoal) {
       const { error } = await supabase.from('goals').update(payload).eq('id', editingGoal.id)
       if (!error) {
         setGoals(
-          goals.map((g) => (g.id === editingGoal.id ? { ...newGoal, id: editingGoal.id } : g)),
+          goals.map((g) =>
+            g.id === editingGoal.id
+              ? {
+                  ...g,
+                  name,
+                  targetValue: Number(targetVal),
+                  currentValue: Number(currentVal),
+                  targetDate: calculatedTargetDate,
+                  monthlyDeposit: calculatedMonthlyDep,
+                  icon,
+                }
+              : g,
+          ),
         )
         toast({ title: 'Meta Atualizada', description: 'Seu plano foi modificado com sucesso.' })
+        setOpen(false)
+        setEditingGoal(null)
       } else {
         toast({ title: 'Erro', description: 'Não foi possível atualizar.', variant: 'destructive' })
       }
     } else {
       const { data, error } = await supabase.from('goals').insert(payload).select().single()
       if (!error && data) {
-        setGoals([{ ...newGoal, id: data.id }, ...goals])
+        const newGoal = {
+          id: data.id,
+          name: data.name,
+          targetValue: Number(data.target_value),
+          currentValue: Number(data.current_value),
+          targetDate: data.target_date || calculatedTargetDate,
+          monthlyDeposit: Number(data.monthly_contribution),
+          icon: data.icon || 'Target',
+          context: currentContext,
+        }
+        setGoals([newGoal, ...goals])
+        setOpen(false)
+        setEditingGoal(null)
         setSuccessAction({
           title: 'Meta Criada com Sucesso!',
           description: 'Parabéns pelo seu novo planejamento financeiro.',
@@ -153,8 +172,7 @@ export default function Metas() {
       }
     }
 
-    setOpen(false)
-    setEditingGoal(null)
+    setIsSaving(false)
   }
 
   const confirmDelete = async () => {
@@ -163,8 +181,23 @@ export default function Metas() {
     if (!error) {
       setGoals(goals.filter((g) => g.id !== goalToDelete))
       toast({ title: 'Meta Removida', description: 'A meta foi excluída do seu painel.' })
+    } else {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
     }
     setGoalToDelete(null)
+  }
+
+  if (isSyncing) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Skeleton className="h-[250px] w-full" />
+          <Skeleton className="h-[250px] w-full" />
+          <Skeleton className="h-[250px] w-full" />
+        </div>
+      </div>
+    )
   }
 
   const diff = Number(targetVal) - Number(currentVal)
@@ -287,7 +320,8 @@ export default function Metas() {
               )}
             </div>
             <DialogFooter className="mt-6 pt-4">
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 {editingGoal ? 'Salvar Alterações' : 'Salvar Meta'}
               </Button>
             </DialogFooter>

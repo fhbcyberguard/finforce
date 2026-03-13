@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -28,7 +29,7 @@ import { useToast } from '@/hooks/use-toast'
 
 export default function Perfis() {
   const { user, profile: userProfile, isMasterAdmin } = useAuth()
-  const { profiles, setProfilesFromDB, searchQuery } = useAppStore()
+  const { profiles, isSyncing, searchQuery } = useAppStore()
   const { toast } = useToast()
 
   const [fullName, setFullName] = useState('')
@@ -47,59 +48,6 @@ export default function Perfis() {
       setProfileType(userProfile.profile_type || 'personal')
     }
   }, [userProfile])
-
-  useEffect(() => {
-    if (!user) return
-
-    const loadMembers = async () => {
-      const { data: family } = await supabase
-        .from('families')
-        .select('id')
-        .eq('owner_id', user.id)
-        .single()
-
-      if (family) {
-        const { data: members } = await supabase
-          .from('members')
-          .select(`
-            id,
-            name,
-            email,
-            role,
-            birth_date,
-            profile_id,
-            profiles (
-              full_name,
-              email,
-              avatar_url,
-              profile_type
-            )
-          `)
-          .eq('family_id', family.id)
-
-        if (members) {
-          const mappedProfiles = members.map((m: any) => {
-            const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
-            return {
-              id: m.id,
-              profile_id: m.profile_id,
-              name: p?.full_name || m.name,
-              email: p?.email || m.email || '',
-              role: m.role,
-              birthDate: m.birth_date || null,
-              limit: 0,
-              avatar: p?.avatar_url || null,
-              context: p?.profile_type === 'enterprise' ? 'business' : 'personal',
-              isArchived: false,
-            }
-          })
-          setProfilesFromDB(mappedProfiles)
-        }
-      }
-    }
-
-    loadMembers()
-  }, [user, setProfilesFromDB])
 
   const handleSaveAccount = async () => {
     if (!user) return
@@ -161,6 +109,19 @@ export default function Perfis() {
   const planDisplay = isMasterAdmin ? 'MASTER' : planLabels[plan] || 'Solo'
 
   const typeDisplay = profileType === 'enterprise' ? 'Empresarial' : 'Pessoal'
+
+  if (isSyncing) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-10 w-full max-w-sm" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-[300px]" />
+          <Skeleton className="h-[300px]" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 animate-slide-in-up pb-12">

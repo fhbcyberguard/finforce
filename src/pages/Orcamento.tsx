@@ -1,67 +1,108 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/hooks/use-auth'
 import useAppStore from '@/stores/useAppStore'
+import { supabase } from '@/lib/supabase/client'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { Skeleton } from '@/components/ui/skeleton'
 import { PieChart, AlertCircle, Wallet, TrendingUp, TrendingDown } from 'lucide-react'
 
 export default function Orcamento() {
-  const { profiles, transactions, selectedYear, selectedMonth, timeframe, currentContext } =
+  const { user } = useAuth()
+  const { isSyncing, profiles, selectedYear, selectedMonth, timeframe, currentContext } =
     useAppStore()
 
-  const { overallBudget, profileSpending } = useMemo(() => {
-    const now = new Date()
-    const yearToUse = selectedYear || now.getFullYear().toString()
-    const currentMonth = `${yearToUse}-${(selectedMonth + 1).toString().padStart(2, '0')}`
+  const [loading, setLoading] = useState(true)
+  const [overallBudget, setOverallBudget] = useState({
+    income: 0,
+    spent: 0,
+    balance: 0,
+    percent: 0,
+  })
+  const [profileSpending, setProfileSpending] = useState<any[]>([])
 
-    const currentTx = transactions.filter((t) => {
-      // Ignore internal transfers for budget calculation
-      if (t.type === 'Transfer') return false
-      if (timeframe === 'annual') return t.date.startsWith(yearToUse)
-      return t.date.startsWith(currentMonth)
-    })
+  useEffect(() => {
+    async function fetchBudget() {
+      if (!user || isSyncing) return
+      setLoading(true)
 
-    const calcBudget = (txs: typeof currentTx) => {
-      const income = txs
-        .filter((t) => t.amount > 0 || t.type === 'Revenue' || t.category.includes('Renda'))
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+      const year = selectedYear || new Date().getFullYear().toString()
+      const monthStr = (selectedMonth + 1).toString().padStart(2, '0')
 
-      const spent = txs
-        .filter((t) => t.amount < 0 && t.type !== 'Revenue' && !t.category.includes('Renda'))
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-
-      const balance = income - spent
-      const percent = income > 0 ? (spent / income) * 100 : spent > 0 ? 100 : 0
-
-      return { income, spent, balance, percent: Math.min(percent, 100) }
-    }
-
-    const overallBudget = calcBudget(currentTx)
-
-    const profileSpending = profiles
-      .map((profile) => {
-        const pTxs = currentTx.filter((t) => t.profile === profile.name || t.profile === profile.id)
-        const stats = calcBudget(pTxs)
-        return { ...profile, ...stats }
-      })
-      .filter((p) => p.income > 0 || p.spent > 0) // Only show profiles with activity
-
-    // Handle unassigned transactions if any
-    const unassignedTxs = currentTx.filter((t) => !t.profile)
-    if (unassignedTxs.length > 0) {
-      const stats = calcBudget(unassignedTxs)
-      if (stats.income > 0 || stats.spent > 0) {
-        profileSpending.push({
-          id: 'unassigned',
-          name: 'Não atribuído',
-          role: '',
-          limit: 0,
-          ...stats,
-        } as any)
+      let startDate, endDate
+      if (timeframe === 'annual') {
+        startDate = `${year}-01-01`
+        endDate = `${year}-12-31`
+      } else {
+        startDate = `${year}-${monthStr}-01`
+        const lastDay = new Date(Number(year), selectedMonth + 1, 0).getDate()
+        endDate = `${year}-${monthStr}-${lastDay}`
       }
+
+      const { data: txs } = await supabase
+        .from('transactions')
+        .select('amount, type, category, profile, context')
+        .eq('user_id', user.id)
+        .gte('date', startDate)
+        .lte('date', endDate)
+
+      const filtered = (txs || []).filter(
+        (t) => t.context === currentContext && t.type !== 'Transfer',
+      )
+
+      const calcBudget = (tList: any[]) => {
+        const income = tList
+          .filter((t) => t.amount > 0 || t.type === 'Revenue' || t.category.includes('Renda'))
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+        const spent = tList
+          .filter((t) => t.amount < 0 && t.type !== 'Revenue' && !t.category.includes('Renda'))
+          .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+        const balance = income - spent
+        const percent = income > 0 ? (spent / income) * 100 : spent > 0 ? 100 : 0
+
+        return { income, spent, balance, percent: Math.min(percent, 100) }
+      }
+
+      setOverallBudget(calcBudget(filtered))
+
+      const pSpending = profiles
+        .map((p) => {
+          const pTxs = filtered.filter((t) => t.profile === p.name || t.profile === p.id)
+          const stats = calcBudget(pTxs)
+          return { ...p, ...stats }
+        })
+        .filter((p) => p.income > 0 || p.spent > 0)
+
+      const unassignedTxs = filtered.filter((t) => !t.profile || t.profile === 'none')
+      if (unassignedTxs.length > 0) {
+        const stats = calcBudget(unassignedTxs)
+        if (stats.income > 0 || stats.spent > 0) {
+          pSpending.push({ id: 'unassigned', name: 'Não atribuído', role: '', limit: 0, ...stats })
+        }
+      }
+
+      setProfileSpending(pSpending)
+      setLoading(false)
     }
 
-    return { overallBudget, profileSpending }
-  }, [profiles, transactions, selectedYear, selectedMonth, timeframe])
+    fetchBudget()
+  }, [user, isSyncing, selectedYear, selectedMonth, timeframe, currentContext, profiles])
+
+  if (isSyncing || loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-[200px] w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-[150px] w-full rounded-xl" />
+          <Skeleton className="h-[150px] w-full rounded-xl" />
+          <Skeleton className="h-[150px] w-full rounded-xl" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 animate-slide-in-up">

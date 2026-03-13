@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -21,7 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Target, TrendingUp, Landmark, Wallet, Plus, Activity } from 'lucide-react'
+import { Target, TrendingUp, Landmark, Wallet, Plus, Activity, Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
@@ -29,7 +30,7 @@ import { addMonths, format } from 'date-fns'
 
 export default function Aposentadoria() {
   const { user } = useAuth()
-  const { goals, setGoals, transactions, currentContext } = useAppStore()
+  const { isSyncing, goals, setGoals, transactions, currentContext } = useAppStore()
   const { toast } = useToast()
 
   const [openAdd, setOpenAdd] = useState(false)
@@ -140,6 +141,19 @@ export default function Aposentadoria() {
         variant: 'destructive',
       })
     }
+  }
+
+  if (isSyncing) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-1/3" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
   }
 
   return (
@@ -376,6 +390,7 @@ export default function Aposentadoria() {
 
             <DialogFooter className="mt-6 pt-4">
               <Button type="submit" className="w-full" disabled={isSaving}>
+                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 {isSaving ? 'Salvando...' : 'Salvar Plano'}
               </Button>
             </DialogFooter>

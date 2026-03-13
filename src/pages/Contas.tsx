@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Dialog,
@@ -20,43 +21,112 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Building2, Plus, Edit2, Trash2 } from 'lucide-react'
+import { Building2, Plus, Edit2, Trash2, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import { CreditCardsSection } from '../components/contas/CreditCardsSection'
 
 export default function Contas() {
-  const { accounts, setAccounts } = useAppStore()
+  const { user } = useAuth()
+  const { accounts, setAccounts, isSyncing, currentContext } = useAppStore()
   const [openAddAcc, setOpenAddAcc] = useState(false)
   const [editingAcc, setEditingAcc] = useState<Account | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
-  const handleSaveAccount = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveAccount = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!user) return
+
     const fd = new FormData(e.currentTarget)
-    const newAcc = {
-      id: editingAcc ? editingAcc.id : Math.random().toString(),
-      bank: fd.get('bank') as string,
-      type: fd.get('type') as string,
-      balance: Number(fd.get('balance')),
-      agency: fd.get('agency') as string,
-      account: fd.get('account') as string,
-      connected: false, // Force manual connection state as Open Finance is removed
+    const name = fd.get('name') as string
+    const type = fd.get('type') as string
+    const balance = Number(fd.get('balance'))
+    const agency = fd.get('agency') as string
+    const accountNumber = fd.get('account') as string
+
+    setIsSaving(true)
+
+    const payload = {
+      user_id: user.id,
+      name,
+      type,
+      balance,
+      agency: agency || null,
+      account_number: accountNumber || null,
     }
 
     if (editingAcc) {
-      setAccounts(accounts.map((a) => (a.id === editingAcc.id ? newAcc : a)))
-      toast({ title: 'Conta Atualizada', description: 'Os dados foram salvos com sucesso.' })
+      const { error } = await supabase.from('accounts').update(payload).eq('id', editingAcc.id)
+      if (!error) {
+        setAccounts(
+          accounts.map((a) =>
+            a.id === editingAcc.id
+              ? {
+                  ...a,
+                  name,
+                  bank: name,
+                  type,
+                  balance,
+                  agency,
+                  account_number: accountNumber,
+                  account: accountNumber,
+                }
+              : a,
+          ),
+        )
+        toast({ title: 'Conta Atualizada', description: 'Os dados foram salvos com sucesso.' })
+      } else {
+        toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' })
+      }
     } else {
-      setAccounts([...accounts, newAcc])
-      toast({ title: 'Conta Adicionada', description: 'Nova instituição vinculada com sucesso.' })
+      const { data, error } = await supabase.from('accounts').insert(payload).select().single()
+      if (!error && data) {
+        const newAcc = {
+          id: data.id,
+          name: data.name,
+          bank: data.name,
+          type: data.type || 'Conta Corrente',
+          balance: Number(data.balance),
+          agency: data.agency || '',
+          account_number: data.account_number || '',
+          account: data.account_number || '',
+          connected: false,
+          context: currentContext,
+        }
+        setAccounts([...accounts, newAcc])
+        toast({ title: 'Conta Adicionada', description: 'Nova instituição vinculada com sucesso.' })
+      } else {
+        toast({ title: 'Erro ao adicionar', description: error?.message, variant: 'destructive' })
+      }
     }
+
+    setIsSaving(false)
     setOpenAddAcc(false)
     setEditingAcc(null)
   }
 
-  const deleteAccount = (id: string) => {
-    setAccounts(accounts.filter((a) => a.id !== id))
-    toast({ title: 'Conta Removida', description: 'A conta foi permanentemente excluída.' })
+  const deleteAccount = async (id: string) => {
+    const { error } = await supabase.from('accounts').delete().eq('id', id)
+    if (!error) {
+      setAccounts(accounts.filter((a) => a.id !== id))
+      toast({ title: 'Conta Removida', description: 'A conta foi permanentemente excluída.' })
+    } else {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    }
+  }
+
+  if (isSyncing) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-10 w-full max-w-md" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-[400px]" />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -114,9 +184,9 @@ export default function Contas() {
                       <div className="space-y-2">
                         <Label>Nome do Banco / Instituição</Label>
                         <Input
-                          name="bank"
+                          name="name"
                           required
-                          defaultValue={editingAcc?.bank || ''}
+                          defaultValue={editingAcc?.name || editingAcc?.bank || ''}
                           placeholder="Ex: Inter, C6 Bank"
                         />
                       </div>
@@ -133,7 +203,7 @@ export default function Contas() {
                           <Label>Conta (Opcional)</Label>
                           <Input
                             name="account"
-                            defaultValue={editingAcc?.account || ''}
+                            defaultValue={editingAcc?.account_number || editingAcc?.account || ''}
                             placeholder="12345-6"
                           />
                         </div>
@@ -159,13 +229,14 @@ export default function Contas() {
                             type="number"
                             step="0.01"
                             required
-                            defaultValue={editingAcc?.balance || ''}
+                            defaultValue={editingAcc ? editingAcc.balance : ''}
                             placeholder="0.00"
                           />
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button type="submit" className="w-full">
+                        <Button type="submit" className="w-full" disabled={isSaving}>
+                          {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                           {editingAcc ? 'Salvar Alterações' : 'Salvar Conta'}
                         </Button>
                       </DialogFooter>
@@ -180,11 +251,13 @@ export default function Contas() {
                     className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors relative overflow-hidden"
                   >
                     <div>
-                      <p className="font-medium">{acc.bank}</p>
+                      <p className="font-medium">{acc.name || acc.bank}</p>
                       <p className="text-xs text-muted-foreground flex gap-2">
                         <span>{acc.type}</span>
                         {acc.agency && <span>• Ag: {acc.agency}</span>}
-                        {acc.account && <span>• Cc: {acc.account}</span>}
+                        {(acc.account_number || acc.account) && (
+                          <span>• Cc: {acc.account_number || acc.account}</span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right transition-transform group-hover:-translate-x-16">
