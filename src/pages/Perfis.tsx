@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Archive, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import useAppStore, { Profile } from '@/stores/useAppStore'
@@ -6,9 +6,13 @@ import { ProfileCard } from '@/components/profiles/ProfileCard'
 import { ProfileEditDialog } from '@/components/profiles/ProfileEditDialog'
 import { ProfileDeleteFlow } from '@/components/profiles/ProfileDeleteFlow'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Perfis() {
-  const { profiles, searchQuery, currentContext, subscriptionPlan } = useAppStore()
+  const { user } = useAuth()
+  const { profiles, setProfilesFromDB, searchQuery, currentContext, subscriptionPlan } =
+    useAppStore()
   const [editingProfile, setEditingProfile] = useState<Partial<Profile> | null>(null)
   const [deletingProfile, setDeletingProfile] = useState<Profile | null>(null)
   const [archivedOpen, setArchivedOpen] = useState(false)
@@ -18,6 +22,55 @@ export default function Perfis() {
   const description = isBusiness
     ? 'Gerencie o acesso e orçamentos da sua equipe.'
     : 'Gerencie o acesso e orçamentos de cada membro.'
+
+  useEffect(() => {
+    if (!user) return
+
+    const loadMembers = async () => {
+      const { data: family } = await supabase
+        .from('families')
+        .select('id')
+        .eq('owner_id', user.id)
+        .single()
+
+      if (family) {
+        const { data: members } = await supabase
+          .from('members')
+          .select(`
+            id,
+            name,
+            email,
+            role,
+            profile_id,
+            profiles (
+              full_name,
+              email,
+              avatar_url
+            )
+          `)
+          .eq('family_id', family.id)
+
+        if (members) {
+          const mappedProfiles = members.map((m: any) => {
+            const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
+            return {
+              id: m.id,
+              name: p?.full_name || m.name,
+              email: p?.email || m.email || '',
+              role: m.role,
+              limit: 0,
+              avatar: p?.avatar_url || null,
+              context: 'personal',
+              isArchived: false,
+            }
+          })
+          setProfilesFromDB(mappedProfiles)
+        }
+      }
+    }
+
+    loadMembers()
+  }, [user, setProfilesFromDB])
 
   const filteredProfiles = useMemo(() => {
     if (!searchQuery) return profiles

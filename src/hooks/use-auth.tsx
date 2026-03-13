@@ -6,6 +6,7 @@ export interface Profile {
   id: string
   full_name: string | null
   updated_at: string | null
+  avatar_url: string | null
 }
 
 interface AuthContextType {

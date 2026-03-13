@@ -178,11 +178,8 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary ml-2">
                 <AvatarImage
-                  src={
-                    mainProfile?.avatar ||
-                    'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=4'
-                  }
-                  alt="User"
+                  src={profile?.avatar_url || mainProfile?.avatar || undefined}
+                  alt={displayUser}
                 />
                 <AvatarFallback>{displayUser.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>

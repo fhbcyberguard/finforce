@@ -36,9 +36,9 @@ const schema = z.object({
     .string()
     .min(1, 'O nome é obrigatório')
     .regex(/^[^0-9]*$/, 'O nome não deve conter números'),
+  email: z.string().email('Email inválido').optional().or(z.literal('')),
   role: z.string().min(1, 'O papel é obrigatório'),
   limit: z.coerce.number().min(0, 'O limite não pode ser negativo'),
-  avatar: z.string().url('Deve ser uma URL válida').optional().or(z.literal('')),
   currentAge: z.coerce.number().min(0, 'Idade inválida').optional(),
   retirementPlanDuration: z.coerce.number().min(0, 'Duração inválida').optional(),
 })
@@ -57,9 +57,9 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
     resolver: zodResolver(schema),
     defaultValues: {
       name: profile.name || '',
+      email: profile.email || '',
       role: profile.role || '',
       limit: profile.limit || 0,
-      avatar: profile.avatar || '',
       currentAge: profile.currentAge || 0,
       retirementPlanDuration: profile.retirementPlanDuration || 0,
     },
@@ -69,9 +69,9 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
     if (open) {
       form.reset({
         name: profile.name || '',
+        email: profile.email || '',
         role: profile.role || '',
         limit: profile.limit || 0,
-        avatar: profile.avatar || '',
         currentAge: profile.currentAge || 0,
         retirementPlanDuration: profile.retirementPlanDuration || 0,
       })
@@ -85,19 +85,13 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       const newProfile = {
         id: Math.random().toString(36).substring(2, 9),
         context: currentContext,
-        avatar:
-          data.avatar ||
-          `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${Math.floor(Math.random() * 100)}`,
+        avatar: null,
         ...data,
       }
       setProfiles([...profiles, newProfile])
       toast({ title: 'Perfil criado', description: 'Membro adicionado com sucesso.' })
     } else {
-      setProfiles(
-        profiles.map((p) =>
-          p.id === profile.id ? { ...p, ...data, avatar: data.avatar || p.avatar } : p,
-        ),
-      )
+      setProfiles(profiles.map((p) => (p.id === profile.id ? { ...p, ...data } : p)))
       toast({ title: 'Perfil atualizado', description: 'Dados salvos com sucesso.' })
     }
     onOpenChange(false)
@@ -126,6 +120,20 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>E-mail</FormLabel>
+                  <FormControl>
+                    <Input type="email" placeholder="Opcional" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

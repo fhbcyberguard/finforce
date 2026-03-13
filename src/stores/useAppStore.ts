@@ -11,9 +11,10 @@ export type ContextType = 'personal' | 'business'
 export type Profile = {
   id: string
   name: string
+  email?: string
   role: string
   limit: number
-  avatar?: string
+  avatar?: string | null
   isArchived?: boolean
   context?: ContextType
   currentAge?: number
@@ -66,7 +67,7 @@ interface AppState {
   selectedYear: string
   simulatorSettings: SimulatorSettings
   currentContext: ContextType
-  subscriptionPlan: 'basic' | 'medium' | 'top'
+  subscriptionPlan: 'basic' | 'medium' | 'top' | 'master'
   categoryColors: Record<string, string>
 }
 
@@ -150,7 +151,6 @@ export default function useAppStore() {
 
   const ctx = store.currentContext || 'personal'
 
-  // Memoize filtered arrays to ensure referential stability and prevent infinite render loops
   const profiles = useMemo(
     () => store.profiles.filter((a) => (a.context || 'personal') === ctx),
     [store.profiles, ctx],
@@ -224,7 +224,7 @@ export default function useAppStore() {
   const setSelectedYear = useCallback((y: string) => updateState({ selectedYear: y }), [])
   const setCurrentContext = useCallback((c: ContextType) => updateState({ currentContext: c }), [])
   const setSubscriptionPlan = useCallback(
-    (p: 'basic' | 'medium' | 'top') => updateState({ subscriptionPlan: p }),
+    (p: 'basic' | 'medium' | 'top' | 'master') => updateState({ subscriptionPlan: p }),
     [],
   )
   const setCategoryColor = useCallback(
@@ -233,7 +233,6 @@ export default function useAppStore() {
     [],
   )
 
-  // Return a memoized object so components don't re-render unless relevant state changes
   return useMemo(
     () => ({
       ...store,

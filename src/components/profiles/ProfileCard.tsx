@@ -36,9 +36,12 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
         </Avatar>
         <h3 className="font-semibold text-lg flex flex-col items-center gap-0.5">
           {profile.name}
-          <span className="text-xs font-normal text-muted-foreground">{contextLabel}</span>
+          {profile.email && (
+            <span className="text-sm font-normal text-muted-foreground">{profile.email}</span>
+          )}
+          <span className="text-xs font-normal text-muted-foreground mt-1">{contextLabel}</span>
         </h3>
-        <Badge variant="secondary" className="mt-2 mb-4">
+        <Badge variant="secondary" className="mt-3 mb-4">
           {profile.role}
         </Badge>
         <div className="w-full bg-muted/50 rounded-lg p-3 mt-auto">
