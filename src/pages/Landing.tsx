@@ -61,7 +61,7 @@ export default function Landing() {
           <Button variant="ghost" asChild className="hidden sm:inline-flex">
             <Link to="/login">Entrar</Link>
           </Button>
-          <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button asChild className="bg-primary text-black hover:bg-primary/90 font-semibold">
             <Link to="/registro">COMEÇAR TESTE GRATUITO</Link>
           </Button>
         </div>
@@ -92,7 +92,7 @@ export default function Landing() {
           </div>
           <Button
             size="lg"
-            className="w-full sm:w-auto h-14 px-8 text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25"
+            className="w-full sm:w-auto h-14 px-8 text-base font-bold bg-primary hover:bg-primary/90 text-black shadow-lg shadow-primary/25"
             asChild
           >
             <Link to="/registro">
@@ -183,7 +183,7 @@ export default function Landing() {
             <div className="mt-14 text-center">
               <Button
                 size="lg"
-                className="w-full sm:w-auto h-14 px-10 text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25"
+                className="w-full sm:w-auto h-14 px-10 text-base font-bold bg-primary hover:bg-primary/90 text-black shadow-lg shadow-primary/25"
                 asChild
               >
                 <Link to="/registro">COMEÇAR TESTE GRATUITO</Link>
@@ -204,7 +204,7 @@ export default function Landing() {
             </p>
             <Button
               size="lg"
-              className="w-full sm:w-auto h-14 px-10 text-base font-bold bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/30 animate-pulse-alert"
+              className="w-full sm:w-auto h-14 px-10 text-base font-bold bg-primary hover:bg-primary/90 text-black shadow-xl shadow-primary/30 animate-pulse-alert"
               asChild
             >
               <Link to="/registro">COMEÇAR TESTE GRATUITO</Link>
