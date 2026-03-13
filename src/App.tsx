@@ -23,6 +23,7 @@ import Registro from './pages/Registro'
 import Landing from './pages/Landing'
 import { ThemeProvider } from './components/ThemeProvider'
 import { SyncData } from './components/SyncData'
+import { ActivePlanGuard } from './components/ActivePlanGuard'
 import logoImg from './assets/copia-de-logo-drowp-horizontal-3e587.png'
 
 function SyncSystemState() {
@@ -58,11 +59,13 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Index />} />
-                <Route path="/transacoes" element={<FluxoCaixa />} />
-                <Route path="/orcamento" element={<Orcamento />} />
-                <Route path="/metas" element={<Metas />} />
-                <Route path="/patrimonio" element={<Patrimonio />} />
-                <Route path="/contas" element={<Contas />} />
+                <Route element={<ActivePlanGuard />}>
+                  <Route path="/transacoes" element={<FluxoCaixa />} />
+                  <Route path="/orcamento" element={<Orcamento />} />
+                  <Route path="/metas" element={<Metas />} />
+                  <Route path="/patrimonio" element={<Patrimonio />} />
+                  <Route path="/contas" element={<Contas />} />
+                </Route>
                 <Route path="/perfis" element={<Perfis />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/producer-admin" element={<ProducerAdmin />} />

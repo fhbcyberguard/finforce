@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '@/hooks/use-auth'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,11 +22,14 @@ import { MOCK_TICKETS } from '@/lib/mockData'
 
 export default function ProducerAdmin() {
   const { toast } = useToast()
+  const { isMasterAdmin } = useAuth()
   const [smtpTLS, setSmtpTLS] = useState(true)
 
   // Implementation of zero-state logic for active subscriptions
   const [activeSubscriptions] = useState<any[]>([])
   const activeSubscriptionsCount = activeSubscriptions.length
+
+  if (!isMasterAdmin) return <Navigate to="/dashboard" replace />
 
   const handleSync = () =>
     toast({ title: 'Sincronizando com Hotmart...', description: 'Atualizando status.' })

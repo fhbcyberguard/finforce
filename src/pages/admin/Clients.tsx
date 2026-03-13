@@ -52,12 +52,14 @@ import {
 } from 'lucide-react'
 
 const planLabels: Record<string, string> = {
-  basica_mensal: 'Básica Mensal',
-  basica_anual: 'Básica Anual',
-  pro_mensal: 'Pro Mensal',
-  pro_anual: 'Pro Anual',
-  top_mensal: 'Top Mensal',
-  top_anual: 'Top Anual',
+  basic: 'Básico (Trial 72h)',
+  pro_monthly: 'Pro Mensal',
+  pro_yearly: 'Pro Anual',
+  plus_monthly: 'Plus Mensal',
+  plus_yearly: 'Plus Anual',
+  max_monthly: 'Max Mensal',
+  max_yearly: 'Max Anual',
+  team: 'Team (Admin)',
   canceled: 'Cancelado',
 }
 
@@ -85,7 +87,7 @@ export default function Clients() {
 
   const [editFullName, setEditFullName] = useState('')
   const [editEmail, setEditEmail] = useState('')
-  const [editPlan, setEditPlan] = useState('basica_mensal')
+  const [editPlan, setEditPlan] = useState('basic')
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -161,7 +163,7 @@ export default function Clients() {
     setUserToEdit(profile)
     setEditFullName(profile.full_name || '')
     setEditEmail(profile.email || '')
-    setEditPlan(profile.plan || 'basica_mensal')
+    setEditPlan(profile.plan || 'basic')
     setIsEditDialogOpen(true)
   }
 
@@ -288,18 +290,22 @@ export default function Clients() {
                       <Badge
                         variant="outline"
                         className={cn(
-                          'uppercase text-[10px] font-bold tracking-wider',
-                          p.plan?.includes('top') &&
-                            'text-purple-600 border-purple-600/30 bg-purple-600/5',
+                          'uppercase text-[10px] font-bold tracking-wider whitespace-nowrap',
+                          p.plan?.includes('max') &&
+                            'text-amber-600 border-amber-600/30 bg-amber-600/5',
+                          p.plan?.includes('plus') &&
+                            'text-blue-600 border-blue-600/30 bg-blue-600/5',
                           p.plan?.includes('pro') &&
-                            'text-[#126eda] border-[#126eda]/30 bg-[#126eda]/5',
-                          p.plan?.includes('basica') &&
+                            'text-purple-600 border-purple-600/30 bg-purple-600/5',
+                          p.plan === 'team' &&
+                            'text-indigo-600 border-indigo-600/30 bg-indigo-600/5',
+                          (p.plan === 'basic' || !p.plan) &&
                             'text-emerald-600 border-emerald-600/30 bg-emerald-600/5',
                           p.plan === 'canceled' &&
                             'bg-destructive/10 text-destructive border-destructive/20',
                         )}
                       >
-                        {planLabels[p.plan] || p.plan || 'Desconhecido'}
+                        {planLabels[p.plan] || p.plan || 'Básico (Trial 72h)'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
@@ -446,12 +452,14 @@ export default function Clients() {
                   <SelectValue placeholder="Selecione um plano" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="basica_mensal">Básica Mensal</SelectItem>
-                  <SelectItem value="basica_anual">Básica Anual</SelectItem>
-                  <SelectItem value="pro_mensal">Pro Mensal</SelectItem>
-                  <SelectItem value="pro_anual">Pro Anual</SelectItem>
-                  <SelectItem value="top_mensal">Top Mensal</SelectItem>
-                  <SelectItem value="top_anual">Top Anual</SelectItem>
+                  <SelectItem value="basic">Básico (Trial)</SelectItem>
+                  <SelectItem value="pro_monthly">Pro Mensal</SelectItem>
+                  <SelectItem value="pro_yearly">Pro Anual</SelectItem>
+                  <SelectItem value="plus_monthly">Plus Mensal</SelectItem>
+                  <SelectItem value="plus_yearly">Plus Anual</SelectItem>
+                  <SelectItem value="max_monthly">Max Mensal</SelectItem>
+                  <SelectItem value="max_yearly">Max Anual</SelectItem>
+                  <SelectItem value="team">Team (Acesso Admin)</SelectItem>
                   <SelectItem value="canceled">Assinatura Cancelada</SelectItem>
                 </SelectContent>
               </Select>

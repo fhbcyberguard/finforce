@@ -10,6 +10,7 @@ export interface Profile {
   email?: string | null
   plan?: string
   birth_date?: string | null
+  created_at?: string
 }
 
 interface AuthContextType {
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const isMasterAdmin = user?.email === 'fhbcyberguard@gmail.com'
+  const isMasterAdmin = user?.email === 'fhbcyberguard@gmail.com' || profile?.plan === 'team'
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
