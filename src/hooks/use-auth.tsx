@@ -46,37 +46,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isMasterAdmin = user?.email === 'fhbcyberguard@gmail.com' || profile?.plan === 'team'
 
-  const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
-    if (data) setProfile(data as Profile)
-  }
-
   useEffect(() => {
+    let mounted = true
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id)
-      } else {
-        setProfile(null)
-      }
-      setLoading(false)
-    })
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        fetchProfile(session.user.id).finally(() => setLoading(false))
-      } else {
+      if (mounted) {
+        setSession(session)
+        setUser(session?.user ?? null)
         setLoading(false)
       }
     })
 
-    return () => subscription.unsubscribe()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      }
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
+
+  useEffect(() => {
+    let mounted = true
+
+    const fetchProfile = async (userId: string) => {
+      const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+      if (mounted && data) {
+        setProfile(data as Profile)
+      }
+    }
+
+    if (user) {
+      fetchProfile(user.id)
+    } else {
+      setProfile(null)
+    }
+
+    return () => {
+      mounted = false
+    }
+  }, [user])
 
   const signUp = async (
     email: string,
