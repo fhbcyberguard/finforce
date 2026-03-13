@@ -31,7 +31,7 @@ const navigation = [
   { title: 'Patrimônio', url: '/patrimonio', icon: PieChart },
   { title: 'Fluxo de Caixa', url: '/fluxo', icon: ArrowRightLeft },
   { title: 'Cartões e Contas', url: '/contas', icon: CreditCard },
-  { title: 'Perfis da Família', url: '/perfis', icon: Users },
+  { title: 'Membros Familiares', url: '/perfis', icon: Users },
 ]
 
 export function AppSidebar() {
@@ -69,7 +69,7 @@ export function AppSidebar() {
                 let title = item.title
                 if (item.url === '/perfis') {
                   title =
-                    currentContext === 'business' ? 'Perfil do Colaborador' : 'Perfis da Família'
+                    currentContext === 'business' ? 'Perfis de Colaborador' : 'Membros Familiares'
                 }
                 return (
                   <SidebarMenuItem key={item.title}>

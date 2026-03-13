@@ -14,7 +14,7 @@ export default function Perfis() {
   const [archivedOpen, setArchivedOpen] = useState(false)
 
   const isBusiness = currentContext === 'business'
-  const title = isBusiness ? 'Perfis de Colaborador' : 'Perfis da Família'
+  const title = isBusiness ? 'Perfis de Colaborador' : 'Membros Familiares'
   const description = isBusiness
     ? 'Gerencie o acesso e orçamentos de cada colaborador.'
     : 'Gerencie o acesso e orçamentos de cada membro.'

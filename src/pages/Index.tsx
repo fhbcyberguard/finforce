@@ -6,6 +6,7 @@ import AlertsPanel from '../components/dashboard/AlertsPanel'
 import { CreditCardWidget } from '../components/dashboard/CreditCardWidget'
 import { SpendingChart } from '../components/dashboard/SpendingChart'
 import { GoalWidget } from '../components/dashboard/GoalWidget'
+import { SpendingByPersonChart } from '../components/dashboard/SpendingByPersonChart'
 
 export default function Index() {
   const { timeframe, setTimeframe, currentContext } = useAppStore()
@@ -46,6 +47,7 @@ export default function Index() {
         <div className="lg:col-span-2 space-y-6">
           <Simulator />
           <SpendingChart />
+          <SpendingByPersonChart />
         </div>
         <div className="flex flex-col gap-6">
           <AlertsPanel />

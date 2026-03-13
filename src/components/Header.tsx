@@ -196,7 +196,7 @@ export function Header() {
               >
                 <Briefcase className="mr-2 h-4 w-4" />
                 <span>
-                  {currentContext === 'personal' ? '(perfil empresarial)' : '(perfil pessoal)'}
+                  {currentContext === 'personal' ? 'perfil empresarial' : 'perfil pessoal'}
                 </span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -209,7 +209,9 @@ export function Header() {
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate('/perfis')} className="cursor-pointer">
                 <Users className="mr-2 h-4 w-4" />
-                <span>Perfis de Acesso</span>
+                <span>
+                  {currentContext === 'business' ? 'Perfis de Colaborador' : 'Membros Familiares'}
+                </span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

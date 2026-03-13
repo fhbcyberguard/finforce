@@ -200,6 +200,7 @@ export const MOCK_TRANSACTIONS = [
     recurrence: 'none',
     expenseType: 'variable',
     context: 'personal',
+    profile: 'Carlos (Pai)',
   },
   {
     id: '2',
@@ -235,6 +236,7 @@ export const MOCK_TRANSACTIONS = [
     hasAttachment: true,
     expenseType: 'variable',
     context: 'personal',
+    profile: 'Marina (Mãe)',
   },
   {
     id: '5',
@@ -248,6 +250,7 @@ export const MOCK_TRANSACTIONS = [
     recurrence: 'none',
     expenseType: 'fixed',
     context: 'personal',
+    profile: 'Carlos (Pai)',
   },
   {
     id: '6',
@@ -271,6 +274,7 @@ export const MOCK_TRANSACTIONS = [
     recurrence: 'monthly',
     expenseType: 'fixed',
     context: 'business',
+    profile: 'João Silva',
   },
 ]
 
