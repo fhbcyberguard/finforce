@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const isMasterAdmin = user?.email === 'fhbcyberguard@gmail.com' || profile?.plan === 'team'
+  const isMasterAdmin = user?.email === 'fhbcyberguard@gmail.com'
 
   useEffect(() => {
     let mounted = true
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email,
       password,
       options: {
-        data: { full_name: fullName, profile_type: profileType },
+        data: { full_name: fullName, profile_type: profileType, plan: 'solo' },
         emailRedirectTo: `${window.location.origin}/`,
       },
     })

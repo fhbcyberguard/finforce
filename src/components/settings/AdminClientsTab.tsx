@@ -51,19 +51,25 @@ import {
 } from 'lucide-react'
 
 const planLabels: Record<string, string> = {
-  basic: 'Básico (Trial 72h)',
-  pro_monthly: 'Pro Mensal',
-  pro_yearly: 'Pro Anual',
-  plus_monthly: 'Plus Mensal',
-  plus_yearly: 'Plus Anual',
-  max_monthly: 'Max Mensal',
-  max_yearly: 'Max Anual',
-  team: 'Team (Admin)',
+  solo: 'Solo (R$39/m)',
+  duo: 'Duo (R$59/m)',
+  pro: 'Pro (R$79/m)',
+  business: 'Business (R$99/m)',
+  master_team: 'Master Team',
   canceled: 'Cancelado',
 }
 
+const planDescriptions: Record<string, string> = {
+  solo: 'Limite de 1 usuário, finanças pessoais, dashboard, metas e alertas.',
+  duo: 'Limite de 2 usuários, despesas compartilhadas, dashboard conjunto, metas e alertas.',
+  pro: 'Limite de até 5 membros, controle estendido, dashboard multi-usuário.',
+  business: 'Limite de até 50 membros, controle empresarial, dashboard centralizado.',
+  master_team: 'Plano exclusivo com acesso irrestrito.',
+  canceled: 'Acesso suspenso ou cancelado.',
+}
+
 export function AdminClientsTab() {
-  const { isMasterAdmin, loading } = useAuth()
+  const { isMasterAdmin, loading, user } = useAuth()
   const { toast } = useToast()
 
   const [profiles, setProfiles] = useState<any[]>([])
@@ -84,11 +90,14 @@ export function AdminClientsTab() {
   const [newFullName, setNewFullName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
+  const [newProfileType, setNewProfileType] = useState('personal')
+  const [newPlan, setNewPlan] = useState('solo')
   const [isAdding, setIsAdding] = useState(false)
 
   const [editFullName, setEditFullName] = useState('')
   const [editEmail, setEditEmail] = useState('')
-  const [editPlan, setEditPlan] = useState('basic')
+  const [editPlan, setEditPlan] = useState('solo')
+  const [editProfileType, setEditProfileType] = useState('personal')
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -159,6 +168,8 @@ export function AdminClientsTab() {
       new_email: newEmail,
       new_password: newPassword,
       full_name: newFullName,
+      plan: newPlan,
+      profile_type: newProfileType,
     })
     setIsAdding(false)
 
@@ -170,6 +181,8 @@ export function AdminClientsTab() {
       setNewEmail('')
       setNewFullName('')
       setNewPassword('')
+      setNewPlan('solo')
+      setNewProfileType('personal')
       fetchProfiles()
     }
   }
@@ -178,7 +191,8 @@ export function AdminClientsTab() {
     setUserToEdit(profile)
     setEditFullName(profile.full_name || '')
     setEditEmail(profile.email || '')
-    setEditPlan(profile.plan || 'basic')
+    setEditPlan(profile.plan || 'solo')
+    setEditProfileType(profile.profile_type || 'personal')
     setIsEditDialogOpen(true)
   }
 
@@ -200,6 +214,7 @@ export function AdminClientsTab() {
         full_name: editFullName,
         email: editEmail,
         plan: editPlan,
+        profile_type: editProfileType,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userToEdit.id)
@@ -330,21 +345,22 @@ export function AdminClientsTab() {
                         variant="outline"
                         className={cn(
                           'uppercase text-[10px] font-bold tracking-wider whitespace-nowrap',
-                          p.plan?.includes('max') &&
+                          p.plan === 'business' &&
                             'text-amber-600 border-amber-600/30 bg-amber-600/5',
-                          p.plan?.includes('plus') &&
-                            'text-blue-600 border-blue-600/30 bg-blue-600/5',
-                          p.plan?.includes('pro') &&
+                          p.plan === 'pro' && 'text-blue-600 border-blue-600/30 bg-blue-600/5',
+                          p.plan === 'duo' &&
                             'text-purple-600 border-purple-600/30 bg-purple-600/5',
-                          p.plan === 'team' &&
+                          p.plan === 'master_team' &&
                             'text-indigo-600 border-indigo-600/30 bg-indigo-600/5',
-                          (p.plan === 'basic' || !p.plan) &&
+                          (p.plan === 'solo' || !p.plan) &&
                             'text-emerald-600 border-emerald-600/30 bg-emerald-600/5',
                           p.plan === 'canceled' &&
                             'bg-destructive/10 text-destructive border-destructive/20',
                         )}
                       >
-                        {planLabels[p.plan] || p.plan || 'Básico (Trial 72h)'}
+                        {p.email === 'fhbcyberguard@gmail.com'
+                          ? 'MASTER'
+                          : planLabels[p.plan] || p.plan || 'Solo'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -379,14 +395,18 @@ export function AdminClientsTab() {
                             <Key className="mr-2 h-4 w-4" />
                             Alterar Senha
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setUserToDelete(p.id)}
-                            className="text-destructive focus:bg-destructive focus:text-destructive-foreground cursor-pointer"
-                          >
-                            <UserMinus className="mr-2 h-4 w-4" />
-                            Remover Acesso
-                          </DropdownMenuItem>
+                          {p.email !== 'fhbcyberguard@gmail.com' && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => setUserToDelete(p.id)}
+                                className="text-destructive focus:bg-destructive focus:text-destructive-foreground cursor-pointer"
+                              >
+                                <UserMinus className="mr-2 h-4 w-4" />
+                                Remover Acesso
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -412,7 +432,7 @@ export function AdminClientsTab() {
             <DialogTitle>Adicionar Novo Cliente</DialogTitle>
             <DialogDescription>Crie uma conta manualmente para um novo cliente.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddClient} className="space-y-4 pt-4">
+          <form onSubmit={handleAddClient} className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label htmlFor="name">Nome Completo</Label>
               <Input
@@ -434,16 +454,46 @@ export function AdminClientsTab() {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha Provisória</Label>
-              <Input
-                id="password"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="profileType">Tipo de Conta</Label>
+                <Select value={newProfileType} onValueChange={setNewProfileType}>
+                  <SelectTrigger id="profileType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="personal">Pessoal</SelectItem>
+                    <SelectItem value="enterprise">Empresarial</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha Provisória</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+            <div className="space-y-2 pt-2 border-t">
+              <Label htmlFor="plan">Plano de Assinatura</Label>
+              <Select value={newPlan} onValueChange={setNewPlan}>
+                <SelectTrigger id="plan">
+                  <SelectValue placeholder="Selecione um plano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="solo">Plano Solo (R$39/mês)</SelectItem>
+                  <SelectItem value="duo">Plano Duo (R$59/mês)</SelectItem>
+                  <SelectItem value="pro">Plano Pro (R$79/mês)</SelectItem>
+                  <SelectItem value="business">Plano Business (R$99/mês)</SelectItem>
+                  {isMasterAdmin && <SelectItem value="master_team">PLANO MASTER TEAM</SelectItem>}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">{planDescriptions[newPlan]}</p>
             </div>
             <DialogFooter className="pt-4">
               <Button
@@ -474,7 +524,7 @@ export function AdminClientsTab() {
             <DialogTitle>Editar Cliente</DialogTitle>
             <DialogDescription>Atualize as informações do cliente e seu plano.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleEditClient} className="space-y-4 pt-4">
+          <form onSubmit={handleEditClient} className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label htmlFor="edit-name">Nome Completo</Label>
               <Input
@@ -497,23 +547,33 @@ export function AdminClientsTab() {
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="edit-profileType">Tipo de Conta</Label>
+              <Select value={editProfileType} onValueChange={setEditProfileType}>
+                <SelectTrigger id="edit-profileType">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="personal">Pessoal</SelectItem>
+                  <SelectItem value="enterprise">Empresarial</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 pt-2 border-t">
               <Label htmlFor="edit-plan">Plano de Assinatura</Label>
               <Select value={editPlan} onValueChange={setEditPlan}>
                 <SelectTrigger id="edit-plan">
                   <SelectValue placeholder="Selecione um plano" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="basic">Básico (Trial)</SelectItem>
-                  <SelectItem value="pro_monthly">Pro Mensal</SelectItem>
-                  <SelectItem value="pro_yearly">Pro Anual</SelectItem>
-                  <SelectItem value="plus_monthly">Plus Mensal</SelectItem>
-                  <SelectItem value="plus_yearly">Plus Anual</SelectItem>
-                  <SelectItem value="max_monthly">Max Mensal</SelectItem>
-                  <SelectItem value="max_yearly">Max Anual</SelectItem>
-                  <SelectItem value="team">Team (Acesso Admin)</SelectItem>
+                  <SelectItem value="solo">Plano Solo (R$39/mês)</SelectItem>
+                  <SelectItem value="duo">Plano Duo (R$59/mês)</SelectItem>
+                  <SelectItem value="pro">Plano Pro (R$79/mês)</SelectItem>
+                  <SelectItem value="business">Plano Business (R$99/mês)</SelectItem>
+                  {isMasterAdmin && <SelectItem value="master_team">PLANO MASTER TEAM</SelectItem>}
                   <SelectItem value="canceled">Assinatura Cancelada</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">{planDescriptions[editPlan]}</p>
             </div>
             <DialogFooter className="pt-4">
               <Button

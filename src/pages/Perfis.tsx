@@ -27,7 +27,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Perfis() {
-  const { user, profile: userProfile } = useAuth()
+  const { user, profile: userProfile, isMasterAdmin } = useAuth()
   const { profiles, setProfilesFromDB, searchQuery } = useAppStore()
   const { toast } = useToast()
 
@@ -137,19 +137,28 @@ export default function Perfis() {
   const activeProfiles = filteredProfiles.filter((p) => !p.isArchived)
   const archivedProfiles = filteredProfiles.filter((p) => p.isArchived)
 
-  const plan = userProfile?.plan || 'basic'
-  const isPremiumOrTeam = plan !== 'basic' && plan !== 'canceled'
-  const limit = isPremiumOrTeam ? Infinity : 1
+  const plan = userProfile?.plan || 'solo'
+
+  const getPlanLimit = (p: string) => {
+    if (p === 'master_team') return Infinity
+    if (p === 'business') return 50
+    if (p === 'pro') return 5
+    if (p === 'duo') return 2
+    return 1 // solo or canceled
+  }
+
+  const limit = isMasterAdmin ? Infinity : getPlanLimit(plan)
   const canAddProfile = activeProfiles.length < limit
 
-  const planDisplay =
-    plan === 'team'
-      ? 'Team'
-      : plan === 'premium'
-        ? 'Premium'
-        : plan === 'basic'
-          ? 'Básico'
-          : plan.replace('_', ' ').toUpperCase()
+  const planLabels: Record<string, string> = {
+    solo: 'Solo',
+    duo: 'Duo',
+    pro: 'Pro',
+    business: 'Business',
+    master_team: 'Master Team',
+    canceled: 'Cancelado',
+  }
+  const planDisplay = isMasterAdmin ? 'MASTER' : planLabels[plan] || 'Solo'
 
   const typeDisplay = profileType === 'enterprise' ? 'Empresarial' : 'Pessoal'
 
@@ -162,7 +171,9 @@ export default function Perfis() {
               Gestão de Perfis
             </h1>
             <Badge
-              variant={isPremiumOrTeam ? 'default' : 'secondary'}
+              variant={
+                isMasterAdmin || (plan !== 'solo' && plan !== 'canceled') ? 'default' : 'secondary'
+              }
               className="uppercase text-[10px] font-bold tracking-wider"
             >
               Plano {planDisplay}
@@ -273,14 +284,14 @@ export default function Perfis() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {plan === 'team' ? (
+                  {isMasterAdmin || plan === 'master_team' ? (
                     <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-lg">
                       <h4 className="font-semibold text-indigo-600 flex items-center gap-2">
-                        Plano Team
+                        Plano Master Team
                       </h4>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Você possui acesso completo e administrativo ao sistema. Permite
-                        gerenciamento sem limites.
+                        Você possui acesso completo e irrestrito ao sistema. Permite gerenciamento
+                        sem limites.
                       </p>
                     </div>
                   ) : (
@@ -289,9 +300,9 @@ export default function Perfis() {
                         Plano {planDisplay}
                       </h4>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {plan === 'basic' || !plan
-                          ? 'Você está no plano básico com recursos limitados. Faça um upgrade para liberar todo o potencial do sistema.'
-                          : 'Você possui uma assinatura ativa e acesso aos recursos do seu plano.'}
+                        {plan === 'solo' || !plan
+                          ? 'Você está no plano Solo com recursos focados em gestão pessoal. Faça um upgrade para gerenciar mais pessoas.'
+                          : `Você possui uma assinatura ativa do plano ${planDisplay} e acesso aos seus respectivos recursos.`}
                       </p>
                     </div>
                   )}

@@ -12,7 +12,7 @@ export function AccountTab() {
   const { profiles } = useAppStore()
   const { toast } = useToast()
   const navigate = useNavigate()
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, isMasterAdmin } = useAuth()
 
   const mainProfile = profiles[0] || {
     id: '0',
@@ -43,9 +43,19 @@ export function AccountTab() {
             <AvatarFallback>{displayUser.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="space-y-2 flex-1 overflow-hidden">
-            <h3 className="font-semibold text-lg truncate">{displayUser}</h3>
+            <h3 className="font-semibold text-lg truncate flex items-center">
+              {displayUser}
+              {isMasterAdmin && (
+                <Badge
+                  variant="default"
+                  className="ml-2 text-[10px] uppercase font-bold tracking-wider"
+                >
+                  MASTER
+                </Badge>
+              )}
+            </h3>
             <p className="text-sm text-muted-foreground truncate">{displayEmail}</p>
-            <Badge variant="secondary">{mainProfile.role}</Badge>
+            {!isMasterAdmin && <Badge variant="secondary">{mainProfile.role}</Badge>}
           </div>
           <Button variant="outline" asChild>
             <Link to="/perfis">Gerenciar Família</Link>
