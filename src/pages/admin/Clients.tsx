@@ -24,7 +24,32 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Search, ArrowUpDown, Loader2, ShieldCheck, UserPlus, Trash2 } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
+import {
+  Search,
+  ArrowUpDown,
+  Loader2,
+  ShieldCheck,
+  UserPlus,
+  MoreHorizontal,
+  Edit,
+  UserMinus,
+} from 'lucide-react'
 
 export default function Clients() {
   const { isMasterAdmin, loading } = useAuth()
@@ -38,13 +63,20 @@ export default function Clients() {
 
   // Modals state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
+  const [userToEdit, setUserToEdit] = useState<any | null>(null)
 
-  // Add User Form state
+  // Form states
   const [newFullName, setNewFullName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [isAdding, setIsAdding] = useState(false)
+
+  const [editFullName, setEditFullName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editPlan, setEditPlan] = useState('basic')
+  const [isEditing, setIsEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchProfiles = useCallback(async () => {
@@ -115,6 +147,40 @@ export default function Clients() {
     }
   }
 
+  const openEditDialog = (profile: any) => {
+    setUserToEdit(profile)
+    setEditFullName(profile.full_name || '')
+    setEditEmail(profile.email || '')
+    setEditPlan(profile.plan || 'basic')
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditClient = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!userToEdit) return
+    setIsEditing(true)
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        full_name: editFullName,
+        email: editEmail,
+        plan: editPlan,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userToEdit.id)
+
+    setIsEditing(false)
+
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } else {
+      toast({ title: 'Sucesso', description: 'Dados do cliente atualizados com sucesso.' })
+      setIsEditDialogOpen(false)
+      fetchProfiles()
+    }
+  }
+
   const handleDeleteClient = async () => {
     if (!userToDelete) return
     setIsDeleting(true)
@@ -164,7 +230,7 @@ export default function Clients() {
           </div>
           <Button
             onClick={() => setIsAddDialogOpen(true)}
-            className="bg-[#126eda] hover:bg-[#126eda]/90 shrink-0"
+            className="bg-[#126eda] hover:bg-[#126eda]/90 shrink-0 text-white"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             Adicionar
@@ -210,24 +276,48 @@ export default function Clients() {
                     <TableCell className="text-muted-foreground">{p.email || '—'}</TableCell>
                     <TableCell>
                       <Badge
-                        variant="outline"
-                        className="text-[#126eda] border-[#126eda]/30 bg-[#126eda]/5 uppercase text-[10px] font-bold tracking-wider"
+                        variant={p.plan === 'canceled' ? 'destructive' : 'outline'}
+                        className={cn(
+                          'uppercase text-[10px] font-bold tracking-wider',
+                          p.plan === 'premium' &&
+                            'text-[#126eda] border-[#126eda]/30 bg-[#126eda]/5',
+                          p.plan === 'basic' &&
+                            'text-muted-foreground border-muted-foreground/30 bg-muted/50',
+                        )}
                       >
-                        {p.plan || 'basic'}
+                        {p.plan === 'canceled' ? 'Cancelado' : p.plan || 'basic'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
                       {p.updated_at ? new Date(p.updated_at).toLocaleDateString('pt-BR') : 'N/A'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        onClick={() => setUserToDelete(p.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Abrir menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem
+                            onClick={() => openEditDialog(p)}
+                            className="cursor-pointer"
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Editar Cliente
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setUserToDelete(p.id)}
+                            className="text-destructive focus:bg-destructive focus:text-destructive-foreground cursor-pointer"
+                          >
+                            <UserMinus className="mr-2 h-4 w-4" />
+                            Remover Acesso
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -295,7 +385,7 @@ export default function Clients() {
               </Button>
               <Button
                 type="submit"
-                className="bg-[#126eda] hover:bg-[#126eda]/90"
+                className="bg-[#126eda] hover:bg-[#126eda]/90 text-white"
                 disabled={isAdding}
               >
                 {isAdding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
@@ -306,14 +396,78 @@ export default function Clients() {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Client Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Editar Cliente</DialogTitle>
+            <DialogDescription>Atualize as informações do cliente e seu plano.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditClient} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Nome Completo</Label>
+              <Input
+                id="edit-name"
+                value={editFullName}
+                onChange={(e) => setEditFullName(e.target.value)}
+                placeholder="João Silva"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">E-mail</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                placeholder="joao@exemplo.com"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-plan">Plano de Assinatura</Label>
+              <Select value={editPlan} onValueChange={setEditPlan}>
+                <SelectTrigger id="edit-plan">
+                  <SelectValue placeholder="Selecione um plano" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">Basic</SelectItem>
+                  <SelectItem value="premium">Premium</SelectItem>
+                  <SelectItem value="canceled">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter className="pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditDialogOpen(false)}
+                disabled={isEditing}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="bg-[#126eda] hover:bg-[#126eda]/90 text-white"
+                disabled={isEditing}
+              >
+                {isEditing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Remover Cliente</DialogTitle>
+            <DialogTitle>Remover Acesso do Cliente</DialogTitle>
             <DialogDescription>
               Tem certeza que deseja remover este cliente? Esta ação não pode ser desfeita e todos
-              os dados relacionados (família, transações) serão perdidos.
+              os dados relacionados (família, transações) serão apagados permanentemente do sistema.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="pt-4">
