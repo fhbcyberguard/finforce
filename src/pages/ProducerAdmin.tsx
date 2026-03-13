@@ -14,7 +14,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Users, ShoppingCart, RefreshCw, BarChart, Settings, LifeBuoy, Mail } from 'lucide-react'
+import {
+  Users,
+  ShoppingCart,
+  RefreshCw,
+  BarChart,
+  Settings,
+  LifeBuoy,
+  Mail,
+  Send,
+} from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { MOCK_TICKETS } from '@/lib/mockData'
 
@@ -27,11 +36,19 @@ export default function ProducerAdmin() {
       title: 'Sincronizando com Hotmart...',
       description: 'Atualizando status de assinaturas.',
     })
+
   const handleSaveSMTP = (e: React.FormEvent) => {
     e.preventDefault()
     toast({
       title: 'Configuração SMTP Salva',
       description: 'Notificações D-2 usarão este provedor agora.',
+    })
+  }
+
+  const handleTestConnection = () => {
+    toast({
+      title: 'Testando Conexão SMTP',
+      description: 'E-mail de teste enviado com sucesso para o administrador.',
     })
   }
 
@@ -191,7 +208,17 @@ export default function ProducerAdmin() {
                   <span className="text-sm font-medium">Usar Autenticação TLS/SSL</span>
                   <Switch checked={smtpTLS} onCheckedChange={setSmtpTLS} />
                 </div>
-                <Button type="submit">Salvar Configurações</Button>
+                <div className="flex gap-4 pt-4 border-t border-border/50">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                    onClick={handleTestConnection}
+                  >
+                    <Send className="w-4 h-4" /> Testar Conexão
+                  </Button>
+                  <Button type="submit">Salvar Configurações</Button>
+                </div>
               </form>
             </CardContent>
           </Card>

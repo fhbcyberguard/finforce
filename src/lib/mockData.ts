@@ -157,6 +157,25 @@ export const MOCK_CATEGORIES = {
   Renda: ['Principal', 'Extra', 'Dividendos'],
 }
 
+export const MOCK_GOALS = [
+  {
+    id: '1',
+    name: 'Reserva de Emergência',
+    targetValue: 50000,
+    currentValue: 32000,
+    targetDate: '2025-12-01',
+    monthlyDeposit: 1500,
+  },
+  {
+    id: '2',
+    name: 'Viagem para Europa',
+    targetValue: 30000,
+    currentValue: 5000,
+    targetDate: '2026-07-15',
+    monthlyDeposit: 1000,
+  },
+]
+
 export const MOCK_ACCESS_LOGS = [
   {
     id: 1,

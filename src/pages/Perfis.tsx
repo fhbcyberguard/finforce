@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Archive, Edit2, Plus } from 'lucide-react'
+import { Archive, Edit2, Plus, Trash2, AlertTriangle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -49,6 +49,10 @@ export default function Perfis() {
   const [profiles, setProfiles] = useState<Profile[]>(MOCK_PROFILES || [])
   const [archiveId, setArchiveId] = useState<string | null>(null)
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null)
+  const [deleteDialog, setDeleteDialog] = useState<string | null>(null) // Phase 1: Impulse trigger
+  const [confirmDeleteProfile, setConfirmDeleteProfile] = useState<Profile | null>(null) // Phase 2: Typing confirmation
+  const [confirmName, setConfirmName] = useState('')
+
   const { toast } = useToast()
 
   const form = useForm<ProfileFormValues>({
@@ -69,6 +73,24 @@ export default function Perfis() {
   const handleArchive = () => {
     setProfiles(profiles.filter((p) => p.id !== archiveId))
     toast({ title: 'Perfil arquivado', description: 'Histórico preservado, mas acesso revogado.' })
+  }
+
+  const handleDeletePhase1 = () => {
+    const p = profiles.find((x) => x.id === deleteDialog)
+    if (p) setConfirmDeleteProfile(p)
+  }
+
+  const handleFinalDelete = () => {
+    if (confirmName === confirmDeleteProfile?.name) {
+      setProfiles(profiles.filter((p) => p.id !== confirmDeleteProfile.id))
+      setConfirmDeleteProfile(null)
+      setConfirmName('')
+      toast({
+        title: 'Perfil Excluído',
+        description: 'Os dados do membro foram removidos permanentemente.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const onSubmit = (data: ProfileFormValues) => {
@@ -125,22 +147,30 @@ export default function Perfis() {
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="border-t bg-muted/20 p-3 grid grid-cols-2 gap-2">
+              <CardFooter className="border-t bg-muted/20 p-3 grid grid-cols-3 gap-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-muted-foreground hover:text-foreground"
                   onClick={() => setEditingProfile(profile)}
                 >
-                  <Edit2 className="w-4 h-4 mr-2" /> Editar
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-amber-500"
+                  onClick={() => setArchiveId(profile.id)}
+                >
+                  <Archive className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-muted-foreground hover:text-destructive"
-                  onClick={() => setArchiveId(profile.id)}
+                  onClick={() => setDeleteDialog(profile.id)}
                 >
-                  <Archive className="w-4 h-4 mr-2" /> Arquivar
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </CardFooter>
             </Card>
@@ -148,15 +178,77 @@ export default function Perfis() {
         </div>
       )}
 
+      {/* Archiving Dialog */}
       <ImpulseControlDialog
         open={!!archiveId}
         onOpenChange={(o) => !o && setArchiveId(null)}
         onConfirm={handleArchive}
-        title="Arquivar Perfil da Família?"
+        title="Arquivar Perfil?"
         description="O perfil será movido para Arquivados. Transações anteriores continuarão existindo para cálculos de patrimônio, mas o acesso ao app será revogado."
-        reflectionText="Antes de prosseguir: Qual o real motivo para revogar este acesso? Manter a transparência financeira ajuda no engajamento de toda a família rumo à independência."
+        reflectionText="Ocultar dados não resolve problemas estruturais. Você tem certeza desta ação?"
         confirmText="Arquivar Perfil"
       />
+
+      {/* Deletion Dialog Phase 1 - CBT Trigger */}
+      <ImpulseControlDialog
+        open={!!deleteDialog}
+        onOpenChange={(o) => !o && setDeleteDialog(null)}
+        onConfirm={handleDeletePhase1}
+        title="Atenção: Exclusão Permanente"
+        description="Você está prestes a excluir um membro da sua gestão familiar."
+        reflectionText="Excluir este perfil vai remover todo o histórico financeiro ligado a ele. Esta decisão foi dialogada abertamente?"
+        confirmText="Avançar"
+        destructive={true}
+      />
+
+      {/* Deletion Dialog Phase 2 - Double Confirmation */}
+      <Dialog
+        open={!!confirmDeleteProfile}
+        onOpenChange={(o) => {
+          if (!o) {
+            setConfirmDeleteProfile(null)
+            setConfirmName('')
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5" /> Confirmação de Segurança
+            </DialogTitle>
+            <DialogDescription>
+              Para confirmar a exclusão irreversível, digite o nome exato do perfil:{' '}
+              <strong className="text-foreground">{confirmDeleteProfile?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-2">
+            <Input
+              value={confirmName}
+              onChange={(e) => setConfirmName(e.target.value)}
+              placeholder="Digite o nome..."
+              className="border-destructive/50 focus-visible:ring-destructive"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setConfirmDeleteProfile(null)
+                setConfirmName('')
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={confirmName !== confirmDeleteProfile?.name}
+              onClick={handleFinalDelete}
+            >
+              Confirmar Exclusão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editingProfile} onOpenChange={(o) => !o && setEditingProfile(null)}>
         <DialogContent>

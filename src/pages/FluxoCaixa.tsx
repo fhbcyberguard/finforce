@@ -22,6 +22,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   ArrowDownRight,
   ArrowUpRight,
   Plus,
@@ -30,8 +36,9 @@ import {
   ArrowRightLeft,
   Upload,
   Paperclip,
+  Download,
 } from 'lucide-react'
-import { MOCK_TRANSACTIONS, MOCK_CATEGORIES } from '@/lib/mockData'
+import { MOCK_TRANSACTIONS, MOCK_CATEGORIES, MOCK_PROFILES } from '@/lib/mockData'
 import { useToast } from '@/hooks/use-toast'
 
 export default function FluxoCaixa() {
@@ -60,6 +67,7 @@ export default function FluxoCaixa() {
       account: fd.get('account') as string,
       recurrence: fd.get('recurrence') as string,
       hasAttachment: !!fileName,
+      profile: fd.get('profile') as string,
     }
     setTransactions([newTx, ...transactions])
     setOpenAdd(false)
@@ -89,102 +97,136 @@ export default function FluxoCaixa() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Fluxo de Caixa</h1>
           <p className="text-muted-foreground">Visão detalhada de entradas e saídas.</p>
         </div>
-        <Dialog open={openAdd} onOpenChange={setOpenAdd}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" /> Nova Transação
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Registrar Transação</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAdd} className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Tipo</Label>
-                  <Select
-                    name="type"
-                    required
-                    onValueChange={(v) => setIsPix(v === 'Pix')}
-                    defaultValue="Expense"
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Expense">Despesa</SelectItem>
-                      <SelectItem value="Revenue">Receita</SelectItem>
-                      <SelectItem value="Pix">Pix (Comprovante)</SelectItem>
-                      <SelectItem value="Transfer">Transferência</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Valor (R$)</Label>
-                  <Input name="amount" type="number" step="0.01" placeholder="0.00" required />
-                </div>
-              </div>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download className="w-4 h-4" /> Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => toast({ title: 'Exportando PDF...' })}>
+                Relatório em PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast({ title: 'Exportando CSV...' })}>
+                Dados em CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <Input name="description" placeholder="Ex: Conta de Luz" required />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
-                  <Select name="category" required defaultValue="Moradia > Luz">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[200px]">
-                      {Object.entries(MOCK_CATEGORIES).map(([parent, subs]) => (
-                        <SelectGroup key={parent}>
-                          <SelectLabel>{parent}</SelectLabel>
-                          {subs.map((sub) => (
-                            <SelectItem key={sub} value={`${parent} > ${sub}`}>
-                              {sub}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Conta Origem/Destino</Label>
-                  <Select name="account" required defaultValue="Nubank">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Nubank">Nubank</SelectItem>
-                      <SelectItem value="Itaú">Itaú</SelectItem>
-                      <SelectItem value="Dinheiro">Dinheiro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-2 items-end">
-                <div className="space-y-2">
-                  <Label>Recorrência</Label>
-                  <Select name="recurrence" defaultValue="none">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Uma vez</SelectItem>
-                      <SelectItem value="weekly">Semanal</SelectItem>
-                      <SelectItem value="monthly">Mensal</SelectItem>
-                      <SelectItem value="yearly">Anual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {isPix && (
+          <Dialog open={openAdd} onOpenChange={setOpenAdd}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 w-full sm:w-auto">
+                <Plus className="w-4 h-4" /> Nova Transação
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[550px]">
+              <DialogHeader>
+                <DialogTitle>Registrar Transação</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleAdd} className="space-y-4 mt-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="opacity-0">Anexo</Label>
+                    <Label>Tipo</Label>
+                    <Select
+                      name="type"
+                      required
+                      onValueChange={(v) => setIsPix(v === 'Pix')}
+                      defaultValue="Expense"
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Expense">Despesa</SelectItem>
+                        <SelectItem value="Revenue">Receita</SelectItem>
+                        <SelectItem value="Pix">Pix (Comprovante)</SelectItem>
+                        <SelectItem value="Transfer">Transferência</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valor (R$)</Label>
+                    <Input name="amount" type="number" step="0.01" placeholder="0.00" required />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Descrição</Label>
+                  <Input name="description" placeholder="Ex: Conta de Luz" required />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Categoria</Label>
+                    <Select name="category" required defaultValue="Moradia > Luz">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[200px]">
+                        {Object.entries(MOCK_CATEGORIES).map(([parent, subs]) => (
+                          <SelectGroup key={parent}>
+                            <SelectLabel className="text-primary">{parent}</SelectLabel>
+                            {subs.map((sub) => (
+                              <SelectItem key={sub} value={`${parent} > ${sub}`}>
+                                {parent} &gt; {sub}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Perfil Responsável</Label>
+                    <Select name="profile" required defaultValue={MOCK_PROFILES[0]?.name}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MOCK_PROFILES.map((p) => (
+                          <SelectItem key={p.id} value={p.name}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2 items-end">
+                  <div className="space-y-2">
+                    <Label>Conta Origem/Destino</Label>
+                    <Select name="account" required defaultValue="Nubank">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Nubank">Nubank</SelectItem>
+                        <SelectItem value="Itaú">Itaú</SelectItem>
+                        <SelectItem value="Dinheiro">Dinheiro</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Recorrência</Label>
+                    <Select name="recurrence" defaultValue="none">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Uma vez</SelectItem>
+                        <SelectItem value="weekly">Semanal</SelectItem>
+                        <SelectItem value="monthly">Mensal</SelectItem>
+                        <SelectItem value="yearly">Anual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {isPix && (
+                  <div className="space-y-2 pt-2">
+                    <Label>Anexo do Comprovante</Label>
                     <div className="flex items-center gap-2">
                       <Button
                         type="button"
@@ -203,24 +245,24 @@ export default function FluxoCaixa() {
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         {fileName ? (
-                          <span className="truncate max-w-[100px]">{fileName}</span>
+                          <span className="truncate max-w-[250px]">{fileName}</span>
                         ) : (
-                          'Anexar Recibo'
+                          'Anexar Recibo PDF/Img'
                         )}
                       </Button>
                     </div>
                   </div>
                 )}
-              </div>
 
-              <DialogFooter className="mt-6 pt-4 border-t">
-                <Button type="submit" className="w-full">
-                  Salvar Transação
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter className="mt-6 pt-4 border-t">
+                  <Button type="submit" className="w-full">
+                    Salvar Transação
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="border-border/50">

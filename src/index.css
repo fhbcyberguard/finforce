@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 214 52% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 214 52% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 52% 15%;
+
+    /* Navy (#1E3A5F) & Teal (#2EC4B6) & Green (#59C3C3) & Gold (#F4D03F) Palette */
+    --primary: 174 62% 47%; /* Teal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 52% 24%; /* Navy */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 214 20% 94%;
+    --muted-foreground: 214 20% 40%;
+    --accent: 48 89% 60%; /* Gold */
+    --accent-foreground: 214 52% 15%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 20% 88%;
+    --input: 214 20% 88%;
+    --ring: 174 62% 47%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 214 52% 10%;
+    --foreground: 0 0% 98%;
+    --card: 214 52% 14%;
+    --card-foreground: 0 0% 98%;
+    --popover: 214 52% 14%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 174 62% 47%; /* Teal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 52% 24%; /* Navy */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 214 30% 20%;
+    --muted-foreground: 214 20% 70%;
+    --accent: 48 89% 60%; /* Gold */
+    --accent-foreground: 214 52% 10%;
+    --destructive: 0 62.8% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 30% 25%;
+    --input: 214 30% 25%;
+    --ring: 174 62% 47%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .shadow-subtle {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+}

@@ -71,17 +71,17 @@ export default function AssetList({ className }: { className?: string }) {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Tipo</Label>
+                  <Label>Classe de Ativo</Label>
                   <Select name="category" required defaultValue="Renda Fixa">
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Renda Fixa">Renda Fixa</SelectItem>
+                      <SelectItem value="Renda Fixa">Renda Fixa (CDB/LCI/LCA)</SelectItem>
                       <SelectItem value="Tesouro Direto">Tesouro Direto</SelectItem>
                       <SelectItem value="FIIs">FIIs</SelectItem>
                       <SelectItem value="Ações">Ações</SelectItem>
-                      <SelectItem value="Previdência">Previdência</SelectItem>
+                      <SelectItem value="Previdência Privada">Previdência Privada</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -144,10 +144,10 @@ export default function AssetList({ className }: { className?: string }) {
         open={!!assetToDelete}
         onOpenChange={(o) => !o && setAssetToDelete(null)}
         onConfirm={confirmDelete}
-        title="Excluir Ativo / Meta?"
+        title="Excluir Ativo / Resgate?"
         description="Você está prestes a remover este ativo da sua carteira."
-        reflectionText="Esta meta não é mais importante ou você precisa de um novo plano? Lembre-se do impacto disso no seu ponto de liberdade no longo prazo."
-        confirmText="Sim, Excluir"
+        reflectionText="O resgate antes do prazo pode causar perdas. Tem certeza de que esta movimentação é necessária?"
+        confirmText="Sim, Confirmar Resgate"
       />
     </Card>
   )

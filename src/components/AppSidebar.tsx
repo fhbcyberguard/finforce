@@ -9,6 +9,7 @@ import {
   Waves,
   LogOut,
   ShieldAlert,
+  Target,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -25,6 +26,7 @@ import { useToast } from '@/hooks/use-toast'
 
 const navigation = [
   { title: 'Visão Geral', url: '/dashboard', icon: LayoutDashboard },
+  { title: 'Metas e Sonhos', url: '/metas', icon: Target },
   { title: 'Patrimônio', url: '/patrimonio', icon: PieChart },
   { title: 'Fluxo de Caixa', url: '/fluxo', icon: ArrowRightLeft },
   { title: 'Cartões e Contas', url: '/contas', icon: CreditCard },

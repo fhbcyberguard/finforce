@@ -28,7 +28,13 @@ import {
   LogOut,
   CodeSquare,
 } from 'lucide-react'
-import { MOCK_ACCOUNTS, MOCK_PROFILES, MOCK_TRANSACTIONS } from '@/lib/mockData'
+import {
+  MOCK_ACCOUNTS,
+  MOCK_PROFILES,
+  MOCK_ALERTS,
+  MOCK_GOALS,
+  MOCK_ACCESS_LOGS,
+} from '@/lib/mockData'
 import { SecuritySettings } from '../components/settings/SecuritySettings'
 
 export default function Configuracoes() {
@@ -61,24 +67,36 @@ export default function Configuracoes() {
     avatar: '',
   }
 
-  // Strictly follows the requested JSON structure
+  // Strictly follows the requested JSON structure from AC
   const generateSystemState = () => {
     return JSON.stringify(
       {
         calculo_enriquecimento: { tempo_estimado: '8 anos e 2 meses', valor_alvo: 1000000 },
         status_notificacoes: notificacoesD2 ? 'Ativada (D-2)' : 'Desativada',
-        tema: theme === 'dark' ? 'Dark Mode' : 'Light Mode',
-        api_status: 'Conectado via Open Finance (1/3 inst.)',
+        tema: theme === 'dark' ? 'Dark Mode Disponível' : 'Light Mode',
+        api_status: 'Aguardando autorização Open Finance',
         plano_ativo: 'Pro',
         status_pagamento: 'Ativo',
         dashboard_resumo: {
-          alertas_d2: 3,
-          saude_patrimonio: 'Equilibrado',
-          saldo_consolidado: MOCK_ACCOUNTS.reduce((acc, curr) => acc + curr.balance, 0),
+          alertas_d2: MOCK_ALERTS.filter((a) => a.type === 'urgent').length,
+          saude_patrimonio: '85%',
+          progresso_metas: '42%',
         },
-        contas_cadastradas: MOCK_ACCOUNTS.length,
-        cartoes_cadastrados: 2,
-        transacoes_mes: MOCK_TRANSACTIONS.length,
+        metas: {
+          total_ativas: MOCK_GOALS.length,
+          total_acumulado: MOCK_GOALS.reduce((acc, curr) => acc + curr.currentValue, 0),
+          total_alvo: MOCK_GOALS.reduce((acc, curr) => acc + curr.targetValue, 0),
+        },
+        smtp_configurado: true,
+        refinamento_ux: {
+          gatilhos_ativos: 5,
+          taxa_eficacia: '78%',
+        },
+        seguranca: {
+          mfa_status: 'Ativado',
+          dispositivos_conectados: MOCK_ACCESS_LOGS.length,
+          acesso_admin: 'Permitido',
+        },
       },
       null,
       2,
@@ -232,7 +250,7 @@ export default function Configuracoes() {
             </DialogDescription>
           </DialogHeader>
           <div className="bg-zinc-950 p-4 rounded-md overflow-auto max-h-[400px]">
-            <pre className="text-xs text-green-400 font-mono">{generateSystemState()}</pre>
+            <pre className="text-xs text-emerald-400 font-mono">{generateSystemState()}</pre>
           </div>
         </DialogContent>
       </Dialog>
