@@ -15,8 +15,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 160 84% 39%; /* Emerald 500 #10B981 */
-    --primary-foreground: 0 0% 100%;
+    --primary: 183 100% 50.6%; /* Cyan #03F2FF */
+    --primary-foreground: 222 47% 11%;
 
     --secondary: 238 82% 66%; /* Indigo 500 #6366F1 */
     --secondary-foreground: 0 0% 100%;
@@ -32,20 +32,20 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 160 84% 39%;
+    --ring: 183 100% 50.6%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 183 100% 50.6%;
+    --sidebar-primary-foreground: 222 47% 11%;
     --sidebar-accent: 214 32% 91%;
     --sidebar-accent-foreground: 222 47% 11%;
     --sidebar-border: 214 32% 91%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-ring: 183 100% 50.6%;
 
-    --chart-1: 160 84% 39%; /* Emerald */
+    --chart-1: 183 100% 50.6%; /* Cyan */
     --chart-2: 238 82% 66%; /* Indigo */
     --chart-3: 199 89% 48%; /* Sky */
     --chart-4: 43 96% 56%; /* Amber */
@@ -62,8 +62,8 @@
     --popover: 215 32% 17%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 160 84% 39%; /* Emerald 500 */
-    --primary-foreground: 0 0% 100%;
+    --primary: 183 100% 50.6%; /* Cyan #03F2FF */
+    --primary-foreground: 222 47% 11%;
 
     --secondary: 238 82% 66%; /* Indigo 500 */
     --secondary-foreground: 0 0% 100%;
@@ -79,18 +79,18 @@
 
     --border: 215 28% 22%;
     --input: 215 28% 22%;
-    --ring: 160 84% 39%;
+    --ring: 183 100% 50.6%;
 
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 183 100% 50.6%;
+    --sidebar-primary-foreground: 222 47% 11%;
     --sidebar-accent: 215 28% 22%;
     --sidebar-accent-foreground: 210 40% 98%;
     --sidebar-border: 215 28% 22%;
-    --sidebar-ring: 160 84% 39%;
+    --sidebar-ring: 183 100% 50.6%;
 
-    --chart-1: 160 84% 39%;
+    --chart-1: 183 100% 50.6%;
     --chart-2: 238 82% 66%;
     --chart-3: 199 89% 48%;
     --chart-4: 43 96% 56%;

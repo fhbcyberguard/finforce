@@ -11,9 +11,9 @@ import {
 import useAppStore from '@/stores/useAppStore'
 import { ChartColorEditor } from './ChartColorEditor'
 
-// High Contrast Palette: Teal, Green, Gold
+// High Contrast Palette: Primary, Light Teal/Green, Gold
 const COLORS = [
-  '#2EC4B6', // Teal
+  '#03F2FF', // Primary
   '#59C3C3', // Light Teal/Green
   '#F4D03F', // Gold
   '#E74C3C', // Red

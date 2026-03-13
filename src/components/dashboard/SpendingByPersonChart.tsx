@@ -10,7 +10,7 @@ import {
 import useAppStore from '@/stores/useAppStore'
 import { ChartColorEditor } from './ChartColorEditor'
 
-const COLORS = ['#2EC4B6', '#59C3C3', '#F4D03F', '#E74C3C', '#8E44AD', '#3498DB']
+const COLORS = ['#03F2FF', '#59C3C3', '#F4D03F', '#E74C3C', '#8E44AD', '#3498DB']
 
 export function SpendingByPersonChart() {
   const { transactions, timeframe, categoryColors, currentContext, selectedYear } = useAppStore()

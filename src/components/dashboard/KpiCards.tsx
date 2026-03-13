@@ -147,9 +147,9 @@ export default function KpiCards() {
                 <span
                   className={
                     kpi.trend.startsWith('+') && !kpi.trendUpIsBad
-                      ? 'text-emerald-500'
+                      ? 'text-primary'
                       : kpi.trend.startsWith('-') && kpi.trendUpIsBad
-                        ? 'text-emerald-500'
+                        ? 'text-primary'
                         : 'text-rose-500'
                   }
                 >

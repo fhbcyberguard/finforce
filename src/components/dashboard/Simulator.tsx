@@ -121,7 +121,7 @@ export default function Simulator() {
             </p>
           </div>
           <div
-            className={`text-2xl md:text-3xl font-bold text-left sm:text-right ${hasReached ? 'text-emerald-500' : isStalled ? 'text-muted-foreground' : 'text-primary'}`}
+            className={`text-2xl md:text-3xl font-bold text-left sm:text-right ${hasReached ? 'text-primary' : isStalled ? 'text-muted-foreground' : 'text-primary'}`}
           >
             {freedomText}
           </div>

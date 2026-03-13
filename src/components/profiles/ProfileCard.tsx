@@ -66,7 +66,7 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
             variant="ghost"
             size="sm"
             onClick={handleUnarchive}
-            className="text-muted-foreground hover:text-emerald-500"
+            className="text-muted-foreground hover:text-primary"
             title="Desarquivar"
           >
             <ArchiveRestore className="w-4 h-4 mr-2" /> Restaurar
