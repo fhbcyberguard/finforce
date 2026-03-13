@@ -32,7 +32,10 @@ import useAppStore, { Profile } from '@/stores/useAppStore'
 import { useToast } from '@/hooks/use-toast'
 
 const schema = z.object({
-  name: z.string().min(1, 'O nome é obrigatório'),
+  name: z
+    .string()
+    .min(1, 'O nome é obrigatório')
+    .regex(/^[^0-9]*$/, 'O nome não deve conter números'),
   role: z.string().min(1, 'O papel é obrigatório'),
   limit: z.coerce.number().min(0, 'O limite não pode ser negativo'),
   avatar: z.string().url('Deve ser uma URL válida').optional().or(z.literal('')),

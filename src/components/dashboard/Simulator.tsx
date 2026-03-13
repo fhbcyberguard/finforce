@@ -1,19 +1,28 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Lightbulb, Clock } from 'lucide-react'
+import { Lightbulb, Clock, Save } from 'lucide-react'
 import { Typewriter } from '../Typewriter'
 import SimulatorControls from './SimulatorControls'
 import SimulatorChart from './SimulatorChart'
 import { Button } from '@/components/ui/button'
 import useAppStore from '@/stores/useAppStore'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Simulator() {
-  const [aporte, setAporte] = useState(2000)
-  const [retorno, setRetorno] = useState(8.5)
-  const [idade, setIdade] = useState(55)
-  const [rendaDesejada, setRendaDesejada] = useState(10000)
+  const { assets, simulatorSettings, setSimulatorSettings } = useAppStore()
+  const { toast } = useToast()
 
-  const { assets } = useAppStore()
+  const [aporte, setAporte] = useState(simulatorSettings.aporte)
+  const [retorno, setRetorno] = useState(simulatorSettings.retorno)
+  const [idade, setIdade] = useState(simulatorSettings.idade)
+  const [rendaDesejada, setRendaDesejada] = useState(simulatorSettings.rendaDesejada)
+
+  useEffect(() => {
+    setAporte(simulatorSettings.aporte)
+    setRetorno(simulatorSettings.retorno)
+    setIdade(simulatorSettings.idade)
+    setRendaDesejada(simulatorSettings.rendaDesejada)
+  }, [simulatorSettings])
 
   const patrimony = useMemo(() => assets.reduce((sum, a) => sum + a.value, 0), [assets])
 
@@ -42,6 +51,14 @@ export default function Simulator() {
     }
   }, [aporte, retorno, rendaDesejada, patrimony])
 
+  const handleSaveScenario = () => {
+    setSimulatorSettings({ aporte, retorno, idade, rendaDesejada })
+    toast({
+      title: 'Cenário Salvo',
+      description: 'Suas projeções de independência financeira foram atualizadas e persisitdas.',
+    })
+  }
+
   // CBT Question Generator
   const getInsight = () => {
     if (idade < 40)
@@ -65,7 +82,8 @@ export default function Simulator() {
               Projete o cruzamento entre seu patrimônio e custo de vida desejado.
             </CardDescription>
           </div>
-          <Button variant="outline" size="sm" onClick={() => {}} className="hidden md:flex">
+          <Button variant="outline" size="sm" onClick={handleSaveScenario} className="gap-2">
+            <Save className="w-4 h-4" />
             Salvar Cenário
           </Button>
         </div>

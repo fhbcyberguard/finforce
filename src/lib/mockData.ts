@@ -1,23 +1,24 @@
 export const MOCK_ALERTS = [
   {
-    id: 1,
+    id: '1',
     title: 'Fatura Cartão Black',
     amount: 3450.0,
-    dueDate: new Date(Date.now() + 86400000 * 2), // D-2 Alert
+    dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
     type: 'urgent',
+    cardId: '1',
   },
   {
-    id: 2,
+    id: '2',
     title: 'Conta de Luz',
     amount: 185.4,
-    dueDate: new Date(Date.now() + 86400000 * 2), // D-2 Alert
+    dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
     type: 'urgent',
   },
   {
-    id: 3,
+    id: '3',
     title: 'Condomínio',
     amount: 850.0,
-    dueDate: new Date(Date.now() + 86400000 * 5),
+    dueDate: new Date(Date.now() + 86400000 * 5).toISOString(),
     type: 'normal',
   },
 ]

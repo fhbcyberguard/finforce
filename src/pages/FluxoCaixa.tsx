@@ -45,7 +45,7 @@ import {
 } from 'lucide-react'
 import { MOCK_CATEGORIES } from '@/lib/mockData'
 import { useToast } from '@/hooks/use-toast'
-import { CsvImportDialog } from '@/components/fluxo/CsvImportDialog'
+import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 
 export default function FluxoCaixa() {
@@ -53,6 +53,7 @@ export default function FluxoCaixa() {
     useAppStore()
   const [openAdd, setOpenAdd] = useState(false)
   const [openImport, setOpenImport] = useState(false)
+  const [importType, setImportType] = useState<'csv' | 'ofx' | null>(null)
   const [isPix, setIsPix] = useState(false)
   const [fileName, setFileName] = useState('')
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
@@ -190,13 +191,31 @@ export default function FluxoCaixa() {
           </ToggleGroup>
 
           <div className="flex gap-2 w-full sm:w-auto flex-wrap justify-end">
-            <Button
-              variant="outline"
-              className="gap-2 flex-1 sm:flex-none"
-              onClick={() => setOpenImport(true)}
-            >
-              <Upload className="w-4 h-4" /> Importar
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
+                  <Upload className="w-4 h-4" /> Importar
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setImportType('ofx')
+                    setOpenImport(true)
+                  }}
+                >
+                  Importar OFX
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setImportType('csv')
+                    setOpenImport(true)
+                  }}
+                >
+                  Importar CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -496,7 +515,7 @@ export default function FluxoCaixa() {
         </CardContent>
       </Card>
 
-      <CsvImportDialog open={openImport} onOpenChange={setOpenImport} />
+      <DataImportDialog open={openImport} onOpenChange={setOpenImport} importType={importType} />
 
       <ImpulseControlDialog
         open={!!pendingLargeExpense}

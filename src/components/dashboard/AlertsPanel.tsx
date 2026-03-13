@@ -1,12 +1,13 @@
-import { MOCK_ALERTS } from '@/lib/mockData'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AlertCircle, Calendar } from 'lucide-react'
+import useAppStore from '@/stores/useAppStore'
 
 export default function AlertsPanel() {
-  const alerts = MOCK_ALERTS || []
+  const { alerts } = useAppStore()
 
-  const formatDays = (date: Date) => {
+  const formatDays = (dateStr: string) => {
+    const date = new Date(dateStr)
     const diffTime = date.getTime() - Date.now()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     if (diffDays <= 0) return 'Vence hoje'
@@ -24,7 +25,7 @@ export default function AlertsPanel() {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y divide-border/40">
+        <div className="divide-y divide-border/40 max-h-[300px] overflow-y-auto">
           {alerts.length === 0 ? (
             <div className="p-6 text-center text-sm text-muted-foreground">
               Nenhum alerta pendente. Tudo em dia!
