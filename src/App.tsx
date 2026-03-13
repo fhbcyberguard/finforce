@@ -10,15 +10,17 @@ import Perfis from './pages/Perfis'
 import FluxoCaixa from './pages/FluxoCaixa'
 import Configuracoes from './pages/Configuracoes'
 import NotFound from './pages/NotFound'
+import Login from './pages/Login'
 import { ThemeProvider } from './components/ThemeProvider'
 
 const App = () => (
-  <BrowserRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+  <BrowserRouter>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Index />} />
             <Route path="/patrimonio" element={<Patrimonio />} />

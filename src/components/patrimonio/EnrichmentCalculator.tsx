@@ -1,18 +1,34 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { Calculator } from 'lucide-react'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 
 export default function EnrichmentCalculator() {
   return (
-    <Card className="border-dashed border-2 bg-muted/10">
-      <CardContent className="flex flex-col items-center justify-center p-12 text-center h-[400px]">
-        <div className="bg-primary/10 p-4 rounded-full mb-4">
-          <Calculator className="w-8 h-8 text-primary" />
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Calculadora de Enriquecimento</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Patrimônio Inicial (R$)</Label>
+            <Input type="number" defaultValue={100000} />
+          </div>
+          <div className="space-y-2">
+            <Label>Aporte Mensal (R$)</Label>
+            <Input type="number" defaultValue={2000} />
+          </div>
+          <div className="space-y-2">
+            <Label>Taxa Anual (%)</Label>
+            <Input type="number" defaultValue={8.5} />
+          </div>
+          <div className="space-y-2">
+            <Label>Período (Anos)</Label>
+            <Input type="number" defaultValue={20} />
+          </div>
         </div>
-        <h3 className="text-xl font-medium mb-2">Calculadora de Enriquecimento</h3>
-        <p className="text-muted-foreground max-w-md">
-          Em breve você poderá projetar cenários avançados de juros compostos com aportes dinâmicos
-          e diferentes indexadores.
-        </p>
+        <Button className="w-full mt-4">Calcular Projeção</Button>
       </CardContent>
     </Card>
   )

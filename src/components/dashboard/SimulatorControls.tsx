@@ -3,11 +3,11 @@ import { Slider } from '@/components/ui/slider'
 
 interface SimulatorControlsProps {
   aporte: number
-  setAporte: (val: number) => void
+  setAporte: (v: number) => void
   retorno: number
-  setRetorno: (val: number) => void
+  setRetorno: (v: number) => void
   idade: number
-  setIdade: (val: number) => void
+  setIdade: (v: number) => void
 }
 
 export default function SimulatorControls({
@@ -19,61 +19,39 @@ export default function SimulatorControls({
   setIdade,
 }: SimulatorControlsProps) {
   return (
-    <div className="space-y-8">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="aporte" className="text-base">
-            Aporte Mensal
-          </Label>
-          <span className="text-sm font-mono font-medium text-primary">
-            R$ {aporte.toLocaleString('pt-BR')}
-          </span>
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <Label>Aporte Mensal</Label>
+          <span className="font-mono text-sm font-medium">R$ {aporte.toLocaleString('pt-BR')}</span>
         </div>
         <Slider
-          id="aporte"
+          value={[aporte]}
           min={100}
           max={20000}
           step={100}
-          value={[aporte]}
-          onValueChange={(val) => setAporte(val[0])}
-          className="cursor-grab active:cursor-grabbing"
+          onValueChange={([v]) => setAporte(v)}
         />
       </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="retorno" className="text-base">
-            Retorno Anual Estimado
-          </Label>
-          <span className="text-sm font-mono font-medium text-primary">{retorno.toFixed(1)}%</span>
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <Label>Taxa Anual Esperada</Label>
+          <span className="font-mono text-sm font-medium">{retorno}% a.a.</span>
         </div>
         <Slider
-          id="retorno"
-          min={2}
-          max={15}
-          step={0.1}
           value={[retorno]}
-          onValueChange={(val) => setRetorno(val[0])}
-          className="cursor-grab active:cursor-grabbing"
+          min={1}
+          max={15}
+          step={0.5}
+          onValueChange={([v]) => setRetorno(v)}
         />
       </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="idade" className="text-base">
-            Idade Alvo da Independência
-          </Label>
-          <span className="text-sm font-mono font-medium text-primary">{idade} anos</span>
+      <div className="space-y-3">
+        <div className="flex justify-between">
+          <Label>Idade de Aposentadoria</Label>
+          <span className="font-mono text-sm font-medium">{idade} anos</span>
         </div>
-        <Slider
-          id="idade"
-          min={30}
-          max={80}
-          step={1}
-          value={[idade]}
-          onValueChange={(val) => setIdade(val[0])}
-          className="cursor-grab active:cursor-grabbing"
-        />
+        <Slider value={[idade]} min={30} max={80} step={1} onValueChange={([v]) => setIdade(v)} />
       </div>
     </div>
   )

@@ -4,21 +4,18 @@ export function Typewriter({ text, speed = 50 }: { text: string; speed?: number 
   const [displayedText, setDisplayedText] = useState('')
 
   useEffect(() => {
-    if (!text) return
-
-    let i = 0
     setDisplayedText('')
-
-    const timeout = setTimeout(() => {
-      const interval = setInterval(() => {
-        setDisplayedText(text.substring(0, i + 1))
+    let i = 0
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        setDisplayedText((prev) => prev + text.charAt(i))
         i++
-        if (i >= text.length) clearInterval(interval)
-      }, speed)
-      return () => clearInterval(interval)
-    }, 100)
+      } else {
+        clearInterval(timer)
+      }
+    }, speed)
 
-    return () => clearTimeout(timeout)
+    return () => clearInterval(timer)
   }, [text, speed])
 
   return <span>{displayedText}</span>

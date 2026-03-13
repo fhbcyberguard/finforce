@@ -40,7 +40,7 @@ export function AppSidebar() {
       title: 'Sessão encerrada',
       description: 'Você saiu da sua conta com sucesso.',
     })
-    navigate('/', { replace: true })
+    navigate('/login', { replace: true })
   }
 
   return (
