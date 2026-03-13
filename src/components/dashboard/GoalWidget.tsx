@@ -1,9 +1,10 @@
-import { Target, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
 import useAppStore from '@/stores/useAppStore'
+import { DynamicIcon } from '@/components/ui/dynamic-icon'
 
 export function GoalWidget() {
   const { goals } = useAppStore()
@@ -13,7 +14,7 @@ export function GoalWidget() {
       <CardHeader className="pb-3 border-b border-border/40">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Target className="w-5 h-5 text-primary" />
+            <DynamicIcon name="Target" className="w-5 h-5 text-primary" />
             Metas e Sonhos
           </CardTitle>
           <Button variant="ghost" size="sm" asChild className="h-8 text-xs gap-1">
@@ -29,7 +30,10 @@ export function GoalWidget() {
           return (
             <div key={goal.id} className="space-y-2">
               <div className="flex justify-between items-center text-sm">
-                <span className="font-medium truncate max-w-[150px]">{goal.name}</span>
+                <span className="font-medium truncate max-w-[150px] flex items-center gap-2">
+                  <DynamicIcon name={goal.icon || 'Target'} className="w-4 h-4 text-primary" />
+                  {goal.name}
+                </span>
                 <span className="font-bold text-primary">
                   R$ {goal.currentValue.toLocaleString('pt-BR')}
                 </span>

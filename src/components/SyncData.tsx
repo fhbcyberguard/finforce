@@ -1,37 +1,47 @@
 import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import useAppStore from '@/stores/useAppStore'
 import { useAuth } from '@/hooks/use-auth'
+import useAppStore, { Category } from '@/stores/useAppStore'
 
 export function SyncData() {
-  const { setProfilesFromDB, setTransactionsFromDB, setGoalsFromDB } = useAppStore()
-  const { user, profile } = useAuth()
+  const { user } = useAuth()
+  const { setProfilesFromDB, setTransactionsFromDB, setGoalsFromDB, setCategoriesFromDB } =
+    useAppStore()
 
   useEffect(() => {
-    if (!user || !profile) return
+    if (!user) return
 
-    // Sync logged-in user profile natively, overriding any mocks
-    setProfilesFromDB([
-      {
-        id: profile.id,
-        name: profile.full_name || user.email?.split('@')[0] || 'Usuário',
-        role: 'Admin',
-        limit: 5000,
-        context: 'personal',
-        // Avatar is omitted to trigger the initials fallback
-      },
-    ])
+    const fetchData = async () => {
+      // 1. Fetch profiles
+      const { data: familyMembers } = await supabase.from('members').select(`
+          id,
+          name,
+          email,
+          role,
+          profile:profiles(id, full_name, avatar_url)
+        `)
 
-    // Fetch user transactions
-    const fetchTransactions = async () => {
-      const { data, error } = await supabase
+      if (familyMembers) {
+        const mappedProfiles = familyMembers.map((m: any) => ({
+          id: m.id,
+          name: m.name,
+          email: m.email || m.profile?.email,
+          role: m.role,
+          avatar: m.profile?.avatar_url || null,
+          profile_id: m.profile?.id || null,
+          limit: 0,
+        }))
+        setProfilesFromDB(mappedProfiles)
+      }
+
+      // 2. Fetch transactions
+      const { data: txs } = await supabase
         .from('transactions')
         .select('*')
-        .eq('user_id', user.id)
         .order('date', { ascending: false })
 
-      if (!error && data) {
-        const formatted = data.map((t: any) => ({
+      if (txs) {
+        const mappedTxs = txs.map((t: any) => ({
           id: t.id,
           date: new Date(t.date).toISOString().split('T')[0],
           description: t.description,
@@ -42,40 +52,73 @@ export function SyncData() {
           cardId: t.card_id || undefined,
           goalId: t.goal_id || undefined,
           recurrence: t.recurrence || 'none',
-          hasAttachment: t.has_attachment,
+          hasAttachment: t.has_attachment || false,
           profile: t.profile || '',
           expenseType: t.expense_type as any,
-          context: 'personal',
         }))
-        setTransactionsFromDB(formatted)
+        setTransactionsFromDB(mappedTxs)
       }
-    }
 
-    // Fetch user goals
-    const fetchGoals = async () => {
-      const { data, error } = await supabase
+      // 3. Fetch goals
+      const { data: dbGoals } = await supabase
         .from('goals')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-      if (!error && data) {
-        const formatted = data.map((g: any) => ({
+      if (dbGoals) {
+        const mappedGoals = dbGoals.map((g: any) => ({
           id: g.id,
           name: g.name,
           targetValue: Number(g.target_value),
           currentValue: Number(g.current_value),
-          targetDate: g.target_date || new Date().toISOString().split('T')[0],
           monthlyDeposit: Number(g.monthly_contribution),
-          context: 'personal' as const,
+          targetDate: g.target_date || new Date().toISOString().split('T')[0],
+          icon: g.icon || 'Target',
         }))
-        setGoalsFromDB(formatted)
+        setGoalsFromDB(mappedGoals)
+      }
+
+      // 4. Fetch categories
+      const { data: dbCats } = await supabase
+        .from('categories')
+        .select('*')
+        .order('created_at', { ascending: true })
+
+      if (dbCats && dbCats.length > 0) {
+        const mappedCats: Category[] = dbCats.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          icon: c.icon || 'CircleDashed',
+        }))
+        setCategoriesFromDB(mappedCats)
       }
     }
 
-    fetchTransactions()
-    fetchGoals()
-  }, [user, profile, setProfilesFromDB, setTransactionsFromDB, setGoalsFromDB])
+    fetchData()
+
+    // Subscriptions
+    const txSub = supabase
+      .channel('public:transactions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, fetchData)
+      .subscribe()
+
+    const goalsSub = supabase
+      .channel('public:goals')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, fetchData)
+      .subscribe()
+
+    const catSub = supabase
+      .channel('public:categories')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, fetchData)
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(txSub)
+      supabase.removeChannel(goalsSub)
+      supabase.removeChannel(catSub)
+    }
+  }, [user, setProfilesFromDB, setTransactionsFromDB, setGoalsFromDB, setCategoriesFromDB])
 
   return null
 }

@@ -8,6 +8,25 @@ import {
 } from '@/lib/mockData'
 
 export type ContextType = 'personal' | 'business'
+
+export type Category = {
+  id: string
+  name: string
+  type: string
+  icon: string
+  context?: ContextType
+}
+
+export const DEFAULT_CATEGORIES: Category[] = [
+  { id: 'def-1', name: 'Renda Principal', type: 'Revenue', icon: 'Wallet' },
+  { id: 'def-2', name: 'Alimentação', type: 'Expense', icon: 'Utensils' },
+  { id: 'def-3', name: 'Moradia', type: 'Expense', icon: 'Home' },
+  { id: 'def-4', name: 'Transporte', type: 'Expense', icon: 'Car' },
+  { id: 'def-5', name: 'Saúde', type: 'Expense', icon: 'HeartPulse' },
+  { id: 'def-6', name: 'Lazer', type: 'Expense', icon: 'Tv' },
+  { id: 'def-7', name: 'Outros', type: 'Expense', icon: 'CircleDashed' },
+]
+
 export type Profile = {
   id: string
   name: string
@@ -36,6 +55,7 @@ export type Goal = {
   currentValue: number
   targetDate: string
   monthlyDeposit: number
+  icon?: string
   context?: ContextType
 }
 export type Alert = (typeof MOCK_ALERTS)[0] & { context?: ContextType }
@@ -71,6 +91,7 @@ interface AppState {
   goals: Goal[]
   transactions: Transaction[]
   alerts: Alert[]
+  categories: Category[]
   logoUrl: string
   searchQuery: string
   timeframe: 'monthly' | 'annual'
@@ -105,6 +126,7 @@ const getInitialState = (): AppState => ({
   goals: loadData('finflow_goals', MOCK_GOALS),
   transactions: loadData('finflow_transactions', [] as Transaction[]),
   alerts: loadData('finflow_alerts', MOCK_ALERTS),
+  categories: loadData('finflow_categories', []),
   simulatorSettings: loadData('finflow_simulator', defaultSimulator),
   logoUrl: localStorage.getItem('finflow_logo') || '',
   searchQuery: '',
@@ -134,6 +156,8 @@ function updateState(partial: Partial<AppState>) {
   if (partial.transactions)
     localStorage.setItem('finflow_transactions', JSON.stringify(partial.transactions))
   if (partial.alerts) localStorage.setItem('finflow_alerts', JSON.stringify(partial.alerts))
+  if (partial.categories)
+    localStorage.setItem('finflow_categories', JSON.stringify(partial.categories))
   if (partial.simulatorSettings)
     localStorage.setItem('finflow_simulator', JSON.stringify(partial.simulatorSettings))
   if (partial.logoUrl !== undefined) localStorage.setItem('finflow_logo', partial.logoUrl)
@@ -189,6 +213,10 @@ export default function useAppStore() {
     () => store.alerts.filter((a) => (a.context || 'personal') === ctx),
     [store.alerts, ctx],
   )
+  const categories = useMemo(
+    () => store.categories.filter((a) => (a.context || 'personal') === ctx),
+    [store.categories, ctx],
+  )
 
   const setProfiles = useCallback(
     (p: Profile[]) => updateState({ profiles: mergeCtx(state.profiles, p, ctx) }),
@@ -200,6 +228,7 @@ export default function useAppStore() {
     [],
   )
   const setGoalsFromDB = useCallback((g: Goal[]) => updateState({ goals: g }), [])
+  const setCategoriesFromDB = useCallback((c: Category[]) => updateState({ categories: c }), [])
   const setAccounts = useCallback(
     (a: Account[]) => updateState({ accounts: mergeCtx(state.accounts, a, ctx) }),
     [ctx],
@@ -222,6 +251,10 @@ export default function useAppStore() {
   )
   const setAlerts = useCallback(
     (al: Alert[]) => updateState({ alerts: mergeCtx(state.alerts, al, ctx) }),
+    [ctx],
+  )
+  const setCategories = useCallback(
+    (c: Category[]) => updateState({ categories: mergeCtx(state.categories, c, ctx) }),
     [ctx],
   )
 
@@ -254,16 +287,19 @@ export default function useAppStore() {
       goals,
       transactions,
       alerts,
+      categories,
       setProfiles,
       setProfilesFromDB,
       setTransactionsFromDB,
       setGoalsFromDB,
+      setCategoriesFromDB,
       setAccounts,
       setCreditCards,
       setAssets,
       setGoals,
       setTransactions,
       setAlerts,
+      setCategories,
       setSimulatorSettings,
       setLogoUrl,
       setSearchQuery,
@@ -282,16 +318,19 @@ export default function useAppStore() {
       goals,
       transactions,
       alerts,
+      categories,
       setProfiles,
       setProfilesFromDB,
       setTransactionsFromDB,
       setGoalsFromDB,
+      setCategoriesFromDB,
       setAccounts,
       setCreditCards,
       setAssets,
       setGoals,
       setTransactions,
       setAlerts,
+      setCategories,
       setSimulatorSettings,
       setLogoUrl,
       setSearchQuery,

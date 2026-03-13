@@ -1,10 +1,11 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Palette, Bell, SlidersHorizontal, Shield, User } from 'lucide-react'
+import { Palette, Bell, SlidersHorizontal, Shield, User, Tags } from 'lucide-react'
 import { AccountTab } from '@/components/settings/AccountTab'
 import { AppearanceTab } from '@/components/settings/AppearanceTab'
 import { NotificationsTab } from '@/components/settings/NotificationsTab'
 import { SystemTab } from '@/components/settings/SystemTab'
 import { SecuritySettings } from '@/components/settings/SecuritySettings'
+import { CategoriesTab } from '@/components/settings/CategoriesTab'
 
 export default function Configuracoes() {
   return (
@@ -22,6 +23,9 @@ export default function Configuracoes() {
           <TabsTrigger value="aparencia" className="flex items-center gap-2">
             <Palette className="w-4 h-4" /> Aparência
           </TabsTrigger>
+          <TabsTrigger value="categorias" className="flex items-center gap-2">
+            <Tags className="w-4 h-4" /> Categorias
+          </TabsTrigger>
           <TabsTrigger value="notificacoes" className="flex items-center gap-2">
             <Bell className="w-4 h-4" /> Alertas
           </TabsTrigger>
@@ -38,6 +42,9 @@ export default function Configuracoes() {
         </TabsContent>
         <TabsContent value="aparencia">
           <AppearanceTab />
+        </TabsContent>
+        <TabsContent value="categorias">
+          <CategoriesTab />
         </TabsContent>
         <TabsContent value="notificacoes">
           <NotificationsTab />

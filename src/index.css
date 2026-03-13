@@ -11,8 +11,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 214 52% 15%;
 
-    --primary: 183 100% 50.6%; /* #03f2ff */
-    --primary-foreground: 222 47% 11%; /* Dark text for contrast */
+    --primary: 212 85% 46%; /* #126eda */
+    --primary-foreground: 0 0% 100%;
     --secondary: 214 52% 24%; /* Navy */
     --secondary-foreground: 0 0% 100%;
     --muted: 214 20% 94%;
@@ -23,7 +23,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 214 20% 88%;
     --input: 214 20% 88%;
-    --ring: 183 100% 50.6%;
+    --ring: 212 85% 46%;
     --radius: 0.5rem;
   }
 

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import useAppStore, { Transaction } from '@/stores/useAppStore'
+import useAppStore, { Transaction, DEFAULT_CATEGORIES } from '@/stores/useAppStore'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
@@ -50,19 +50,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
-
-const REVENUE_CATEGORIES = {
-  Renda: ['Principal', 'Extra', 'Dividendos', 'Rendimentos', 'Serviços'],
-}
-
-const EXPENSE_CATEGORIES = {
-  Alimentação: ['Supermercado', 'Delivery', 'Restaurante'],
-  Moradia: ['Aluguel', 'Luz', 'Água', 'Internet'],
-  Transporte: ['Combustível', 'Aplicativo', 'Manutenção'],
-  Saúde: ['Farmácia', 'Plano de Saúde', 'Consultas'],
-  Lazer: ['Eventos', 'Assinaturas', 'Viagens'],
-  Outros: ['Cartão de Crédito', 'Importado', 'Diversos'],
-}
+import { DynamicIcon } from '@/components/ui/dynamic-icon'
 
 export default function FluxoCaixa() {
   const { user } = useAuth()
@@ -74,6 +62,7 @@ export default function FluxoCaixa() {
     creditCards,
     goals,
     setGoals,
+    categories,
     searchQuery,
     timeframe,
     setTimeframe,
@@ -97,6 +86,9 @@ export default function FluxoCaixa() {
   const [pendingLargeExpense, setPendingLargeExpense] = useState<Transaction | null>(null)
 
   const { toast } = useToast()
+
+  const allCategories = categories.length > 0 ? categories : DEFAULT_CATEGORIES
+  const availableCategories = allCategories.filter((c) => c.type === formType)
 
   const resetForm = () => {
     setEditingTx(null)
@@ -299,8 +291,8 @@ export default function FluxoCaixa() {
     setOpenAdd(true)
   }
 
-  const getIcon = (type: string, isGain: boolean) => {
-    if (type === 'Aporte') return <Target className="w-4 h-4 text-[#03f2ff]" />
+  const getIconForType = (type: string, isGain: boolean) => {
+    if (type === 'Aporte') return <Target className="w-4 h-4 text-primary" />
     if (isGain) return <ArrowUpRight className="w-4 h-4 text-emerald-500" />
     switch (type) {
       case 'Expense':
@@ -308,7 +300,7 @@ export default function FluxoCaixa() {
       case 'Pix':
         return <Receipt className="w-4 h-4 text-rose-500" />
       case 'Transfer':
-        return <ArrowRightLeft className="w-4 h-4 text-blue-500" />
+        return <ArrowRightLeft className="w-4 h-4 text-primary" />
       default:
         return <ArrowDownRight className="w-4 h-4 text-rose-500" />
     }
@@ -349,9 +341,7 @@ export default function FluxoCaixa() {
     <div className="space-y-6 animate-slide-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#03f2ff]">
-            Transações
-          </h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">Transações</h1>
           <p className="text-muted-foreground">Visão detalhada de entradas e saídas.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-wrap items-start sm:items-center">
@@ -410,7 +400,7 @@ export default function FluxoCaixa() {
             </DropdownMenu>
 
             <Button
-              className="gap-2 w-full sm:w-auto bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
+              className="gap-2 w-full sm:w-auto"
               onClick={() => {
                 resetForm()
                 setOpenAdd(true)
@@ -508,7 +498,10 @@ export default function FluxoCaixa() {
                           ) : (
                             goals.map((g) => (
                               <SelectItem key={g.id} value={g.id}>
-                                {g.name}
+                                <div className="flex items-center gap-2">
+                                  <DynamicIcon name={g.icon || 'Target'} className="w-4 h-4" />
+                                  {g.name}
+                                </div>
                               </SelectItem>
                             ))
                           )}
@@ -523,18 +516,17 @@ export default function FluxoCaixa() {
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                         <SelectContent className="max-h-[200px]">
-                          {Object.entries(
-                            formType === 'Revenue' ? REVENUE_CATEGORIES : EXPENSE_CATEGORIES,
-                          ).map(([parent, subs]) => (
-                            <SelectGroup key={parent}>
-                              <SelectLabel className="text-[#03f2ff]">{parent}</SelectLabel>
-                              {subs.map((sub) => (
-                                <SelectItem key={sub} value={`${parent} > ${sub}`}>
-                                  {parent} &gt; {sub}
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
+                          {availableCategories.map((cat) => (
+                            <SelectItem key={cat.name} value={cat.name}>
+                              <div className="flex items-center gap-2">
+                                <DynamicIcon name={cat.icon} className="w-4 h-4" />
+                                {cat.name}
+                              </div>
+                            </SelectItem>
                           ))}
+                          {availableCategories.length === 0 && (
+                            <SelectItem value="Outros">Outros</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -674,10 +666,7 @@ export default function FluxoCaixa() {
                 )}
 
                 <DialogFooter className="mt-6 pt-4 border-t">
-                  <Button
-                    type="submit"
-                    className="w-full bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
-                  >
+                  <Button type="submit" className="w-full">
                     {editingTx ? 'Salvar Alterações' : 'Salvar Transação'}
                   </Button>
                 </DialogFooter>
@@ -699,12 +688,17 @@ export default function FluxoCaixa() {
 
               const amountClass = isGain
                 ? tx.type === 'Aporte'
-                  ? 'text-[#03f2ff]'
+                  ? 'text-primary'
                   : 'text-emerald-500'
                 : tx.type === 'Transfer'
-                  ? 'text-[#03f2ff]'
+                  ? 'text-primary'
                   : 'text-rose-500'
               const amountPrefix = isGain ? '+' : tx.type === 'Transfer' ? '' : '-'
+
+              const catObj = allCategories.find(
+                (c) => c.name === tx.category || tx.category.includes(c.name),
+              )
+              const catIcon = catObj ? catObj.icon : undefined
 
               return (
                 <div
@@ -713,9 +707,16 @@ export default function FluxoCaixa() {
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`p-2 rounded-full ${isGain ? (tx.type === 'Aporte' ? 'bg-[#03f2ff]/10' : 'bg-emerald-500/10') : tx.type === 'Transfer' ? 'bg-[#03f2ff]/10' : 'bg-rose-500/10'}`}
+                      className={`p-2 rounded-full ${isGain ? (tx.type === 'Aporte' ? 'bg-primary/10' : 'bg-emerald-500/10') : tx.type === 'Transfer' ? 'bg-primary/10' : 'bg-rose-500/10'}`}
                     >
-                      {getIcon(tx.type, isGain)}
+                      {catIcon ? (
+                        <DynamicIcon
+                          name={catIcon}
+                          className={`w-4 h-4 ${isGain ? (tx.type === 'Aporte' ? 'text-primary' : 'text-emerald-500') : tx.type === 'Transfer' ? 'text-primary' : 'text-rose-500'}`}
+                        />
+                      ) : (
+                        getIconForType(tx.type, isGain)
+                      )}
                     </div>
                     <div>
                       <p className="font-medium text-sm sm:text-base flex items-center gap-2">
@@ -725,14 +726,17 @@ export default function FluxoCaixa() {
                         )}
                       </p>
                       <div className="flex flex-wrap items-center gap-2 mt-1">
-                        <Badge variant="secondary" className="text-[10px] font-normal">
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] font-normal flex items-center gap-1"
+                        >
                           {tx.category}
                         </Badge>
 
                         {tx.type === 'Aporte' ? (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-normal border-[#03f2ff]/30 text-[#03f2ff] bg-[#03f2ff]/5"
+                            className="text-[10px] font-normal border-primary/30 text-primary bg-primary/5"
                           >
                             Aporte
                           </Badge>
@@ -746,7 +750,7 @@ export default function FluxoCaixa() {
                         ) : tx.type === 'Transfer' ? (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-normal border-[#03f2ff]/30 text-[#03f2ff] bg-[#03f2ff]/5"
+                            className="text-[10px] font-normal border-primary/30 text-primary bg-primary/5"
                           >
                             Transferência
                           </Badge>
@@ -769,7 +773,7 @@ export default function FluxoCaixa() {
                           • {new Date(tx.date).toLocaleDateString('pt-BR')}
                         </span>
                         {tx.profile && (
-                          <span className="text-xs text-[#03f2ff]/80 font-medium ml-1">
+                          <span className="text-xs text-primary/80 font-medium ml-1">
                             [{tx.profile}]
                           </span>
                         )}

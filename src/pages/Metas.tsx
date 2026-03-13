@@ -13,12 +13,14 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Target, Plus, Trash2, Calendar as CalIcon, Calculator, Edit2 } from 'lucide-react'
+import { Plus, Trash2, Calendar as CalIcon, Calculator, Edit2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { differenceInMonths, addMonths, format } from 'date-fns'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
+import { IconPicker } from '@/components/ui/icon-picker'
+import { DynamicIcon } from '@/components/ui/dynamic-icon'
 
 export default function Metas() {
   const { user } = useAuth()
@@ -34,6 +36,7 @@ export default function Metas() {
   const [currentVal, setCurrentVal] = useState('')
   const [targetDate, setTargetDate] = useState('')
   const [monthlyDep, setMonthlyDep] = useState('')
+  const [icon, setIcon] = useState('Target')
 
   useEffect(() => {
     if (editingGoal) {
@@ -42,6 +45,7 @@ export default function Metas() {
       setCurrentVal(editingGoal.currentValue.toString())
       setTargetDate(editingGoal.targetDate)
       setMonthlyDep(editingGoal.monthlyDeposit.toString())
+      setIcon(editingGoal.icon || 'Target')
       setCalcMode('date')
       setOpen(true)
     } else if (!open) {
@@ -50,6 +54,7 @@ export default function Metas() {
       setCurrentVal('')
       setTargetDate('')
       setMonthlyDep('')
+      setIcon('Target')
     }
   }, [editingGoal, open])
 
@@ -81,6 +86,7 @@ export default function Metas() {
       currentValue: Number(currentVal),
       targetDate: calculatedTargetDate,
       monthlyDeposit: calculatedMonthlyDep,
+      icon,
     }
 
     const payload = {
@@ -90,6 +96,7 @@ export default function Metas() {
       current_value: newGoal.currentValue,
       target_date: newGoal.targetDate,
       monthly_contribution: newGoal.monthlyDeposit,
+      icon: newGoal.icon,
     }
 
     if (editingGoal) {
@@ -141,7 +148,9 @@ export default function Metas() {
     <div className="space-y-6 animate-slide-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Metas e Sonhos</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">
+            Metas e Sonhos
+          </h1>
           <p className="text-muted-foreground">Planeje e calcule o tempo para suas conquistas.</p>
         </div>
         <Button
@@ -167,14 +176,20 @@ export default function Metas() {
             <DialogTitle>{editingGoal ? 'Editar Meta' : 'Planejar Nova Meta'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nome da Meta / Sonho</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                placeholder="Ex: Viagem, Carro Novo"
-              />
+            <div className="flex gap-4">
+              <div className="space-y-2">
+                <Label>Ícone</Label>
+                <IconPicker value={icon} onChange={setIcon} />
+              </div>
+              <div className="space-y-2 flex-1">
+                <Label>Nome da Meta / Sonho</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="Ex: Viagem, Carro Novo"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -268,7 +283,7 @@ export default function Metas() {
               <CardContent className="p-5 flex-1 space-y-4">
                 <div className="flex justify-between items-start">
                   <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                    <Target className="w-5 h-5" />
+                    <DynamicIcon name={goal.icon || 'Target'} className="w-5 h-5" />
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
