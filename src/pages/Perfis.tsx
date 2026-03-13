@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MOCK_PROFILES } from '@/lib/mockData'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -14,15 +14,75 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Typewriter } from '../components/Typewriter'
+import { useToast } from '@/hooks/use-toast'
+import { z } from 'zod'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const profileSchema = z.object({
+  name: z.string().min(1, 'O nome é obrigatório'),
+  role: z.string().min(1, 'O papel é obrigatório'),
+  limit: z.coerce.number().min(0, 'O limite não pode ser negativo'),
+})
+
+type ProfileFormValues = z.infer<typeof profileSchema>
+type Profile = (typeof MOCK_PROFILES)[0]
 
 export default function Perfis() {
+  const [profiles, setProfiles] = useState<Profile[]>(MOCK_PROFILES)
   const [archiveId, setArchiveId] = useState<string | null>(null)
-  const [profiles, setProfiles] = useState(MOCK_PROFILES)
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null)
+  const { toast } = useToast()
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { name: '', role: '', limit: 0 },
+  })
+
+  useEffect(() => {
+    if (editingProfile) {
+      form.reset({
+        name: editingProfile.name,
+        role: editingProfile.role,
+        limit: editingProfile.limit,
+      })
+    }
+  }, [editingProfile, form])
 
   const handleArchive = () => {
     setProfiles(profiles.filter((p) => p.id !== archiveId))
     setArchiveId(null)
+    toast({ title: 'Perfil arquivado', description: 'Histórico preservado, mas acesso revogado.' })
   }
+
+  const onSubmit = (data: ProfileFormValues) => {
+    if (!editingProfile) return
+    setProfiles(profiles.map((p) => (p.id === editingProfile.id ? { ...p, ...data } : p)))
+    setEditingProfile(null)
+    toast({
+      title: 'Perfil atualizado',
+      description: `Dados de ${data.name} foram salvos com sucesso.`,
+    })
+  }
+
+  const currentRole = form.watch('role')
+  const showReflection = editingProfile?.role === 'Admin' && currentRole && currentRole !== 'Admin'
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -51,7 +111,6 @@ export default function Perfis() {
               <Badge variant="secondary" className="mt-1 mb-4">
                 {profile.role}
               </Badge>
-
               <div className="w-full bg-muted/50 rounded-lg p-3 mt-auto">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
                   Limite Orçamentário
@@ -66,6 +125,7 @@ export default function Perfis() {
                 variant="ghost"
                 size="sm"
                 className="text-muted-foreground hover:text-foreground"
+                onClick={() => setEditingProfile(profile)}
               >
                 <Edit2 className="w-4 h-4 mr-2" /> Editar
               </Button>
@@ -107,6 +167,86 @@ export default function Perfis() {
               Sim, Arquivar
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingProfile} onOpenChange={(o) => !o && setEditingProfile(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar Perfil</DialogTitle>
+            <DialogDescription>Atualize as informações do membro da família.</DialogDescription>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Nome do perfil" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Papel na Família</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Admin">Administrador</SelectItem>
+                          <SelectItem value="Dependente">Dependente</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="limit"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Limite (R$)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" step="10" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              {showReflection && (
+                <div className="pt-2 pb-2 mt-2 text-sm text-amber-500 italic border-l-2 border-amber-500 pl-4 bg-amber-500/10 rounded-r-md">
+                  <Typewriter
+                    text="Atenção: Remover o papel de Administrador revogará o acesso total deste perfil às configurações da família. Essa decisão foi conversada?"
+                    speed={25}
+                  />
+                </div>
+              )}
+              <DialogFooter className="mt-6">
+                <Button type="button" variant="outline" onClick={() => setEditingProfile(null)}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Salvar Alterações</Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
