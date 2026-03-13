@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, Search, Settings, LogOut, Users, Waves, Briefcase, Star } from 'lucide-react'
+import { Bell, Search, Settings, LogOut, Users, Briefcase, Star } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ThemeToggle } from './ThemeToggle'
+import { Logo } from './Logo'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore from '@/stores/useAppStore'
 import { useAuth } from '@/hooks/use-auth'
@@ -35,7 +36,6 @@ export function Header() {
   const { user, profile, signOut } = useAuth()
 
   const {
-    logoUrl,
     searchQuery,
     setSearchQuery,
     profiles,
@@ -85,20 +85,14 @@ export function Header() {
   return (
     <>
       <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <SidebarTrigger />
-          <div className="md:hidden flex items-center">
-            {logoUrl ? (
-              <img
-                src={logoUrl}
-                alt="Logo"
-                className="w-6 h-6 rounded-md object-contain bg-muted"
-              />
-            ) : (
-              <div className="bg-[#1E3A5F] p-1 rounded-md text-[#2EC4B6]">
-                <Waves className="w-4 h-4" />
-              </div>
-            )}
+          <div className="flex items-center mr-1">
+            <Logo
+              showText={true}
+              iconClassName="h-6 w-6 sm:h-7 sm:w-auto"
+              textClassName="hidden sm:block text-lg"
+            />
           </div>
 
           {currentContext === 'business' && (

@@ -18,17 +18,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Logo } from '@/components/Logo'
 
 export default function Landing() {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/30">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b border-border/50 backdrop-blur-md sticky top-0 z-50 bg-background/80">
-        <Link className="flex items-center justify-center gap-2" to="/">
-          <div className="bg-primary/20 p-1.5 rounded-lg text-primary">
-            <Waves className="h-6 w-6" />
-          </div>
-          <span className="font-bold text-xl tracking-tight">FinFlow</span>
-        </Link>
+        <Logo />
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link
             className="text-sm font-medium hover:text-primary transition-colors hidden sm:block"
@@ -73,10 +69,10 @@ export default function Landing() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <Button asChild size="lg" className="h-12 px-8 text-base">
-                  <Link to="#features">Ver Como Funciona</Link>
+                  <Link to="#pricing">Ver Planos</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base">
-                  <Link to="#pricing">Ver Planos</Link>
+                  <Link to="#features">Ver Como Funciona</Link>
                 </Button>
               </div>
             </div>
@@ -91,7 +87,7 @@ export default function Landing() {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Escolha seu Perfil</h2>
               <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                Nossas soluções se adaptam perfeitamente ao seu momento de vida e trabalho.
+                Nossas solutions se adaptam perfeitamente ao seu momento de vida e trabalho.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">

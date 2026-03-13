@@ -99,6 +99,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          plan: string
           updated_at: string | null
         }
         Insert: {
@@ -106,6 +107,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          plan?: string
           updated_at?: string | null
         }
         Update: {
@@ -113,6 +115,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          plan?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -343,6 +346,7 @@ export const Constants = {
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   email: text (nullable)
 //   avatar_url: text (nullable)
+//   plan: text (not null, default: 'basic'::text)
 // Table: transactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
