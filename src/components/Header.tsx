@@ -196,7 +196,7 @@ export function Header() {
               >
                 <Briefcase className="mr-2 h-4 w-4" />
                 <span>
-                  {currentContext === 'personal' ? 'Mudar p/ Empresarial' : 'Mudar p/ Pessoal'}
+                  {currentContext === 'personal' ? '(perfil empresarial)' : '(perfil pessoal)'}
                 </span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />

@@ -52,6 +52,7 @@ interface AppState {
   simulatorSettings: SimulatorSettings
   currentContext: ContextType
   subscriptionPlan: 'basic' | 'medium' | 'master'
+  categoryColors: Record<string, string>
 }
 
 const loadData = <T>(key: string, mockData: T): T => {
@@ -84,6 +85,7 @@ const getInitialState = (): AppState => ({
   timeframe: 'monthly',
   currentContext: (localStorage.getItem('finflow_context') as ContextType) || 'personal',
   subscriptionPlan: (localStorage.getItem('finflow_plan') as any) || 'basic',
+  categoryColors: loadData('finflow_category_colors', {}),
 })
 
 let state: AppState = getInitialState()
@@ -110,6 +112,8 @@ function updateState(partial: Partial<AppState>) {
   if (partial.logoUrl !== undefined) localStorage.setItem('finflow_logo', partial.logoUrl)
   if (partial.currentContext) localStorage.setItem('finflow_context', partial.currentContext)
   if (partial.subscriptionPlan) localStorage.setItem('finflow_plan', partial.subscriptionPlan)
+  if (partial.categoryColors)
+    localStorage.setItem('finflow_category_colors', JSON.stringify(partial.categoryColors))
   emit()
 }
 
@@ -215,5 +219,7 @@ export default function useAppStore() {
     setCurrentContext: (currentContext: ContextType) => updateState({ currentContext }),
     setSubscriptionPlan: (subscriptionPlan: 'basic' | 'medium' | 'master') =>
       updateState({ subscriptionPlan }),
+    setCategoryColor: (category: string, color: string) =>
+      updateState({ categoryColors: { ...state.categoryColors, [category]: color } }),
   }
 }

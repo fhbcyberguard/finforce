@@ -9,6 +9,7 @@ import {
   ChartLegendContent,
 } from '@/components/ui/chart'
 import useAppStore from '@/stores/useAppStore'
+import { ChartColorEditor } from './ChartColorEditor'
 
 // High Contrast Palette: Teal, Green, Gold
 const COLORS = [
@@ -22,7 +23,7 @@ const COLORS = [
 
 export function SpendingChart() {
   const [view, setView] = useState('bar')
-  const { transactions, timeframe } = useAppStore()
+  const { transactions, timeframe, categoryColors } = useAppStore()
 
   const { barData, pieData, config } = useMemo(() => {
     const now = new Date()
@@ -68,14 +69,21 @@ export function SpendingChart() {
     )
     const config: any = {}
     allCats.forEach((cat, idx) => {
-      config[cat] = { label: cat, color: COLORS[idx % COLORS.length] }
+      config[cat] = {
+        label: cat,
+        color: categoryColors[cat] || COLORS[idx % COLORS.length],
+      }
     })
     config.value = { label: 'Valor' }
 
     return { barData, pieData, config }
-  }, [transactions, timeframe])
+  }, [transactions, timeframe, categoryColors])
 
   const chartCats = Object.keys(config).filter((k) => k !== 'value')
+  const editorCategories = chartCats.map((cat) => ({
+    name: cat,
+    color: config[cat].color,
+  }))
 
   return (
     <Card className="border-border/50">
@@ -83,16 +91,19 @@ export function SpendingChart() {
         <CardTitle className="text-lg">
           Análise de Gastos ({timeframe === 'annual' ? 'Anual' : 'Mensal'})
         </CardTitle>
-        <Tabs value={view} onValueChange={setView}>
-          <TabsList className="h-8">
-            <TabsTrigger value="bar" className="text-xs px-3">
-              Barras
-            </TabsTrigger>
-            <TabsTrigger value="pie" className="text-xs px-3">
-              Pizza
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-2">
+          <Tabs value={view} onValueChange={setView}>
+            <TabsList className="h-8">
+              <TabsTrigger value="bar" className="text-xs px-3">
+                Barras
+              </TabsTrigger>
+              <TabsTrigger value="pie" className="text-xs px-3">
+                Pizza
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <ChartColorEditor categories={editorCategories} />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="h-[280px] w-full">
@@ -120,8 +131,8 @@ export function SpendingChart() {
                 />
                 <Tooltip content={<ChartTooltipContent />} />
                 <ChartLegend verticalAlign="top" content={<ChartLegendContent />} />
-                {chartCats.map((cat, i) => (
-                  <Bar key={cat} dataKey={cat} fill={COLORS[i % COLORS.length]} stackId="a" />
+                {chartCats.map((cat) => (
+                  <Bar key={cat} dataKey={cat} fill={config[cat].color} stackId="a" />
                 ))}
               </BarChart>
             </ChartContainer>
@@ -138,10 +149,10 @@ export function SpendingChart() {
                   outerRadius={100}
                   paddingAngle={2}
                 >
-                  {pieData.map((entry, idx) => (
+                  {pieData.map((entry) => (
                     <Cell
                       key={entry.name}
-                      fill={config[entry.name]?.color || COLORS[idx % COLORS.length]}
+                      fill={config[entry.name]?.color}
                       stroke="#1E3A5F"
                       strokeWidth={2}
                     />

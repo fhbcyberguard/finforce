@@ -38,7 +38,7 @@ export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const { logoUrl } = useAppStore()
+  const { logoUrl, currentContext } = useAppStore()
 
   const handleLogout = () => {
     toast({
@@ -65,16 +65,23 @@ export function AppSidebar() {
           <SidebarGroupLabel>Navegação Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigation.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                    <Link to={item.url} className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {navigation.map((item) => {
+                let title = item.title
+                if (item.url === '/perfis') {
+                  title =
+                    currentContext === 'business' ? 'Perfil do Colaborador' : 'Perfis da Família'
+                }
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={location.pathname === item.url}>
+                      <Link to={item.url} className="flex items-center gap-3">
+                        <item.icon className="w-4 h-4" />
+                        <span>{title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

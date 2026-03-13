@@ -2,6 +2,7 @@ import { PieChart, Pie, Cell, Legend, Tooltip } from 'recharts'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import useAppStore from '@/stores/useAppStore'
+import { ChartColorEditor } from '../dashboard/ChartColorEditor'
 
 const COLORS = [
   '#2EC4B6', // Teal
@@ -12,7 +13,7 @@ const COLORS = [
 ]
 
 export default function AllocationChart({ className }: { className?: string }) {
-  const { assets } = useAppStore()
+  const { assets, categoryColors } = useAppStore()
 
   const dataMap = assets.reduce(
     (acc, asset) => {
@@ -26,10 +27,16 @@ export default function AllocationChart({ className }: { className?: string }) {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
 
+  const editorCategories = data.map((d, i) => ({
+    name: d.name,
+    color: categoryColors[d.name] || COLORS[i % COLORS.length],
+  }))
+
   return (
     <Card className={className}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg">Alocação Atual</CardTitle>
+        {data.length > 0 && <ChartColorEditor categories={editorCategories} />}
       </CardHeader>
       <CardContent>
         <div className="h-[250px]">
@@ -52,10 +59,10 @@ export default function AllocationChart({ className }: { className?: string }) {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {data.map((_, index) => (
+                  {data.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={categoryColors[entry.name] || COLORS[index % COLORS.length]}
                       stroke="#1E3A5F"
                       strokeWidth={2}
                     />
