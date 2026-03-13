@@ -1,11 +1,8 @@
-import { Link, useLocation } from 'react-router-dom'
-import { Logo } from '@/components/Logo'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { LogOut, User } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,39 +11,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Link } from 'react-router-dom'
 
 export function Header() {
   const { user, signOut } = useAuth()
-  const location = useLocation()
-
-  const navItems = [
-    { title: 'Dashboard', url: '/dashboard' },
-    { title: 'Perfis', url: '/perfis' },
-  ]
 
   return (
     <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6 shadow-sm">
       <div className="flex items-center gap-4 lg:gap-8">
-        <SidebarTrigger className="md:hidden" />
-
-        {/* Logo Integration - Redirects to dashboard if logged in */}
-        <Logo to={user ? '/dashboard' : '/'} />
-
-        {/* Navigation Menu aligned horizontally with the Logo */}
-        <nav className="hidden md:flex items-center gap-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.url}
-              to={item.url}
-              className={cn(
-                'text-sm font-medium transition-colors hover:text-foreground',
-                location.pathname === item.url ? 'text-[#03f2ff]' : 'text-muted-foreground',
-              )}
-            >
-              {item.title}
-            </Link>
-          ))}
-        </nav>
+        <SidebarTrigger />
       </div>
 
       <div className="flex items-center gap-3 md:gap-4">

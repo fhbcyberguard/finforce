@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import useAppStore from '@/stores/useAppStore'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
@@ -8,6 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible'
+import { Button } from '@/components/ui/button'
+import { BarChart3 } from 'lucide-react'
 import KpiCards from '../components/dashboard/KpiCards'
 import Simulator from '../components/dashboard/Simulator'
 import AlertsPanel from '../components/dashboard/AlertsPanel'
@@ -15,10 +18,12 @@ import { CreditCardWidget } from '../components/dashboard/CreditCardWidget'
 import { SpendingChart } from '../components/dashboard/SpendingChart'
 import { GoalWidget } from '../components/dashboard/GoalWidget'
 import { SpendingByPersonChart } from '../components/dashboard/SpendingByPersonChart'
+import { HistoricalComparison } from '../components/dashboard/HistoricalComparison'
 
 export default function Index() {
   const { timeframe, setTimeframe, currentContext, selectedYear, setSelectedYear, transactions } =
     useAppStore()
+  const [showComparison, setShowComparison] = useState(false)
 
   const isBusiness = currentContext === 'business'
 
@@ -48,6 +53,15 @@ export default function Index() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start sm:self-auto">
+          <Button
+            variant={showComparison ? 'secondary' : 'outline'}
+            size="sm"
+            className="h-9 bg-muted/50 border-0 focus:ring-1 hover:bg-muted"
+            onClick={() => setShowComparison(!showComparison)}
+          >
+            <BarChart3 className="w-4 h-4 mr-2" />
+            Comparar
+          </Button>
           <Select value={selectedYear} onValueChange={setSelectedYear}>
             <SelectTrigger className="h-9 w-[100px] text-xs bg-muted/50 border-0 focus:ring-1">
               <SelectValue placeholder="Ano" />
@@ -75,6 +89,14 @@ export default function Index() {
           </ToggleGroup>
         </div>
       </div>
+
+      <Collapsible open={showComparison} onOpenChange={setShowComparison}>
+        <CollapsibleContent>
+          <div className="pb-6">
+            <HistoricalComparison />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <KpiCards />
 
