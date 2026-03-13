@@ -4,31 +4,29 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Lock, CreditCard } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
-import type { CreditCardType } from './CreditCardList'
+import useAppStore from '@/stores/useAppStore'
 
-interface AddCreditCardFormProps {
-  onAdd: (card: CreditCardType) => void
-}
-
-export function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
+export function AddCreditCardForm() {
   const { toast } = useToast()
+  const { creditCards, setCreditCards } = useAppStore()
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
 
-    const newCard: CreditCardType = {
+    const newCard = {
       id: Math.random().toString(),
       bank: fd.get('bank') as string,
       brand: fd.get('brand') as string,
       lastDigits: fd.get('lastDigits') as string,
       totalLimit: Number(fd.get('limit')),
-      availableLimit: Number(fd.get('limit')), // Fully available initially
+      availableLimit: Number(fd.get('limit')),
       dueDate: Number(fd.get('dueDate')),
       bestPurchaseDay: Number(fd.get('bestDay')),
+      isArchived: false,
     }
 
-    onAdd(newCard)
+    setCreditCards([...creditCards, newCard])
     toast({
       title: 'Cartão Registrado',
       description: 'O novo cartão já está disponível no seu painel.',

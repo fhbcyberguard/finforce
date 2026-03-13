@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { useEffect } from 'react'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import useAppStore from '@/stores/useAppStore'
 import Layout from './components/Layout'
 import Index from './pages/Index'
 import Metas from './pages/Metas'
@@ -17,9 +19,28 @@ import Registro from './pages/Registro'
 import Landing from './pages/Landing'
 import { ThemeProvider } from './components/ThemeProvider'
 
+function SyncSystemState() {
+  const { logoUrl } = useAppStore()
+
+  useEffect(() => {
+    if (logoUrl) {
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
+      if (!link) {
+        link = document.createElement('link')
+        link.rel = 'icon'
+        document.head.appendChild(link)
+      }
+      link.href = logoUrl
+    }
+  }, [logoUrl])
+
+  return null
+}
+
 const App = () => (
   <BrowserRouter>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+      <SyncSystemState />
       <TooltipProvider>
         <Toaster />
         <Sonner />

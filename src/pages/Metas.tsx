@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { useState } from 'react'
+import useAppStore from '@/stores/useAppStore'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,18 +15,16 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Target, Plus, Trash2, Calendar as CalIcon, Calculator } from 'lucide-react'
-import { MOCK_GOALS } from '@/lib/mockData'
 import { useToast } from '@/hooks/use-toast'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { differenceInMonths, addMonths, format } from 'date-fns'
 
 export default function Metas() {
-  const [goals, setGoals] = useState(MOCK_GOALS)
+  const { goals, setGoals } = useAppStore()
   const [open, setOpen] = useState(false)
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null)
   const { toast } = useToast()
 
-  // Form State
   const [calcMode, setCalcMode] = useState<'date' | 'deposit'>('date')
   const [targetVal, setTargetVal] = useState('')
   const [currentVal, setCurrentVal] = useState('')
@@ -119,7 +118,6 @@ export default function Metas() {
                   />
                 </div>
               </div>
-
               <div className="pt-2 border-t">
                 <Label className="mb-2 block">O que você deseja calcular?</Label>
                 <Tabs
@@ -132,7 +130,6 @@ export default function Metas() {
                     <TabsTrigger value="deposit">Descobrir Tempo</TabsTrigger>
                   </TabsList>
                 </Tabs>
-
                 {calcMode === 'date' ? (
                   <div className="space-y-2">
                     <Label>Data Desejada</Label>
@@ -155,7 +152,6 @@ export default function Metas() {
                     />
                   </div>
                 )}
-
                 {calculatedMsg && (
                   <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-md flex items-center gap-2 text-primary font-medium text-sm">
                     <Calculator className="w-4 h-4" />
@@ -163,7 +159,6 @@ export default function Metas() {
                   </div>
                 )}
               </div>
-
               <DialogFooter className="mt-6 pt-4">
                 <Button type="submit" className="w-full">
                   Salvar Meta
@@ -177,6 +172,20 @@ export default function Metas() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {goals.map((goal) => {
           const percent = goal.targetValue > 0 ? (goal.currentValue / goal.targetValue) * 100 : 0
+          const remaining = goal.targetValue - goal.currentValue
+          const monthsToGoal =
+            remaining > 0 && goal.monthlyDeposit > 0
+              ? Math.ceil(remaining / goal.monthlyDeposit)
+              : 0
+          const years = Math.floor(monthsToGoal / 12)
+          const months = monthsToGoal % 12
+          const timeStr =
+            remaining <= 0
+              ? 'Concluída'
+              : monthsToGoal > 0
+                ? `${years > 0 ? `${years}a ` : ''}${months}m`
+                : 'Sem previsão'
+
           return (
             <Card key={goal.id} className="border-border/50 flex flex-col group overflow-hidden">
               <CardContent className="p-5 flex-1 space-y-4">
@@ -200,7 +209,6 @@ export default function Metas() {
                     <span>Alvo: {format(new Date(goal.targetDate), 'MMM yyyy')}</span>
                   </div>
                 </div>
-
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between text-sm items-end">
                     <span className="font-bold text-xl">
@@ -214,11 +222,18 @@ export default function Metas() {
                   <p className="text-xs text-right text-muted-foreground">{percent.toFixed(1)}%</p>
                 </div>
               </CardContent>
-              <div className="bg-muted/30 p-3 border-t flex justify-between text-xs text-muted-foreground">
-                <span>Aporte Sugerido:</span>
-                <span className="font-medium text-foreground">
-                  R$ {goal.monthlyDeposit.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}/mês
-                </span>
+              <div className="bg-muted/30 p-3 border-t flex flex-col gap-1 text-xs text-muted-foreground">
+                <div className="flex justify-between">
+                  <span>Aporte Sugerido:</span>
+                  <span className="font-medium text-foreground">
+                    R$ {goal.monthlyDeposit.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
+                    /mês
+                  </span>
+                </div>
+                <div className="flex justify-between mt-1 pt-1 border-t border-border/50">
+                  <span>Tempo Estimado:</span>
+                  <span className="font-medium text-primary">{timeStr}</span>
+                </div>
               </div>
             </Card>
           )

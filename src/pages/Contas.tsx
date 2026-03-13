@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MOCK_ACCOUNTS } from '@/lib/mockData'
+import useAppStore, { Account } from '@/stores/useAppStore'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,41 +21,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Building2, ShieldCheck, RefreshCw, Archive, Plus } from 'lucide-react'
+import { Building2, ShieldCheck, RefreshCw, Archive, Plus, Edit2, Trash2 } from 'lucide-react'
 import { ImpulseControlDialog } from '../components/ImpulseControlDialog'
 import { useToast } from '@/hooks/use-toast'
 import { CreditCardsSection } from '../components/contas/CreditCardsSection'
 
 export default function Contas() {
   const [openFinance, setOpenFinance] = useState(false)
-  const [accounts, setAccounts] = useState(MOCK_ACCOUNTS)
+  const { accounts, setAccounts } = useAppStore()
   const [openAddAcc, setOpenAddAcc] = useState(false)
+  const [editingAcc, setEditingAcc] = useState<Account | null>(null)
   const [accountToArchive, setAccountToArchive] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const handleAddAccount = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSaveAccount = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     const newAcc = {
-      id: Math.random().toString(),
+      id: editingAcc ? editingAcc.id : Math.random().toString(),
       bank: fd.get('bank') as string,
       type: fd.get('type') as string,
       balance: Number(fd.get('balance')),
       agency: fd.get('agency') as string,
       account: fd.get('account') as string,
-      connected: false,
+      connected: editingAcc ? editingAcc.connected : false,
     }
-    setAccounts([...accounts, newAcc])
+
+    if (editingAcc) {
+      setAccounts(accounts.map((a) => (a.id === editingAcc.id ? newAcc : a)))
+      toast({ title: 'Conta Atualizada', description: 'Os dados foram salvos com sucesso.' })
+    } else {
+      setAccounts([...accounts, newAcc])
+      toast({ title: 'Conta Adicionada', description: 'Nova instituição vinculada com sucesso.' })
+    }
     setOpenAddAcc(false)
-    toast({ title: 'Conta Adicionada', description: 'Nova instituição vinculada com sucesso.' })
+    setEditingAcc(null)
   }
 
-  const confirmArchive = () => {
-    setAccounts(accounts.filter((a) => a.id !== accountToArchive))
-    toast({
-      title: 'Conta Arquivada',
-      description: 'O histórico foi preservado para relatórios anuais.',
-    })
+  const deleteAccount = (id: string) => {
+    setAccounts(accounts.filter((a) => a.id !== id))
+    toast({ title: 'Conta Removida', description: 'A conta foi permanentemente excluída.' })
   }
 
   return (
@@ -76,19 +81,15 @@ export default function Contas() {
             <div>
               <h3 className="font-semibold text-lg flex items-center gap-2">
                 Open Finance
-                {openFinance ? (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500">
-                    Conectado
-                  </span>
-                ) : (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500">
-                    Aguardando
-                  </span>
-                )}
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full ${openFinance ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'}`}
+                >
+                  {openFinance ? 'Conectado' : 'Aguardando'}
+                </span>
               </h3>
               <p className="text-sm text-muted-foreground max-w-xl mt-1">
-                Conecte seus bancos para sincronização automática. Dados protegidos por criptografia
-                ponta a ponta e em conformidade com a LGPD.
+                Conecte seus bancos para sincronização automática. Dados protegidos por
+                criptografia.
               </p>
             </div>
           </div>
@@ -118,35 +119,63 @@ export default function Contas() {
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Building2 className="w-5 h-5" /> Minhas Contas
                 </CardTitle>
-                <Dialog open={openAddAcc} onOpenChange={setOpenAddAcc}>
+                <Dialog
+                  open={openAddAcc || !!editingAcc}
+                  onOpenChange={(o) => {
+                    if (!o) {
+                      setOpenAddAcc(false)
+                      setEditingAcc(null)
+                    }
+                  }}
+                >
                   <DialogTrigger asChild>
-                    <Button size="sm" variant="ghost" className="h-8 gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 gap-1"
+                      onClick={() => setOpenAddAcc(true)}
+                    >
                       <Plus className="w-3 h-3" /> Nova
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Adicionar Instituição</DialogTitle>
+                      <DialogTitle>
+                        {editingAcc ? 'Editar Instituição' : 'Adicionar Instituição'}
+                      </DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={handleAddAccount} className="space-y-4">
+                    <form onSubmit={handleSaveAccount} className="space-y-4">
                       <div className="space-y-2">
                         <Label>Nome do Banco / Instituição</Label>
-                        <Input name="bank" required placeholder="Ex: Inter, C6 Bank" />
+                        <Input
+                          name="bank"
+                          required
+                          defaultValue={editingAcc?.bank || ''}
+                          placeholder="Ex: Inter, C6 Bank"
+                        />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Agência (Opcional)</Label>
-                          <Input name="agency" placeholder="0001" />
+                          <Input
+                            name="agency"
+                            defaultValue={editingAcc?.agency || ''}
+                            placeholder="0001"
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label>Conta (Opcional)</Label>
-                          <Input name="account" placeholder="12345-6" />
+                          <Input
+                            name="account"
+                            defaultValue={editingAcc?.account || ''}
+                            placeholder="12345-6"
+                          />
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Tipo de Conta</Label>
-                          <Select name="type" defaultValue="Conta Corrente">
+                          <Select name="type" defaultValue={editingAcc?.type || 'Conta Corrente'}>
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
@@ -164,13 +193,14 @@ export default function Contas() {
                             type="number"
                             step="0.01"
                             required
+                            defaultValue={editingAcc?.balance || ''}
                             placeholder="0.00"
                           />
                         </div>
                       </div>
                       <DialogFooter>
                         <Button type="submit" className="w-full">
-                          Salvar Conta
+                          {editingAcc ? 'Salvar Alterações' : 'Salvar Conta'}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -191,7 +221,7 @@ export default function Contas() {
                         {acc.account && <span>• Cc: {acc.account}</span>}
                       </p>
                     </div>
-                    <div className="text-right transition-transform group-hover:-translate-x-10">
+                    <div className="text-right transition-transform group-hover:-translate-x-16">
                       <p className="font-mono font-medium">R$ {acc.balance.toFixed(2)}</p>
                       <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-0.5">
                         {acc.connected ? (
@@ -203,30 +233,36 @@ export default function Contas() {
                         )}
                       </p>
                     </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="absolute right-2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
-                      onClick={() => setAccountToArchive(acc.id)}
-                    >
-                      <Archive className="w-4 h-4" />
-                    </Button>
+                    <div className="absolute right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        onClick={() => setEditingAcc(acc)}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => deleteAccount(acc.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 ))}
+                {accounts.length === 0 && (
+                  <div className="text-center p-4 text-sm text-muted-foreground border border-dashed rounded-md">
+                    Nenhuma conta cadastrada.
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
         </TabsContent>
       </Tabs>
-
-      <ImpulseControlDialog
-        open={!!accountToArchive}
-        onOpenChange={(o) => !o && setAccountToArchive(null)}
-        onConfirm={confirmArchive}
-        title="Arquivar Conta Bancária"
-        description="Esta conta não aparecerá mais nos saldos diários, mas suas transações passadas serão mantidas no histórico de patrimônio."
-        reflectionText="Atenção: Ocultar dados financeiros reais pode criar uma falsa sensação de organização. Você tem certeza que deseja remover esta conta da sua visão diária?"
-      />
     </div>
   )
 }

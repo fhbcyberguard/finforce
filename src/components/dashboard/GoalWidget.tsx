@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { MOCK_GOALS } from '@/lib/mockData'
+import useAppStore from '@/stores/useAppStore'
 
 export function GoalWidget() {
-  const goals = MOCK_GOALS || []
+  const { goals } = useAppStore()
 
   return (
     <Card className="h-full border-border/50">

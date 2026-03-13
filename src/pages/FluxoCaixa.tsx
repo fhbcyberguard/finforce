@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import useAppStore from '@/stores/useAppStore'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -38,12 +39,14 @@ import {
   Paperclip,
   Download,
 } from 'lucide-react'
-import { MOCK_TRANSACTIONS, MOCK_CATEGORIES, MOCK_PROFILES } from '@/lib/mockData'
+import { MOCK_CATEGORIES } from '@/lib/mockData'
 import { useToast } from '@/hooks/use-toast'
+import { CsvImportDialog } from '@/components/fluxo/CsvImportDialog'
 
 export default function FluxoCaixa() {
-  const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS)
+  const { transactions, setTransactions, profiles } = useAppStore()
   const [openAdd, setOpenAdd] = useState(false)
+  const [openImport, setOpenImport] = useState(false)
   const [isPix, setIsPix] = useState(false)
   const [fileName, setFileName] = useState('')
   const { toast } = useToast()
@@ -97,7 +100,11 @@ export default function FluxoCaixa() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Fluxo de Caixa</h1>
           <p className="text-muted-foreground">Visão detalhada de entradas e saídas.</p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-2 w-full sm:w-auto flex-wrap">
+          <Button variant="outline" className="gap-2" onClick={() => setOpenImport(true)}>
+            <Upload className="w-4 h-4" /> Importar
+          </Button>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="gap-2">
@@ -179,12 +186,12 @@ export default function FluxoCaixa() {
                   </div>
                   <div className="space-y-2">
                     <Label>Perfil Responsável</Label>
-                    <Select name="profile" required defaultValue={MOCK_PROFILES[0]?.name}>
+                    <Select name="profile" required defaultValue={profiles[0]?.name}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {MOCK_PROFILES.map((p) => (
+                        {profiles.map((p) => (
                           <SelectItem key={p.id} value={p.name}>
                             {p.name}
                           </SelectItem>
@@ -227,30 +234,28 @@ export default function FluxoCaixa() {
                 {isPix && (
                   <div className="space-y-2 pt-2">
                     <Label>Anexo do Comprovante</Label>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full relative overflow-hidden"
-                        onClick={() => {
-                          const input = document.createElement('input')
-                          input.type = 'file'
-                          input.accept = 'image/*,.pdf'
-                          input.onchange = (e) => {
-                            const target = e.target as HTMLInputElement
-                            if (target.files?.length) setFileName(target.files[0].name)
-                          }
-                          input.click()
-                        }}
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        {fileName ? (
-                          <span className="truncate max-w-[250px]">{fileName}</span>
-                        ) : (
-                          'Anexar Recibo PDF/Img'
-                        )}
-                      </Button>
-                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full relative overflow-hidden"
+                      onClick={() => {
+                        const input = document.createElement('input')
+                        input.type = 'file'
+                        input.accept = 'image/*,.pdf'
+                        input.onchange = (e) => {
+                          const target = e.target as HTMLInputElement
+                          if (target.files?.length) setFileName(target.files[0].name)
+                        }
+                        input.click()
+                      }}
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      {fileName ? (
+                        <span className="truncate max-w-[250px]">{fileName}</span>
+                      ) : (
+                        'Anexar Recibo PDF/Img'
+                      )}
+                    </Button>
                   </div>
                 )}
 
@@ -290,6 +295,11 @@ export default function FluxoCaixa() {
                       <span className="text-xs text-muted-foreground">
                         • {new Date(tx.date).toLocaleDateString('pt-BR')}
                       </span>
+                      {tx.profile && (
+                        <span className="text-xs text-primary/70 font-medium ml-1">
+                          [{tx.profile}]
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -305,9 +315,16 @@ export default function FluxoCaixa() {
                 </div>
               </div>
             ))}
+            {transactions.length === 0 && (
+              <div className="p-8 text-center text-muted-foreground">
+                Nenhuma transação encontrada.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      <CsvImportDialog open={openImport} onOpenChange={setOpenImport} />
     </div>
   )
 }

@@ -3,10 +3,11 @@ import { Link } from 'react-router-dom'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { MOCK_CREDIT_CARDS } from '@/lib/mockData'
+import useAppStore from '@/stores/useAppStore'
 
 export function CreditCardWidget() {
-  const cards = MOCK_CREDIT_CARDS || []
+  const { creditCards } = useAppStore()
+  const cards = creditCards.filter((c) => !c.isArchived)
 
   const totalLimit = cards.reduce((acc, c) => acc + c.totalLimit, 0)
   const availableLimit = cards.reduce((acc, c) => acc + c.availableLimit, 0)
@@ -71,7 +72,7 @@ export function CreditCardWidget() {
           ))}
           {cards.length === 0 && (
             <div className="text-center p-3 text-sm text-muted-foreground border border-dashed rounded-md">
-              Nenhum cartão cadastrado.
+              Nenhum cartão ativo.
             </div>
           )}
         </div>

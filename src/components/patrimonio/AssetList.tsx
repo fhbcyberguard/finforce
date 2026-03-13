@@ -1,6 +1,6 @@
 import { useState } from 'react'
+import useAppStore from '@/stores/useAppStore'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { MOCK_ASSETS } from '@/lib/mockData'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Plus, Trash2 } from 'lucide-react'
@@ -25,7 +25,7 @@ import { useToast } from '@/hooks/use-toast'
 import { ImpulseControlDialog } from '../ImpulseControlDialog'
 
 export default function AssetList({ className }: { className?: string }) {
-  const [assets, setAssets] = useState(MOCK_ASSETS || [])
+  const { assets, setAssets } = useAppStore()
   const [open, setOpen] = useState(false)
   const [assetToDelete, setAssetToDelete] = useState<string | null>(null)
   const { toast } = useToast()
