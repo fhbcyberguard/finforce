@@ -1,16 +1,17 @@
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
+import { Progress } from '@/components/ui/progress'
 
 interface SimulatorControlsProps {
   aporte: number
   setAporte: (v: number) => void
   retorno: number
   setRetorno: (v: number) => void
-  idade: number
-  setIdade: (v: number) => void
   rendaDesejada: number
   setRendaDesejada: (v: number) => void
+  currentAge: number
+  retirementAge: number
 }
 
 export default function SimulatorControls({
@@ -18,10 +19,10 @@ export default function SimulatorControls({
   setAporte,
   retorno,
   setRetorno,
-  idade,
-  setIdade,
   rendaDesejada,
   setRendaDesejada,
+  currentAge,
+  retirementAge,
 }: SimulatorControlsProps) {
   return (
     <div className="space-y-6">
@@ -53,12 +54,20 @@ export default function SimulatorControls({
         />
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
-          <Label>Idade de Aposentadoria / Liberdade</Label>
-          <span className="font-mono text-sm font-medium">{idade} anos</span>
+          <Label>Idade Projetada p/ Liberdade</Label>
+          <span className="font-mono text-sm font-medium text-primary">
+            {retirementAge === Infinity ? 'Sem previsão' : `${Math.ceil(retirementAge)} anos`}
+          </span>
         </div>
-        <Slider value={[idade]} min={30} max={80} step={1} onValueChange={([v]) => setIdade(v)} />
+        <Progress
+          value={retirementAge === Infinity ? 0 : Math.min((currentAge / retirementAge) * 100, 100)}
+          className="h-2"
+        />
+        <p className="text-xs text-muted-foreground mt-1">
+          Cálculo automático baseado na sua idade atual ({currentAge} anos).
+        </p>
       </div>
 
       <div className="space-y-2 pt-2 border-t border-border/50">

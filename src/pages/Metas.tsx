@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import useAppStore, { Goal } from '@/stores/useAppStore'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -16,14 +16,16 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Plus, Trash2, Calendar as CalIcon, Calculator, Edit2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
-import { differenceInMonths, addMonths, format } from 'date-fns'
+import { differenceInMonths, addMonths, format, differenceInYears } from 'date-fns'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
 import { IconPicker } from '@/components/ui/icon-picker'
 import { DynamicIcon } from '@/components/ui/dynamic-icon'
+import { AreaChart, Area, ReferenceLine, XAxis } from 'recharts'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 
 export default function Metas() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { goals, setGoals } = useAppStore()
   const [open, setOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
@@ -37,6 +39,13 @@ export default function Metas() {
   const [targetDate, setTargetDate] = useState('')
   const [monthlyDep, setMonthlyDep] = useState('')
   const [icon, setIcon] = useState('Target')
+
+  const currentAge = useMemo(() => {
+    if (profile?.birth_date) {
+      return differenceInYears(new Date(), new Date(profile.birth_date))
+    }
+    return 35
+  }, [profile])
 
   useEffect(() => {
     if (editingGoal) {
@@ -266,17 +275,28 @@ export default function Metas() {
           const percent = goal.targetValue > 0 ? (goal.currentValue / goal.targetValue) * 100 : 0
           const remaining = goal.targetValue - goal.currentValue
           const monthsToGoal =
-            remaining > 0 && goal.monthlyDeposit > 0
-              ? Math.ceil(remaining / goal.monthlyDeposit)
-              : 0
+            remaining > 0 && goal.monthlyDeposit > 0 ? remaining / goal.monthlyDeposit : 0
           const years = Math.floor(monthsToGoal / 12)
-          const months = monthsToGoal % 12
+          const months = Math.ceil(monthsToGoal % 12)
           const timeStr =
             remaining <= 0
               ? 'Concluída'
               : monthsToGoal > 0
                 ? `${years > 0 ? `${years}a ` : ''}${months}m`
                 : 'Sem previsão'
+
+          const ageAtCompletion = currentAge + monthsToGoal / 12
+
+          const chartData = []
+          let curr = goal.currentValue
+          const totalYearsProj = Math.min(Math.max(Math.ceil(monthsToGoal / 12), 1), 30)
+          for (let i = 0; i <= totalYearsProj; i++) {
+            chartData.push({ age: currentAge + i, value: Math.round(curr) })
+            curr += goal.monthlyDeposit * 12
+            if (curr > goal.targetValue && i >= totalYearsProj - 1) {
+              curr = goal.targetValue
+            }
+          }
 
           return (
             <Card key={goal.id} className="border-border/50 flex flex-col group overflow-hidden">
@@ -324,18 +344,70 @@ export default function Metas() {
                   <p className="text-xs text-right text-muted-foreground">{percent.toFixed(1)}%</p>
                 </div>
               </CardContent>
-              <div className="bg-muted/30 p-3 border-t flex flex-col gap-1 text-xs text-muted-foreground">
-                <div className="flex justify-between">
-                  <span>Aporte Sugerido:</span>
+              <div className="bg-muted/10 p-4 border-t flex flex-col gap-3 text-sm">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-muted-foreground">Aporte Sugerido:</span>
                   <span className="font-medium text-foreground">
                     R$ {goal.monthlyDeposit.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}
                     /mês
                   </span>
                 </div>
-                <div className="flex justify-between mt-1 pt-1 border-t border-border/50">
-                  <span>Tempo Estimado:</span>
-                  <span className="font-medium text-primary">{timeStr}</span>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50 text-xs">
+                  <div>
+                    <p className="text-muted-foreground mb-0.5">Tempo Estimado</p>
+                    <p className="font-medium text-foreground">{timeStr}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-muted-foreground mb-0.5">Idade na Conclusão</p>
+                    <p className="font-medium text-primary">
+                      {remaining <= 0
+                        ? 'Alcançado'
+                        : monthsToGoal > 0
+                          ? `${Math.ceil(ageAtCompletion)} anos`
+                          : '-'}
+                    </p>
+                  </div>
                 </div>
+
+                {monthsToGoal > 0 && remaining > 0 && (
+                  <div className="mt-2 h-24 w-full">
+                    <ChartContainer
+                      config={{ value: { label: 'Projeção', color: 'hsl(var(--primary))' } }}
+                      className="h-full w-full"
+                    >
+                      <AreaChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id={`fill-${goal.id}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="var(--color-value)" stopOpacity={0.8} />
+                            <stop offset="95%" stopColor="var(--color-value)" stopOpacity={0.1} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="age"
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(v) => `${v}a`}
+                          fontSize={10}
+                          className="text-muted-foreground"
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <ReferenceLine
+                          y={goal.targetValue}
+                          stroke="hsl(var(--destructive))"
+                          strokeDasharray="3 3"
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="var(--color-value)"
+                          fill={`url(#fill-${goal.id})`}
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ChartContainer>
+                  </div>
+                )}
               </div>
             </Card>
           )

@@ -5,42 +5,46 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 interface SimulatorChartProps {
   aporte: number
   retorno: number
-  idade: number
+  currentAge: number
+  retirementAge: number
   rendaDesejada: number
+  patrimony: number
 }
 
 export default function SimulatorChart({
   aporte,
   retorno,
-  idade,
+  currentAge,
+  retirementAge,
   rendaDesejada,
+  patrimony,
 }: SimulatorChartProps) {
   const targetWealth = useMemo(() => {
     return Math.round((rendaDesejada * 12) / (retorno / 100))
   }, [rendaDesejada, retorno])
 
   const data = useMemo(() => {
-    const currentAge = 35
-    const years = Math.max(idade - currentAge, 5)
-    let patrimonio = 100000 // initial base
+    const yearsToProject =
+      retirementAge === Infinity ? 30 : Math.max(Math.ceil(retirementAge - currentAge), 5) + 5
+    let currentVal = patrimony
     const result = []
 
     const monthlyRate = Math.pow(1 + retorno / 100, 1 / 12) - 1
 
-    for (let i = 0; i <= years; i++) {
+    for (let i = 0; i <= yearsToProject; i++) {
       if (i > 0) {
         for (let m = 0; m < 12; m++) {
-          patrimonio = patrimonio * (1 + monthlyRate) + aporte
+          currentVal = currentVal * (1 + monthlyRate) + aporte
         }
       }
       result.push({
         age: currentAge + i,
-        patrimonio: Math.round(patrimonio),
+        patrimonio: Math.round(currentVal),
       })
     }
 
     return result
-  }, [aporte, retorno, idade])
+  }, [aporte, retorno, currentAge, retirementAge, patrimony])
 
   return (
     <div className="h-[300px] w-full mt-4 md:mt-0">

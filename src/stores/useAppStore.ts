@@ -83,7 +83,6 @@ export type Transaction = {
 interface SimulatorSettings {
   aporte: number
   retorno: number
-  idade: number
   rendaDesejada: number
 }
 
@@ -118,7 +117,6 @@ const loadData = <T>(key: string, mockData: T): T => {
 const defaultSimulator: SimulatorSettings = {
   aporte: 2000,
   retorno: 8.5,
-  idade: 55,
   rendaDesejada: 10000,
 }
 

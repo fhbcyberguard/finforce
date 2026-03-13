@@ -3,7 +3,8 @@ import { Wallet, TrendingUp, DollarSign, Clock, Activity, Target } from 'lucide-
 import useAppStore from '@/stores/useAppStore'
 
 export default function KpiCards() {
-  const { assets, transactions, timeframe, simulatorSettings, selectedYear } = useAppStore()
+  const { assets, accounts, transactions, timeframe, simulatorSettings, selectedYear } =
+    useAppStore()
 
   const now = new Date()
   const yearToUse = selectedYear || now.getFullYear().toString()
@@ -16,7 +17,9 @@ export default function KpiCards() {
   })
 
   // Derived calculations for KPIs
-  const patrimony = assets.reduce((sum, asset) => sum + asset.value, 0)
+  const patrimony =
+    assets.reduce((sum, asset) => sum + asset.value, 0) +
+    accounts.reduce((sum, acc) => sum + acc.balance, 0)
 
   // Real-time calculated income
   const rendaMensal = filteredTransactions

@@ -7,31 +7,48 @@ import SimulatorChart from './SimulatorChart'
 import { Button } from '@/components/ui/button'
 import useAppStore from '@/stores/useAppStore'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/hooks/use-auth'
+import { differenceInYears } from 'date-fns'
 
 export default function Simulator() {
-  const { assets, simulatorSettings, setSimulatorSettings } = useAppStore()
+  const { assets, accounts, simulatorSettings, setSimulatorSettings } = useAppStore()
   const { toast } = useToast()
+  const { profile } = useAuth()
+
+  const currentAge = useMemo(() => {
+    if (profile?.birth_date) {
+      return differenceInYears(new Date(), new Date(profile.birth_date))
+    }
+    return 35 // fallback
+  }, [profile])
 
   const [aporte, setAporte] = useState(simulatorSettings.aporte)
   const [retorno, setRetorno] = useState(simulatorSettings.retorno)
-  const [idade, setIdade] = useState(simulatorSettings.idade)
   const [rendaDesejada, setRendaDesejada] = useState(simulatorSettings.rendaDesejada)
 
   useEffect(() => {
     setAporte(simulatorSettings.aporte)
     setRetorno(simulatorSettings.retorno)
-    setIdade(simulatorSettings.idade)
     setRendaDesejada(simulatorSettings.rendaDesejada)
   }, [simulatorSettings])
 
-  const patrimony = useMemo(() => assets.reduce((sum, a) => sum + a.value, 0), [assets])
+  const patrimony = useMemo(() => {
+    return (
+      assets.reduce((sum, a) => sum + a.value, 0) + accounts.reduce((sum, a) => sum + a.balance, 0)
+    )
+  }, [assets, accounts])
 
-  const { freedomText, hasReached, isStalled } = useMemo(() => {
+  const { freedomText, hasReached, isStalled, retirementAge } = useMemo(() => {
     const monthlyRate = Math.pow(1 + retorno / 100, 1 / 12) - 1
     const target = Math.round((rendaDesejada * 12) / (retorno / 100))
 
     if (patrimony >= target) {
-      return { freedomText: 'Você já alcançou!', hasReached: true, isStalled: false }
+      return {
+        freedomText: 'Você já alcançou!',
+        hasReached: true,
+        isStalled: false,
+        retirementAge: currentAge,
+      }
     }
 
     let monthsToFreedom = Infinity
@@ -48,7 +65,12 @@ export default function Simulator() {
     }
 
     if (aporte <= 0 || monthsToFreedom === Infinity) {
-      return { freedomText: 'Aporte necessário', hasReached: false, isStalled: true }
+      return {
+        freedomText: 'Aporte necessário',
+        hasReached: false,
+        isStalled: true,
+        retirementAge: Infinity,
+      }
     }
 
     const years = Math.floor(monthsToFreedom / 12)
@@ -58,11 +80,12 @@ export default function Simulator() {
       freedomText: `${years} anos e ${months} meses`,
       hasReached: false,
       isStalled: false,
+      retirementAge: currentAge + monthsToFreedom / 12,
     }
-  }, [aporte, retorno, rendaDesejada, patrimony])
+  }, [aporte, retorno, rendaDesejada, patrimony, currentAge])
 
   const handleSaveScenario = () => {
-    setSimulatorSettings({ aporte, retorno, idade, rendaDesejada })
+    setSimulatorSettings({ aporte, retorno, rendaDesejada })
     toast({
       title: 'Plano Salvo',
       description: 'Suas projeções do Plano de Aposentadoria foram atualizadas.',
@@ -73,8 +96,8 @@ export default function Simulator() {
   const getInsight = () => {
     if (aporte <= 0)
       return `Sem aportes, seu patrimônio depende apenas do tempo e rendimento. Você está confortável em pausar seus investimentos agora?`
-    if (idade < 40)
-      return `Aposentar-se aos ${idade} anos exige sacrifício extremo agora. Cuidado com o burnout. Está valendo a pena?`
+    if (retirementAge < 40 && retirementAge > currentAge)
+      return `Aposentar-se aos ${Math.ceil(retirementAge)} anos exige sacrifício extremo agora. Cuidado com o burnout. Está valendo a pena?`
     if (aporte > 10000)
       return `Um aporte de R$ ${aporte.toLocaleString()} é alto! O que você está deixando de viver hoje para manter esse ritmo?`
     if (retorno > 10)
@@ -134,10 +157,10 @@ export default function Simulator() {
               setAporte={setAporte}
               retorno={retorno}
               setRetorno={setRetorno}
-              idade={idade}
-              setIdade={setIdade}
               rendaDesejada={rendaDesejada}
               setRendaDesejada={setRendaDesejada}
+              currentAge={currentAge}
+              retirementAge={retirementAge}
             />
           </div>
           <div className="md:col-span-8 relative">
@@ -154,8 +177,10 @@ export default function Simulator() {
             <SimulatorChart
               aporte={aporte}
               retorno={retorno}
-              idade={idade}
+              currentAge={currentAge}
+              retirementAge={retirementAge}
               rendaDesejada={rendaDesejada}
+              patrimony={patrimony}
             />
           </div>
         </div>

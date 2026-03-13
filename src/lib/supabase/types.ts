@@ -129,6 +129,7 @@ export type Database = {
       }
       members: {
         Row: {
+          birth_date: string | null
           created_at: string | null
           email: string | null
           family_id: string
@@ -138,6 +139,7 @@ export type Database = {
           role: string
         }
         Insert: {
+          birth_date?: string | null
           created_at?: string | null
           email?: string | null
           family_id: string
@@ -147,6 +149,7 @@ export type Database = {
           role?: string
         }
         Update: {
+          birth_date?: string | null
           created_at?: string | null
           email?: string | null
           family_id?: string
@@ -175,6 +178,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          birth_date: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -183,6 +187,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          birth_date?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -191,6 +196,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          birth_date?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
@@ -203,6 +209,8 @@ export type Database = {
         Row: {
           account: string | null
           amount: number
+          asset_name: string | null
+          bank_broker: string | null
           card_id: string | null
           category: string
           date: string
@@ -219,6 +227,8 @@ export type Database = {
         Insert: {
           account?: string | null
           amount: number
+          asset_name?: string | null
+          bank_broker?: string | null
           card_id?: string | null
           category: string
           date: string
@@ -235,6 +245,8 @@ export type Database = {
         Update: {
           account?: string | null
           amount?: number
+          asset_name?: string | null
+          bank_broker?: string | null
           card_id?: string | null
           category?: string
           date?: string
@@ -446,6 +458,7 @@ export const Constants = {
 //   email: text (nullable)
 //   role: text (not null, default: 'member'::text)
 //   created_at: timestamp with time zone (nullable, default: now())
+//   birth_date: date (nullable)
 // Table: profiles
 //   id: uuid (not null)
 //   full_name: text (nullable)
@@ -453,6 +466,7 @@ export const Constants = {
 //   email: text (nullable)
 //   avatar_url: text (nullable)
 //   plan: text (not null, default: 'basic'::text)
+//   birth_date: date (nullable)
 // Table: transactions
 //   id: uuid (not null, default: gen_random_uuid())
 //   user_id: uuid (not null)
@@ -468,6 +482,8 @@ export const Constants = {
 //   has_attachment: boolean (nullable, default: false)
 //   profile: text (nullable)
 //   goal_id: uuid (nullable)
+//   bank_broker: text (nullable)
+//   asset_name: text (nullable)
 
 // --- CONSTRAINTS ---
 // Table: categories
@@ -504,6 +520,8 @@ export const Constants = {
 //   Policy "Users can view own categories" (SELECT, PERMISSIVE) roles={public}
 //     USING: (auth.uid() = user_id)
 // Table: families
+//   Policy "Master admin can view all families" (SELECT, PERMISSIVE) roles={public}
+//     USING: ((auth.jwt() ->> 'email'::text) = 'fhbcyberguard@gmail.com'::text)
 //   Policy "Users can insert own families" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: (auth.uid() = owner_id)
 //   Policy "Users can update own families" (UPDATE, PERMISSIVE) roles={public}
@@ -523,6 +541,8 @@ export const Constants = {
 //   Policy "Users can manage members of their families" (ALL, PERMISSIVE) roles={public}
 //     USING: (EXISTS ( SELECT 1    FROM families f   WHERE ((f.id = members.family_id) AND (f.owner_id = auth.uid()))))
 // Table: profiles
+//   Policy "Master admin can view all profiles" (SELECT, PERMISSIVE) roles={public}
+//     USING: ((auth.jwt() ->> 'email'::text) = 'fhbcyberguard@gmail.com'::text)
 //   Policy "Users can insert own profile" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: (auth.uid() = id)
 //   Policy "Users can update own profile" (UPDATE, PERMISSIVE) roles={public}
