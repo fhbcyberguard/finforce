@@ -32,7 +32,7 @@ import { useAuth } from '@/hooks/use-auth'
 import useAppStore from '@/stores/useAppStore'
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Wallet, label: 'Contas', href: '/contas' },
   { icon: ArrowLeftRight, label: 'Fluxo de Caixa', href: '/transacoes' },
   { icon: PieChart, label: 'Orçamento', href: '/orcamento' },

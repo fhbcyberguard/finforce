@@ -1,9 +1,17 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Shield, TrendingUp, Users } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Landing() {
+  const { user, loading } = useAuth()
+
+  // Ensure logged-in users are routed directly to their dashboard
+  if (!loading && user) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="container mx-auto px-4 h-20 flex items-center justify-between">

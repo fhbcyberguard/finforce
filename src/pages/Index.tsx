@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import useAppStore from '@/stores/useAppStore'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
@@ -34,6 +35,7 @@ export default function Index() {
   const [showComparison, setShowComparison] = useState(false)
 
   const isBusiness = currentContext === 'business'
+  const hasTransactions = transactions.length > 0
 
   // Memoize to prevent Radix Select from recreating internal refs unnecessarily
   const availableYears = useMemo(() => {
@@ -161,18 +163,34 @@ export default function Index() {
 
       <KpiCards />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Simulator />
-          <SpendingChart />
-          <SpendingByPersonChart />
+      {!hasTransactions ? (
+        <div className="flex flex-col items-center justify-center p-10 mt-6 border border-dashed border-border/60 rounded-xl bg-muted/10 text-center animate-in fade-in zoom-in-95 duration-500">
+          <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+            <BarChart3 className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2">Nenhuma transação registrada ainda</h2>
+          <p className="text-muted-foreground max-w-md mb-6">
+            Seu painel está vazio. Comece a registrar suas receitas e despesas para visualizar o
+            resumo financeiro, gráficos e projeções no tempo.
+          </p>
+          <Button asChild className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Link to="/transacoes">Ir para Fluxo de Caixa</Link>
+          </Button>
         </div>
-        <div className="flex flex-col gap-6">
-          <AlertsPanel />
-          <GoalWidget />
-          <CreditCardWidget />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Simulator />
+            <SpendingChart />
+            <SpendingByPersonChart />
+          </div>
+          <div className="flex flex-col gap-6">
+            <AlertsPanel />
+            <GoalWidget />
+            <CreditCardWidget />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

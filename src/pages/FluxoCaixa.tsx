@@ -461,7 +461,7 @@ export default function FluxoCaixa() {
           description: 'Sua retirada da reserva de emergência foi registrada.',
           reflection: getRandomPhrase(EMERGENCY_WITHDRAWAL_PHRASES),
         }
-      } else if (Math.abs(amount) > highValueThreshold && highValueThreshold > 0) {
+      } else if (incomeToCompare > 0 && Math.abs(amount) > highValueThreshold) {
         reflectionInfo = {
           title: 'Alerta de Gasto Elevado',
           description: 'Sua transação de alto valor foi registrada no fluxo.',
