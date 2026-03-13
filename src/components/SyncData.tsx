@@ -1,11 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 import useAppStore, { Category } from '@/stores/useAppStore'
 
 export function SyncData() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const {
+    currentContext,
+    setCurrentContext,
     setProfilesFromDB,
     setTransactionsFromDB,
     setGoalsFromDB,
@@ -14,6 +16,18 @@ export function SyncData() {
     setCreditCardsFromDB,
     setAssetsFromDB,
   } = useAppStore()
+
+  const prevProfileType = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (profile?.profile_type && profile.profile_type !== prevProfileType.current) {
+      prevProfileType.current = profile.profile_type
+      const expectedCtx = profile.profile_type === 'enterprise' ? 'business' : 'personal'
+      if (currentContext !== expectedCtx) {
+        setCurrentContext(expectedCtx)
+      }
+    }
+  }, [profile?.profile_type, currentContext, setCurrentContext])
 
   useEffect(() => {
     if (!user) return

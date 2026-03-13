@@ -16,7 +16,6 @@ import FluxoCaixa from './pages/FluxoCaixa'
 import Orcamento from './pages/Orcamento'
 import Configuracoes from './pages/Configuracoes'
 import ProducerAdmin from './pages/ProducerAdmin'
-import Clients from './pages/admin/Clients'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
@@ -73,7 +72,6 @@ const App = () => (
                 <Route path="/perfis" element={<Perfis />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/producer-admin" element={<ProducerAdmin />} />
-                <Route path="/admin/clients" element={<Clients />} />
               </Route>
             </Route>
             <Route path="*" element={<NotFound />} />

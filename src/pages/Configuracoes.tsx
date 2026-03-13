@@ -1,13 +1,17 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Palette, Bell, SlidersHorizontal, Shield, User, Tags } from 'lucide-react'
+import { Palette, Bell, SlidersHorizontal, Shield, User, Tags, ShieldAlert } from 'lucide-react'
 import { AccountTab } from '@/components/settings/AccountTab'
 import { AppearanceTab } from '@/components/settings/AppearanceTab'
 import { NotificationsTab } from '@/components/settings/NotificationsTab'
 import { SystemTab } from '@/components/settings/SystemTab'
 import { SecuritySettings } from '@/components/settings/SecuritySettings'
 import { CategoriesTab } from '@/components/settings/CategoriesTab'
+import { AdminClientsTab } from '@/components/settings/AdminClientsTab'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function Configuracoes() {
+  const { isMasterAdmin } = useAuth()
+
   return (
     <div className="space-y-6 animate-slide-in-up">
       <div>
@@ -35,6 +39,14 @@ export default function Configuracoes() {
           <TabsTrigger value="seguranca" className="flex items-center gap-2">
             <Shield className="w-4 h-4" /> Segurança
           </TabsTrigger>
+          {isMasterAdmin && (
+            <TabsTrigger
+              value="admin"
+              className="flex items-center gap-2 text-destructive data-[state=active]:bg-destructive/10 data-[state=active]:text-destructive"
+            >
+              <ShieldAlert className="w-4 h-4" /> Administração
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="conta">
@@ -55,6 +67,11 @@ export default function Configuracoes() {
         <TabsContent value="seguranca">
           <SecuritySettings />
         </TabsContent>
+        {isMasterAdmin && (
+          <TabsContent value="admin">
+            <AdminClientsTab />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   )
