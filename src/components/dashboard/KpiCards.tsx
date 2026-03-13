@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Wallet, TrendingUp, DollarSign, Clock, Coins } from 'lucide-react'
+import { Wallet, TrendingUp, DollarSign, Clock, Coins, Activity } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 
 export default function KpiCards() {
@@ -34,14 +34,30 @@ export default function KpiCards() {
       .filter(
         (t) =>
           t.amount < 0 &&
+          t.type !== 'Transfer' &&
           (t.expenseType === 'fixed' || t.recurrence === 'monthly' || t.recurrence === 'yearly'),
       )
       .reduce((sum, t) => sum + t.amount, 0),
   )
 
+  const variableExpenses = Math.abs(
+    filteredTransactions
+      .filter(
+        (t) =>
+          t.amount < 0 &&
+          t.type !== 'Transfer' &&
+          t.expenseType === 'variable' &&
+          t.recurrence !== 'monthly' &&
+          t.recurrence !== 'yearly',
+      )
+      .reduce((sum, t) => sum + t.amount, 0),
+  )
+
   // Time to freedom calculation
-  const monthlyFixedExpenses = isAnnual ? fixedExpenses / 12 || 4200 : fixedExpenses || 4200
-  const targetPatrimony = monthlyFixedExpenses * 300 // Rule of 300 for monthly FI
+  const totalMonthlyExpenses = isAnnual
+    ? (fixedExpenses + variableExpenses) / 12
+    : fixedExpenses + variableExpenses
+  const targetPatrimony = (totalMonthlyExpenses > 0 ? totalMonthlyExpenses : 1000) * 300
   const shortfall = targetPatrimony - patrimony
   const averageMonthlyAporte = 2000 // Assumed average contribution
   const yearsToFreedom = shortfall > 0 ? (shortfall / averageMonthlyAporte / 12).toFixed(1) : '0'
@@ -77,27 +93,37 @@ export default function KpiCards() {
       trendUpIsBad: true,
     },
     {
+      title: isAnnual ? 'Gastos Variáveis (Ano)' : 'Gastos Variáveis',
+      value: `R$ ${variableExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: Activity,
+      trend: '+3.5%',
+      desc: 'estilo de vida',
+      trendUpIsBad: true,
+    },
+    {
       title: 'Tempo p/ Liberdade',
       value: `${yearsToFreedom} Anos`,
       icon: Clock,
-      desc: `com aporte de R$${averageMonthlyAporte}`,
+      desc: `com aporte médio`,
     },
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
+    <div className="grid gap-4 grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
       {kpis.map((kpi, i) => (
         <Card
           key={i}
           className="border-border/50 bg-card/50 backdrop-blur shadow-subtle hover:shadow-md transition-all"
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{kpi.title}</CardTitle>
-            <kpi.icon className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-muted-foreground truncate mr-2">
+              {kpi.title}
+            </CardTitle>
+            <kpi.icon className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpi.value}</div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+            <div className="text-xl lg:text-2xl font-bold truncate">{kpi.value}</div>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 truncate">
               {kpi.trend && (
                 <span
                   className={

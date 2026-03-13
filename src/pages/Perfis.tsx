@@ -1,15 +1,17 @@
 import { useState, useMemo } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, Archive, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import useAppStore, { Profile } from '@/stores/useAppStore'
 import { ProfileCard } from '@/components/profiles/ProfileCard'
 import { ProfileEditDialog } from '@/components/profiles/ProfileEditDialog'
 import { ProfileDeleteFlow } from '@/components/profiles/ProfileDeleteFlow'
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 
 export default function Perfis() {
   const { profiles, searchQuery } = useAppStore()
   const [editingProfile, setEditingProfile] = useState<Partial<Profile> | null>(null)
   const [deletingProfile, setDeletingProfile] = useState<Profile | null>(null)
+  const [archivedOpen, setArchivedOpen] = useState(false)
 
   const filteredProfiles = useMemo(() => {
     if (!searchQuery) return profiles
@@ -52,21 +54,35 @@ export default function Perfis() {
       )}
 
       {archivedProfiles.length > 0 && (
-        <div className="pt-8 space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight text-muted-foreground flex items-center gap-2">
-            Perfis Arquivados
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-80">
-            {archivedProfiles.map((profile) => (
-              <ProfileCard
-                key={profile.id}
-                profile={profile}
-                onEdit={() => setEditingProfile(profile)}
-                onDelete={() => setDeletingProfile(profile)}
-              />
-            ))}
-          </div>
-        </div>
+        <Collapsible open={archivedOpen} onOpenChange={setArchivedOpen} className="pt-8 space-y-4">
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full flex justify-between items-center text-muted-foreground hover:bg-muted/50 p-4 h-auto rounded-lg border border-dashed border-border"
+            >
+              <span className="text-lg font-semibold tracking-tight flex items-center gap-2">
+                <Archive className="w-5 h-5" /> Perfis Arquivados ({archivedProfiles.length})
+              </span>
+              {archivedOpen ? (
+                <ChevronUp className="w-5 h-5" />
+              ) : (
+                <ChevronDown className="w-5 h-5" />
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-75 grayscale-[0.2]">
+              {archivedProfiles.map((profile) => (
+                <ProfileCard
+                  key={profile.id}
+                  profile={profile}
+                  onEdit={() => setEditingProfile(profile)}
+                  onDelete={() => setDeletingProfile(profile)}
+                />
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {editingProfile !== null && (

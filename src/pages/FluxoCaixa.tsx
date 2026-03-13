@@ -513,7 +513,7 @@ export default function FluxoCaixa() {
         }}
         title="Alerta de Gasto Elevado"
         description="Você está registrando uma saída de valor substancial."
-        reflectionText="Este gasto está acima da sua média. Ele está alinhado com seu propósito financeiro?"
+        reflectionText="Este gasto de alto valor foge do seu padrão. Ele realmente reflete suas prioridades e metas financeiras de longo prazo?"
         confirmText="Confirmar Gasto"
         destructive={false}
       />

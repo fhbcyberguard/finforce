@@ -85,9 +85,47 @@ export default function useAppStore() {
 
   return {
     ...store,
-    setProfiles: (profiles: Profile[]) => updateState({ profiles }),
+    setProfiles: (profiles: Profile[]) => {
+      const deletedProfiles = state.profiles.filter((p) => !profiles.some((np) => np.id === p.id))
+      let newTx = state.transactions
+
+      if (deletedProfiles.length > 0) {
+        const deletedNames = deletedProfiles.map((p) => p.name)
+        newTx = newTx.filter((t) => !t.profile || !deletedNames.includes(t.profile))
+      }
+
+      const renamedProfiles = profiles.filter((p) => {
+        const old = state.profiles.find((op) => op.id === p.id)
+        return old && old.name !== p.name
+      })
+
+      if (renamedProfiles.length > 0) {
+        newTx = newTx.map((t) => {
+          const matchedRenamed = renamedProfiles.find((rp) => {
+            const old = state.profiles.find((op) => op.id === rp.id)
+            return old?.name === t.profile
+          })
+          if (matchedRenamed) return { ...t, profile: matchedRenamed.name }
+          return t
+        })
+      }
+
+      updateState({ profiles, transactions: newTx })
+    },
     setAccounts: (accounts: Account[]) => updateState({ accounts }),
-    setCreditCards: (creditCards: CreditCard[]) => updateState({ creditCards }),
+    setCreditCards: (creditCards: CreditCard[]) => {
+      const deletedCardIds = state.creditCards
+        .filter((c) => !creditCards.some((nc) => nc.id === c.id))
+        .map((c) => c.id)
+      if (deletedCardIds.length > 0) {
+        const remainingTx = state.transactions.filter(
+          (t) => !t.cardId || !deletedCardIds.includes(t.cardId),
+        )
+        updateState({ creditCards, transactions: remainingTx })
+      } else {
+        updateState({ creditCards })
+      }
+    },
     setAssets: (assets: Asset[]) => updateState({ assets }),
     setGoals: (goals: Goal[]) => updateState({ goals }),
     setTransactions: (transactions: Transaction[]) => updateState({ transactions }),

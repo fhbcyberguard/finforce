@@ -155,7 +155,7 @@ export default function AssetList({ className }: { className?: string }) {
         onConfirm={confirmDelete}
         title="Excluir Ativo / Resgate?"
         description="Você está prestes a remover este ativo da sua carteira."
-        reflectionText="Remover este patrimônio impacta seu Ponto de Liberdade. Você revisou sua estratégia de diversificação?"
+        reflectionText="O resgate deste ativo afetará diretamente seu tempo até a independência financeira. Essa mudança de rota foi planejada?"
         confirmText="Sim, Confirmar Resgate"
       />
     </Card>

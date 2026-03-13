@@ -104,7 +104,7 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
         onConfirm={handleArchive}
         title="Arquivar Perfil?"
         description="O perfil será movido para Arquivados. Transações anteriores continuarão existindo para cálculos de patrimônio, mas o acesso ao app será revogado."
-        reflectionText="Ocultar dados não resolve problemas estruturais. Você tem certeza desta ação?"
+        reflectionText="Ocultar o perfil não soluciona eventuais conflitos. A transparência financeira da família está sendo preservada com essa decisão?"
         confirmText="Arquivar Perfil"
       />
     </>

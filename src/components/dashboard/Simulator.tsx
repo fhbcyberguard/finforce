@@ -1,16 +1,46 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Lightbulb } from 'lucide-react'
+import { Lightbulb, Clock } from 'lucide-react'
 import { Typewriter } from '../Typewriter'
 import SimulatorControls from './SimulatorControls'
 import SimulatorChart from './SimulatorChart'
 import { Button } from '@/components/ui/button'
+import useAppStore from '@/stores/useAppStore'
 
 export default function Simulator() {
   const [aporte, setAporte] = useState(2000)
   const [retorno, setRetorno] = useState(8.5)
   const [idade, setIdade] = useState(55)
   const [rendaDesejada, setRendaDesejada] = useState(10000)
+
+  const { assets } = useAppStore()
+
+  const patrimony = useMemo(() => assets.reduce((sum, a) => sum + a.value, 0), [assets])
+
+  const { freedomText, hasReached } = useMemo(() => {
+    const monthlyRate = Math.pow(1 + retorno / 100, 1 / 12) - 1
+    const target = Math.round((rendaDesejada * 12) / (retorno / 100))
+
+    let monthsToFreedom = 0
+    if (patrimony < target) {
+      if (monthlyRate > 0) {
+        const num = (target + aporte / monthlyRate) / (patrimony + aporte / monthlyRate)
+        if (num > 0) {
+          monthsToFreedom = Math.log(num) / Math.log(1 + monthlyRate)
+        }
+      } else {
+        monthsToFreedom = (target - patrimony) / (aporte || 1)
+      }
+    }
+
+    const years = Math.floor(monthsToFreedom / 12)
+    const months = Math.ceil(monthsToFreedom % 12)
+
+    return {
+      freedomText: patrimony >= target ? 'Você já alcançou!' : `${years} anos e ${months} meses`,
+      hasReached: patrimony >= target,
+    }
+  }, [aporte, retorno, rendaDesejada, patrimony])
 
   // CBT Question Generator
   const getInsight = () => {
@@ -41,6 +71,23 @@ export default function Simulator() {
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-6">
+        <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-primary flex items-center gap-2">
+              <Clock className="w-5 h-5" /> Tempo de Liberdade Estimado
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Projeção baseada no patrimônio de R$ {patrimony.toLocaleString('pt-BR')} e aporte de
+              R$ {aporte.toLocaleString('pt-BR')}
+            </p>
+          </div>
+          <div
+            className={`text-2xl md:text-3xl font-bold text-left sm:text-right ${hasReached ? 'text-emerald-500' : 'text-primary'}`}
+          >
+            {freedomText}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start flex-1">
           <div className="md:col-span-4 h-full flex flex-col">
             <SimulatorControls
