@@ -57,7 +57,7 @@ export default function Simulator() {
     return {
       freedomText: `${years} anos e ${months} meses`,
       hasReached: false,
-      isStalled: false
+      isStalled: false,
     }
   }, [aporte, retorno, rendaDesejada, patrimony])
 
@@ -101,16 +101,23 @@ export default function Simulator() {
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-6">
-        <div className={`bg-primary/5 border p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isStalled ? 'border-amber-500/50 bg-amber-500/5' : 'border-primary/20'}`}>
+        <div
+          className={`bg-primary/5 border p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isStalled ? 'border-amber-500/50 bg-amber-500/5' : 'border-primary/20'}`}
+        >
           <div>
             <h3 className="font-semibold flex items-center gap-2">
-              {isStalled ? <AlertTriangle className="w-5 h-5 text-amber-500" /> : <Clock className="w-5 h-5 text-primary" />}
+              {isStalled ? (
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+              ) : (
+                <Clock className="w-5 h-5 text-primary" />
+              )}
               <span className={isStalled ? 'text-amber-600 dark:text-amber-500' : 'text-primary'}>
                 Tempo de Liberdade Estimado
               </span>
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Projeção baseada no patrimônio atual de R$ {patrimony.toLocaleString('pt-BR')} e aportes.
+              Projeção baseada no patrimônio atual de R$ {patrimony.toLocaleString('pt-BR')} e
+              aportes.
             </p>
           </div>
           <div
@@ -135,12 +142,14 @@ export default function Simulator() {
           </div>
           <div className="md:col-span-8 relative">
             {isStalled && (
-               <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-[1px] rounded-lg">
-                  <div className="bg-background border shadow-lg p-4 rounded-lg text-center max-w-[280px]">
-                     <p className="text-sm font-medium text-muted-foreground">Gráfico indisponível</p>
-                     <p className="text-xs text-muted-foreground mt-1">Ajuste o valor do aporte para visualizar a projeção patrimonial no tempo.</p>
-                  </div>
-               </div>
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-[1px] rounded-lg">
+                <div className="bg-background border shadow-lg p-4 rounded-lg text-center max-w-[280px]">
+                  <p className="text-sm font-medium text-muted-foreground">Gráfico indisponível</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Ajuste o valor do aporte para visualizar a projeção patrimonial no tempo.
+                  </p>
+                </div>
+              </div>
             )}
             <SimulatorChart
               aporte={aporte}

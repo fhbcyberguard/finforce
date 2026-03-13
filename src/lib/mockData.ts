@@ -35,7 +35,14 @@ export const MOCK_ALERTS = [
 ]
 
 export const MOCK_ASSETS = [
-  { id: '1', name: 'CDB Banco Inter', category: 'Renda Fixa', value: 45000, rate: '110% CDI', context: 'personal' },
+  {
+    id: '1',
+    name: 'CDB Banco Inter',
+    category: 'Renda Fixa',
+    value: 45000,
+    rate: '110% CDI',
+    context: 'personal',
+  },
   {
     id: '2',
     name: 'Tesouro IPCA+ 2035',
@@ -44,9 +51,23 @@ export const MOCK_ASSETS = [
     rate: 'IPCA + 5.5%',
     context: 'personal',
   },
-  { id: '3', name: 'FII HGLG11', category: 'FIIs', value: 15000, rate: 'Div 0.8% a.m', context: 'personal' },
+  {
+    id: '3',
+    name: 'FII HGLG11',
+    category: 'FIIs',
+    value: 15000,
+    rate: 'Div 0.8% a.m',
+    context: 'personal',
+  },
   { id: '4', name: 'Ações WEGE3', category: 'Ações', value: 8500, rate: '-', context: 'personal' },
-  { id: '5', name: 'Caixa Empresa', category: 'Renda Fixa', value: 35000, rate: '100% CDI', context: 'business' },
+  {
+    id: '5',
+    name: 'Caixa Empresa',
+    category: 'Renda Fixa',
+    value: 35000,
+    rate: '100% CDI',
+    context: 'business',
+  },
 ]
 
 export const MOCK_ACCOUNTS = [
@@ -70,7 +91,14 @@ export const MOCK_ACCOUNTS = [
     account: '98765-4',
     context: 'personal',
   },
-  { id: '3', bank: 'XP Investimentos', type: 'Corretora', balance: 0.0, connected: false, context: 'personal' },
+  {
+    id: '3',
+    bank: 'XP Investimentos',
+    type: 'Corretora',
+    balance: 0.0,
+    connected: false,
+    context: 'personal',
+  },
   {
     id: '4',
     bank: 'Inter Empresas',

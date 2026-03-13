@@ -5,7 +5,7 @@ import useAppStore from '@/stores/useAppStore'
 
 export default function AlertsPanel() {
   const { alerts, accounts } = useAppStore()
-  
+
   const hasAccounts = accounts.length > 0
 
   const formatDays = (dateStr: string) => {
@@ -30,9 +30,11 @@ export default function AlertsPanel() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center justify-center h-[200px] gap-3">
-             <AlertCircle className="w-8 h-8 text-muted-foreground/50" />
-             <p>Nenhuma conta vinculada neste perfil.</p>
-             <p className="text-xs">Cadastre contas e despesas para ativar o monitoramento inteligente de faturas.</p>
+            <AlertCircle className="w-8 h-8 text-muted-foreground/50" />
+            <p>Nenhuma conta vinculada neste perfil.</p>
+            <p className="text-xs">
+              Cadastre contas e despesas para ativar o monitoramento inteligente de faturas.
+            </p>
           </div>
         </CardContent>
       </Card>

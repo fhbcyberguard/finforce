@@ -20,8 +20,8 @@ export default function Index() {
             {isBusiness ? 'Visão Empresarial' : 'Visão Geral'}
           </h1>
           <p className="text-muted-foreground">
-            {isBusiness 
-              ? 'Gerencie o fluxo de caixa e a saúde financeira do seu negócio.' 
+            {isBusiness
+              ? 'Gerencie o fluxo de caixa e a saúde financeira do seu negócio.'
               : 'Bem-vindo de volta. Acompanhe seu progresso rumo à independência.'}
           </p>
         </div>

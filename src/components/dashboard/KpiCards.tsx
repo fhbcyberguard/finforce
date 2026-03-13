@@ -57,13 +57,13 @@ export default function KpiCards() {
   const totalMonthlyExpenses = isAnnual
     ? (fixedExpenses + variableExpenses) / 12
     : fixedExpenses + variableExpenses
-    
+
   const targetPatrimony = (totalMonthlyExpenses > 0 ? totalMonthlyExpenses : 1000) * 300
   const shortfall = targetPatrimony - patrimony
   const averageMonthlyAporte = simulatorSettings?.aporte || 0
-  
+
   let yearsToFreedomStr = 'N/A'
-  
+
   if (shortfall <= 0) {
     yearsToFreedomStr = 'Alcançado'
   } else if (averageMonthlyAporte > 0) {
@@ -114,7 +114,10 @@ export default function KpiCards() {
       title: 'Tempo p/ Liberdade',
       value: yearsToFreedomStr,
       icon: Clock,
-      desc: averageMonthlyAporte > 0 ? `com aporte de R$ ${averageMonthlyAporte}` : 'configure seu plano',
+      desc:
+        averageMonthlyAporte > 0
+          ? `com aporte de R$ ${averageMonthlyAporte}`
+          : 'configure seu plano',
     },
   ]
 
@@ -132,7 +135,9 @@ export default function KpiCards() {
             <kpi.icon className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className={`text-xl lg:text-2xl font-bold truncate ${kpi.value === 'Aporte Zero' ? 'text-muted-foreground/50 text-lg' : ''}`}>
+            <div
+              className={`text-xl lg:text-2xl font-bold truncate ${kpi.value === 'Aporte Zero' ? 'text-muted-foreground/50 text-lg' : ''}`}
+            >
               {kpi.value}
             </div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 truncate">

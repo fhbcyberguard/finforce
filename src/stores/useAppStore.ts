@@ -12,7 +12,10 @@ import {
 export type ContextType = 'personal' | 'business'
 export type Profile = (typeof MOCK_PROFILES)[0] & { isArchived?: boolean; context?: ContextType }
 export type Account = (typeof MOCK_ACCOUNTS)[0] & { context?: ContextType }
-export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & { isArchived?: boolean; context?: ContextType }
+export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & {
+  isArchived?: boolean
+  context?: ContextType
+}
 export type Asset = (typeof MOCK_ASSETS)[0] & { context?: ContextType }
 export type Goal = (typeof MOCK_GOALS)[0] & { context?: ContextType }
 export type Alert = (typeof MOCK_ALERTS)[0] & { context?: ContextType }

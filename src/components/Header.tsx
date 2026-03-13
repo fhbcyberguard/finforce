@@ -30,17 +30,17 @@ export function Header() {
   const [showUpgrade, setShowUpgrade] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
-  
-  const { 
-    logoUrl, 
-    searchQuery, 
-    setSearchQuery, 
-    profiles, 
-    alerts, 
-    currentContext, 
+
+  const {
+    logoUrl,
+    searchQuery,
+    setSearchQuery,
+    profiles,
+    alerts,
+    currentContext,
     setCurrentContext,
     subscriptionPlan,
-    setSubscriptionPlan
+    setSubscriptionPlan,
   } = useAppStore()
 
   const urgentAlerts = alerts.filter((a) => a.type === 'urgent').length
@@ -72,9 +72,9 @@ export function Header() {
     setSubscriptionPlan('master')
     setShowUpgrade(false)
     setCurrentContext('business')
-    toast({ 
-      title: 'Plano Atualizado!', 
-      description: 'Bem-vindo ao Plano Master. O contexto empresarial foi ativado com sucesso.' 
+    toast({
+      title: 'Plano Atualizado!',
+      description: 'Bem-vindo ao Plano Master. O contexto empresarial foi ativado com sucesso.',
     })
   }
 
@@ -85,17 +85,24 @@ export function Header() {
           <SidebarTrigger />
           <div className="md:hidden flex items-center">
             {logoUrl ? (
-              <img src={logoUrl} alt="Logo" className="w-6 h-6 rounded-md object-contain bg-muted" />
+              <img
+                src={logoUrl}
+                alt="Logo"
+                className="w-6 h-6 rounded-md object-contain bg-muted"
+              />
             ) : (
               <div className="bg-[#1E3A5F] p-1 rounded-md text-[#2EC4B6]">
                 <Waves className="w-4 h-4" />
               </div>
             )}
           </div>
-          
+
           {currentContext === 'business' && (
             <div className="hidden md:flex items-center ml-2">
-              <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30 gap-1.5 py-1">
+              <Badge
+                variant="outline"
+                className="bg-primary/10 text-primary border-primary/30 gap-1.5 py-1"
+              >
                 <Briefcase className="w-3 h-3" /> Fluxo da Empresa
               </Badge>
             </div>
@@ -142,21 +149,31 @@ export function Header() {
             <DropdownMenuContent align="end" className="w-56 mt-1">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{mainProfile?.name || 'Usuário'}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {mainProfile?.name || 'Usuário'}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">conta@familia.com</p>
                 </div>
               </DropdownMenuLabel>
-              
+
               <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={handleContextSwitch} className="cursor-pointer font-medium text-primary focus:text-primary">
+
+              <DropdownMenuItem
+                onClick={handleContextSwitch}
+                className="cursor-pointer font-medium text-primary focus:text-primary"
+              >
                 <Briefcase className="mr-2 h-4 w-4" />
-                <span>{currentContext === 'personal' ? 'Mudar p/ Empresarial' : 'Mudar p/ Pessoal'}</span>
+                <span>
+                  {currentContext === 'personal' ? 'Mudar p/ Empresarial' : 'Mudar p/ Pessoal'}
+                </span>
               </DropdownMenuItem>
 
               <DropdownMenuSeparator />
-              
-              <DropdownMenuItem onClick={() => navigate('/configuracoes')} className="cursor-pointer">
+
+              <DropdownMenuItem
+                onClick={() => navigate('/configuracoes')}
+                className="cursor-pointer"
+              >
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Configurações</span>
               </DropdownMenuItem>
@@ -164,9 +181,9 @@ export function Header() {
                 <Users className="mr-2 h-4 w-4" />
                 <span>Perfis de Acesso</span>
               </DropdownMenuItem>
-              
+
               <DropdownMenuSeparator />
-              
+
               <DropdownMenuItem
                 onClick={handleLogout}
                 className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
@@ -183,25 +200,31 @@ export function Header() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <Star className="w-5 h-5 text-amber-500 fill-amber-500" /> 
+              <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
               Funcionalidade Premium
             </DialogTitle>
             <DialogDescription className="text-base pt-2">
-              O gerenciamento de <strong>Fluxo de Caixa Empresarial</strong> e a separação de contextos estão disponíveis apenas para assinantes do <strong>Plano Médio</strong> ou <strong>Plano Master</strong>.
+              O gerenciamento de <strong>Fluxo de Caixa Empresarial</strong> e a separação de
+              contextos estão disponíveis apenas para assinantes do <strong>Plano Médio</strong> ou{' '}
+              <strong>Plano Master</strong>.
             </DialogDescription>
           </DialogHeader>
           <div className="py-6 flex flex-col items-center justify-center text-center bg-muted/30 rounded-lg my-2 border border-border/50">
-             <Briefcase className="w-12 h-12 text-primary mb-3" />
-             <h4 className="font-semibold">Profissionalize suas finanças</h4>
-             <p className="text-sm text-muted-foreground mt-1 max-w-[280px]">
-               Separe completamente os gastos da sua empresa dos seus gastos pessoais em um único app.
-             </p>
+            <Briefcase className="w-12 h-12 text-primary mb-3" />
+            <h4 className="font-semibold">Profissionalize suas finanças</h4>
+            <p className="text-sm text-muted-foreground mt-1 max-w-[280px]">
+              Separe completamente os gastos da sua empresa dos seus gastos pessoais em um único
+              app.
+            </p>
           </div>
           <DialogFooter className="sm:justify-between flex-row gap-2 mt-2">
             <Button variant="outline" onClick={() => setShowUpgrade(false)} className="flex-1">
               Cancelar
             </Button>
-            <Button onClick={handleUpgrade} className="flex-1 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-white border-0">
+            <Button
+              onClick={handleUpgrade}
+              className="flex-1 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-white border-0"
+            >
               Fazer Upgrade
             </Button>
           </DialogFooter>
