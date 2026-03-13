@@ -106,7 +106,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               role: data.role,
               birth_date: data.birthDate || null,
               color: data.color,
-            })
+            } as any)
             .select()
             .single()
 
@@ -130,7 +130,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
             role: data.role,
             birth_date: data.birthDate || null,
             color: data.color,
-          })
+          } as any)
           .eq('id', profile.id)
 
         if (error) {

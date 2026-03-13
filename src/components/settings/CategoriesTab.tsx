@@ -53,7 +53,10 @@ export function CategoriesTab() {
     const payload = { name, type, icon, color, user_id: user.id }
 
     if (editingId) {
-      const { error } = await supabase.from('categories').update(payload).eq('id', editingId)
+      const { error } = await supabase
+        .from('categories')
+        .update(payload as any)
+        .eq('id', editingId)
       if (!error) {
         setCategories(categories.map((c) => (c.id === editingId ? { ...c, ...payload } : c)))
         toast({ title: 'Categoria atualizada' })
@@ -62,7 +65,11 @@ export function CategoriesTab() {
         toast({ title: 'Erro ao atualizar', variant: 'destructive' })
       }
     } else {
-      const { data, error } = await supabase.from('categories').insert(payload).select().single()
+      const { data, error } = await supabase
+        .from('categories')
+        .insert(payload as any)
+        .select()
+        .single()
       if (!error && data) {
         setCategories([...categories, { ...payload, id: data.id }])
         toast({ title: 'Categoria adicionada' })
