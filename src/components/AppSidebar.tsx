@@ -1,4 +1,14 @@
-import { Home, Users, Settings, PieChart, CreditCard, Wallet, Building2, User } from 'lucide-react'
+import {
+  Home,
+  Users,
+  Settings,
+  PieChart,
+  CreditCard,
+  Wallet,
+  Building2,
+  User,
+  Target,
+} from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -24,6 +34,7 @@ const mainNavItems = [
   { title: 'Dashboard', icon: Home, url: '/dashboard' },
   { title: 'Transações', icon: CreditCard, url: '/transacoes' },
   { title: 'Orçamento', icon: PieChart, url: '/orcamento' },
+  { title: 'Metas', icon: Target, url: '/metas' },
   { title: 'Contas', icon: Wallet, url: '/contas' },
   { title: 'Perfis', icon: Users, url: '/perfis' },
 ]

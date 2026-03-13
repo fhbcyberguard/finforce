@@ -119,8 +119,12 @@ export default function FluxoCaixa() {
         setSelectedAccount(foundAcc ? foundAcc.id : accounts[0]?.id || '')
         setSelectedCard(editingTx.cardId || 'none')
         if (editingTx.type === 'Aporte') {
-          const match = goals.find((g) => editingTx.category.includes(g.name))
-          if (match) setSelectedGoalId(match.id)
+          if (editingTx.goalId) {
+            setSelectedGoalId(editingTx.goalId)
+          } else {
+            const match = goals.find((g) => editingTx.category.includes(g.name))
+            if (match) setSelectedGoalId(match.id)
+          }
         }
       } else {
         setFormType('Expense')
@@ -144,7 +148,7 @@ export default function FluxoCaixa() {
   const handleSave = async (txToSave: Transaction) => {
     if (!user) return
 
-    const dbPayload = {
+    const dbPayload: any = {
       user_id: user.id,
       description: txToSave.description,
       amount: txToSave.amount,
@@ -157,11 +161,26 @@ export default function FluxoCaixa() {
       recurrence: txToSave.recurrence,
       has_attachment: txToSave.hasAttachment,
       profile: txToSave.profile,
+      goal_id: txToSave.goalId || null,
     }
 
     if (editingTx) {
       const { error } = await supabase.from('transactions').update(dbPayload).eq('id', editingTx.id)
       if (!error) {
+        if (txToSave.type === 'Aporte' && txToSave.goalId) {
+          const diff = txToSave.amount - editingTx.amount
+          if (diff !== 0) {
+            const goal = goals.find((g) => g.id === txToSave.goalId)
+            if (goal) {
+              const newBalance = goal.currentValue + diff
+              await supabase.from('goals').update({ current_value: newBalance }).eq('id', goal.id)
+              setGoals(
+                goals.map((g) => (g.id === goal.id ? { ...g, currentValue: newBalance } : g)),
+              )
+            }
+          }
+        }
+
         const updatedTx = { ...txToSave, id: editingTx.id }
         setTransactions(transactions.map((t) => (t.id === editingTx.id ? updatedTx : t)))
         toast({
@@ -182,6 +201,15 @@ export default function FluxoCaixa() {
         .select()
         .single()
       if (!error && data) {
+        if (txToSave.type === 'Aporte' && txToSave.goalId) {
+          const goal = goals.find((g) => g.id === txToSave.goalId)
+          if (goal) {
+            const newBalance = goal.currentValue + txToSave.amount
+            await supabase.from('goals').update({ current_value: newBalance }).eq('id', goal.id)
+            setGoals(goals.map((g) => (g.id === goal.id ? { ...g, currentValue: newBalance } : g)))
+          }
+        }
+
         const finalTx = { ...txToSave, id: data.id }
         setTransactions([finalTx, ...transactions])
         toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
@@ -210,15 +238,6 @@ export default function FluxoCaixa() {
     if (type === 'Aporte') {
       const goal = goals.find((g) => g.id === selectedGoalId)
       category = `Metas > ${goal?.name || 'Geral'}`
-
-      // Update Goal logic (optimistic update for local store)
-      if (goal && !editingTx) {
-        setGoals(
-          goals.map((g) =>
-            g.id === selectedGoalId ? { ...g, currentValue: g.currentValue + amount } : g,
-          ),
-        )
-      }
     } else {
       category = fd.get('category') as string
     }
@@ -238,6 +257,7 @@ export default function FluxoCaixa() {
       type,
       account: accountField,
       cardId: cardField,
+      goalId: type === 'Aporte' ? selectedGoalId : undefined,
       recurrence: fd.get('recurrence') as string,
       hasAttachment: !!fileName || (editingTx?.hasAttachment ?? false),
       profile: fd.get('profile') as string,
@@ -254,8 +274,17 @@ export default function FluxoCaixa() {
 
   const handleDelete = async (id: string) => {
     if (!user) return
+    const tx = transactions.find((t) => t.id === id)
     const { error } = await supabase.from('transactions').delete().eq('id', id)
     if (!error) {
+      if (tx?.type === 'Aporte' && tx.goalId) {
+        const goal = goals.find((g) => g.id === tx.goalId)
+        if (goal) {
+          const newBalance = goal.currentValue - tx.amount
+          await supabase.from('goals').update({ current_value: newBalance }).eq('id', goal.id)
+          setGoals(goals.map((g) => (g.id === goal.id ? { ...g, currentValue: newBalance } : g)))
+        }
+      }
       setTransactions(transactions.filter((t) => t.id !== id))
       toast({ title: 'Transação removida', description: 'O registro foi apagado.' })
     } else {

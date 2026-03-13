@@ -29,7 +29,15 @@ export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & {
   name?: string
 }
 export type Asset = (typeof MOCK_ASSETS)[0] & { context?: ContextType }
-export type Goal = (typeof MOCK_GOALS)[0] & { context?: ContextType }
+export type Goal = {
+  id: string
+  name: string
+  targetValue: number
+  currentValue: number
+  targetDate: string
+  monthlyDeposit: number
+  context?: ContextType
+}
 export type Alert = (typeof MOCK_ALERTS)[0] & { context?: ContextType }
 export type Transaction = {
   id: string
@@ -44,6 +52,7 @@ export type Transaction = {
   profile?: string
   expenseType?: 'fixed' | 'variable'
   cardId?: string
+  goalId?: string
   context?: ContextType
 }
 
@@ -190,6 +199,7 @@ export default function useAppStore() {
     (t: Transaction[]) => updateState({ transactions: t }),
     [],
   )
+  const setGoalsFromDB = useCallback((g: Goal[]) => updateState({ goals: g }), [])
   const setAccounts = useCallback(
     (a: Account[]) => updateState({ accounts: mergeCtx(state.accounts, a, ctx) }),
     [ctx],
@@ -247,6 +257,7 @@ export default function useAppStore() {
       setProfiles,
       setProfilesFromDB,
       setTransactionsFromDB,
+      setGoalsFromDB,
       setAccounts,
       setCreditCards,
       setAssets,
@@ -274,6 +285,7 @@ export default function useAppStore() {
       setProfiles,
       setProfilesFromDB,
       setTransactionsFromDB,
+      setGoalsFromDB,
       setAccounts,
       setCreditCards,
       setAssets,

@@ -17,8 +17,11 @@ import { Target, Plus, Trash2, Calendar as CalIcon, Calculator, Edit2 } from 'lu
 import { useToast } from '@/hooks/use-toast'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { differenceInMonths, addMonths, format } from 'date-fns'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 
 export default function Metas() {
+  const { user } = useAuth()
   const { goals, setGoals } = useAppStore()
   const [open, setOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
@@ -50,8 +53,9 @@ export default function Metas() {
     }
   }, [editingGoal, open])
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (!user) return
 
     const calculatedTargetDate =
       calcMode === 'date'
@@ -79,21 +83,47 @@ export default function Metas() {
       monthlyDeposit: calculatedMonthlyDep,
     }
 
+    const payload = {
+      user_id: user.id,
+      name: newGoal.name,
+      target_value: newGoal.targetValue,
+      current_value: newGoal.currentValue,
+      target_date: newGoal.targetDate,
+      monthly_contribution: newGoal.monthlyDeposit,
+    }
+
     if (editingGoal) {
-      setGoals(goals.map((g) => (g.id === editingGoal.id ? newGoal : g)))
-      toast({ title: 'Meta Atualizada', description: 'Seu plano foi modificado com sucesso.' })
+      const { error } = await supabase.from('goals').update(payload).eq('id', editingGoal.id)
+      if (!error) {
+        setGoals(
+          goals.map((g) => (g.id === editingGoal.id ? { ...newGoal, id: editingGoal.id } : g)),
+        )
+        toast({ title: 'Meta Atualizada', description: 'Seu plano foi modificado com sucesso.' })
+      } else {
+        toast({ title: 'Erro', description: 'Não foi possível atualizar.', variant: 'destructive' })
+      }
     } else {
-      setGoals([...goals, newGoal])
-      toast({ title: 'Meta Criada', description: 'Seu novo plano foi salvo com sucesso.' })
+      const { data, error } = await supabase.from('goals').insert(payload).select().single()
+      if (!error && data) {
+        setGoals([{ ...newGoal, id: data.id }, ...goals])
+        toast({ title: 'Meta Criada', description: 'Seu novo plano foi salvo com sucesso.' })
+      } else {
+        toast({ title: 'Erro', description: 'Não foi possível salvar.', variant: 'destructive' })
+      }
     }
 
     setOpen(false)
     setEditingGoal(null)
   }
 
-  const confirmDelete = () => {
-    setGoals(goals.filter((g) => g.id !== goalToDelete))
-    toast({ title: 'Meta Removida', description: 'A meta foi excluída do seu painel.' })
+  const confirmDelete = async () => {
+    if (!goalToDelete) return
+    const { error } = await supabase.from('goals').delete().eq('id', goalToDelete)
+    if (!error) {
+      setGoals(goals.filter((g) => g.id !== goalToDelete))
+      toast({ title: 'Meta Removida', description: 'A meta foi excluída do seu painel.' })
+    }
+    setGoalToDelete(null)
   }
 
   const diff = Number(targetVal) - Number(currentVal)
