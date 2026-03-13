@@ -63,7 +63,9 @@ export function CreditCardWidget() {
                   <p className="text-sm font-medium leading-none truncate max-w-[130px]">
                     {card.name || card.bank}
                   </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">•••• {card.lastDigits}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {card.lastDigits ? `•••• ${card.lastDigits}` : 'Cartão de Crédito'}
+                  </p>
                 </div>
               </div>
               <div className="text-right">

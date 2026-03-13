@@ -36,7 +36,14 @@ export function CreditCardList() {
                 <CreditCardIcon className="w-5 h-5 text-[#126eda]" />
               </div>
               <div>
-                <p className="font-medium">{card.name}</p>
+                <p className="font-medium">
+                  {card.name}
+                  {card.lastDigits && (
+                    <span className="text-muted-foreground ml-1 font-normal text-sm">
+                      (•••• {card.lastDigits})
+                    </span>
+                  )}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   Vencimento: dia {card.dueDate} • Fechamento: dia {card.closingDate}
                 </p>

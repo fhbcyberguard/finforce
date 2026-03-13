@@ -33,6 +33,16 @@ export function AddCreditCardForm() {
     const dueDate = Number(fd.get('dueDate'))
     const closingDate = Number(fd.get('closingDate'))
     const accountId = fd.get('accountId') as string
+    const lastDigits = fd.get('lastDigits') as string
+
+    if (lastDigits && !/^\d{4}$/.test(lastDigits)) {
+      toast({
+        title: 'Dados inválidos',
+        description: 'Os últimos 4 dígitos devem conter exatamente 4 números.',
+        variant: 'destructive',
+      })
+      return
+    }
 
     setIsSaving(true)
 
@@ -43,9 +53,15 @@ export function AddCreditCardForm() {
       due_day: dueDate,
       closing_day: closingDate,
       account_id: accountId === 'none' ? null : accountId,
+      last_digits: lastDigits || null,
     }
 
-    const { data, error } = await supabase.from('cards').insert(payload).select().single()
+    // Cast payload as any since types.ts might not reflect the recent migration yet
+    const { data, error } = await supabase
+      .from('cards')
+      .insert(payload as any)
+      .select()
+      .single()
 
     setIsSaving(false)
 
@@ -62,6 +78,7 @@ export function AddCreditCardForm() {
         accountId: data.account_id || 'none',
         isArchived: data.is_archived || false,
         context: currentContext,
+        lastDigits: (data as any).last_digits || undefined,
       }
 
       setCreditCards([...creditCards, newCard])
@@ -93,9 +110,22 @@ export function AddCreditCardForm() {
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label>Identificação</Label>
-            <Input name="name" placeholder="Ex: Nubank Principal, Itaú Black" required />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="md:col-span-2 space-y-2">
+              <Label>Identificação</Label>
+              <Input name="name" placeholder="Ex: Nubank Principal, Itaú Black" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Últimos 4 dígitos</Label>
+              <Input
+                name="lastDigits"
+                placeholder="Ex: 1234"
+                maxLength={4}
+                pattern="\d{4}"
+                inputMode="numeric"
+                title="Exatamente 4 dígitos numéricos"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
