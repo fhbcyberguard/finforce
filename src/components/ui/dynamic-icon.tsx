@@ -1,8 +1,79 @@
 import { memo } from 'react'
-import * as Icons from 'lucide-react'
+import {
+  CircleDashed,
+  Wallet,
+  Home,
+  Utensils,
+  Car,
+  HeartPulse,
+  PiggyBank,
+  TrendingUp,
+  DollarSign,
+  Briefcase,
+  ShoppingBag,
+  ShoppingCart,
+  CreditCard,
+  Building,
+  Landmark,
+  Shield,
+  Plane,
+  Monitor,
+  Smartphone,
+  Book,
+  GraduationCap,
+  Baby,
+  Activity,
+  Zap,
+  Coffee,
+  Gift,
+  Music,
+  Video,
+  Camera,
+  Scissors,
+  PenTool,
+  Wrench,
+  Hammer,
+} from 'lucide-react'
+
+// Map of explicitly allowed icons to prevent importing all 1000+ icons from lucide-react,
+// which causes Out Of Memory (Exit Code 143) during 'vite build' chunk rendering.
+const iconMap: Record<string, any> = {
+  Wallet,
+  Home,
+  Utensils,
+  Car,
+  HeartPulse,
+  PiggyBank,
+  TrendingUp,
+  DollarSign,
+  Briefcase,
+  ShoppingBag,
+  ShoppingCart,
+  CreditCard,
+  Building,
+  Landmark,
+  Shield,
+  Plane,
+  Monitor,
+  Smartphone,
+  Book,
+  GraduationCap,
+  Baby,
+  Activity,
+  Zap,
+  Coffee,
+  Gift,
+  Music,
+  Video,
+  Camera,
+  Scissors,
+  PenTool,
+  Wrench,
+  Hammer,
+}
 
 export const DynamicIcon = memo(({ name, className }: { name?: string; className?: string }) => {
-  const IconComponent = name ? (Icons as any)[name] : null
-  const RenderedIcon = IconComponent || Icons.CircleDashed
+  const IconComponent = name ? iconMap[name] : null
+  const RenderedIcon = IconComponent || CircleDashed
   return <RenderedIcon className={className} />
 })

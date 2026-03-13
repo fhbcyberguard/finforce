@@ -7,34 +7,17 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Plus, Upload, Download, ChevronLeft, ChevronRight, BarChart2 } from 'lucide-react'
+import { Plus, Upload } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
-import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { TransactionTable } from '@/components/fluxo/TransactionTable'
 import { TransactionSummaries } from '@/components/fluxo/TransactionSummaries'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { DynamicIcon } from '@/components/ui/dynamic-icon'
+import { TransactionFormDialog } from '@/components/fluxo/TransactionFormDialog'
 
 export default function FluxoCaixa() {
   const { user } = useAuth()
@@ -42,7 +25,6 @@ export default function FluxoCaixa() {
     isSyncing,
     transactions,
     setTransactions,
-    profiles,
     accounts,
     creditCards,
     goals,
@@ -52,25 +34,16 @@ export default function FluxoCaixa() {
     timeframe,
     setTimeframe,
     selectedYear,
-    setSelectedYear,
     selectedMonth,
-    setSelectedMonth,
     currentContext,
   } = useAppStore()
+
   const [openAdd, setOpenAdd] = useState(false)
   const [openImport, setOpenImport] = useState(false)
   const [importType, setImportType] = useState<'csv' | 'ofx' | null>(null)
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const [familyMembers, setFamilyMembers] = useState<any[]>([])
   const { toast } = useToast()
-
-  // Form State
-  const [formType, setFormType] = useState('Expense')
-  const [isPix, setIsPix] = useState(false)
-  const [selectedAccount, setSelectedAccount] = useState('none')
-  const [selectedCard, setSelectedCard] = useState('none')
-  const [selectedGoalId, setSelectedGoalId] = useState('')
-  const [recurrenceType, setRecurrenceType] = useState('none')
 
   useEffect(() => {
     const fetchMembers = async () => {
@@ -80,23 +53,6 @@ export default function FluxoCaixa() {
     }
     fetchMembers()
   }, [user])
-
-  const resetForm = () => {
-    setEditingTx(null)
-    setIsPix(false)
-    setFormType('Expense')
-    setSelectedAccount('none')
-    setSelectedCard('none')
-    setSelectedGoalId('')
-    setRecurrenceType('none')
-  }
-
-  const openEdit = (tx: Transaction) => {
-    setEditingTx(tx)
-    setIsPix(tx.type === 'Pix')
-    setFormType(tx.type)
-    setOpenAdd(true)
-  }
 
   const filteredTransactions = useMemo(() => {
     const y = selectedYear || new Date().getFullYear().toString()
@@ -139,40 +95,32 @@ export default function FluxoCaixa() {
     setTransactions([tx, ...transactions])
   }
 
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleFormSubmit = async (txData: any) => {
     if (!user) return
-    const fd = new FormData(e.currentTarget)
-    const type = fd.get('type') as string
-    let amount = Number(fd.get('amount'))
+
+    const type = txData.type
+    let amount = Number(txData.amount)
     amount =
       type === 'Revenue' || type === 'Aporte' || type === 'Transfer'
         ? Math.abs(amount)
         : -Math.abs(amount)
+
     const category =
       type === 'Aporte'
-        ? `Metas > ${goals.find((g) => g.id === selectedGoalId)?.name || 'Geral'}`
-        : (fd.get('category') as string)
+        ? `Metas > ${goals.find((g) => g.id === txData.goal_id)?.name || 'Geral'}`
+        : txData.category
 
-    const memberVal = fd.get('member_id') as string
-    const member_id = memberVal === 'none' ? null : memberVal
+    const member_id = txData.member_id === 'none' ? null : txData.member_id
 
     const newTx: any = {
       user_id: user.id,
-      description: fd.get('description') as string,
+      description: txData.description,
       amount,
       category,
       type,
-      date: new Date(`${fd.get('date')}T12:00:00Z`).toISOString(),
-      expense_type: fd.get('expenseType') || null,
-      account: selectedAccount === 'none' ? null : selectedAccount,
-      card_id: selectedCard === 'none' ? null : selectedCard,
-      recurrence: recurrenceType,
-      installments: recurrenceType === 'installment' ? Number(fd.get('installments')) : null,
-      profile: fd.get('profile') === 'none' ? null : fd.get('profile'),
-      goal_id: type === 'Aporte' ? selectedGoalId : null,
-      bank_broker: fd.get('bankBroker') || null,
-      asset_name: fd.get('assetName') || null,
+      date: new Date(`${txData.date}T12:00:00Z`).toISOString(),
+      expense_type: txData.expenseType || null,
+      goal_id: type === 'Aporte' ? txData.goal_id : null,
       context: currentContext,
       member_id,
     }
@@ -189,19 +137,13 @@ export default function FluxoCaixa() {
         setTransactions(
           transactions.map((t) =>
             t.id === editingTx.id
-              ? {
-                  ...t,
-                  ...newTx,
-                  id: editingTx.id,
-                  date: fd.get('date') as string,
-                  members: data?.members,
-                }
+              ? { ...t, ...newTx, id: editingTx.id, date: txData.date, members: data?.members }
               : t,
           ),
         )
         toast({ title: 'Transação atualizada' })
         setOpenAdd(false)
-        resetForm()
+        setEditingTx(null)
       }
     } else {
       const { data, error } = await supabase
@@ -211,11 +153,10 @@ export default function FluxoCaixa() {
         .single()
 
       if (!error && data) {
-        const t = { ...newTx, id: data.id, date: fd.get('date') as string, members: data.members }
+        const t = { ...newTx, id: data.id, date: txData.date, members: data.members }
         commitToUI(t)
         toast({ title: 'Transação adicionada' })
         setOpenAdd(false)
-        resetForm()
       }
     }
   }
@@ -266,9 +207,9 @@ export default function FluxoCaixa() {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button
-              className="bg-[#126eda] text-white"
+              className="bg-[#126eda] text-white hover:bg-[#126eda]/90"
               onClick={() => {
-                resetForm()
+                setEditingTx(null)
                 setOpenAdd(true)
               }}
             >
@@ -289,10 +230,13 @@ export default function FluxoCaixa() {
               creditCards={creditCards}
               categories={categories}
               members={familyMembers}
-              onEdit={openEdit}
+              onEdit={(tx) => {
+                setEditingTx(tx)
+                setOpenAdd(true)
+              }}
               onDelete={handleDelete}
               onAdd={() => {
-                resetForm()
+                setEditingTx(null)
                 setOpenAdd(true)
               }}
             />
@@ -300,137 +244,19 @@ export default function FluxoCaixa() {
         </CardContent>
       </Card>
 
-      <Dialog
+      <TransactionFormDialog
         open={openAdd}
         onOpenChange={(o) => {
           setOpenAdd(o)
-          if (!o) resetForm()
+          if (!o) setEditingTx(null)
         }}
-      >
-        <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingTx ? 'Editar Transação' : 'Registrar Transação'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleFormSubmit} className="space-y-4">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Data</Label>
-                <Input
-                  name="date"
-                  type="date"
-                  required
-                  defaultValue={editingTx?.date || new Date().toISOString().split('T')[0]}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select
-                  name="type"
-                  required
-                  onValueChange={(v) => {
-                    setIsPix(v === 'Pix')
-                    setFormType(v)
-                  }}
-                  defaultValue={editingTx?.type || 'Expense'}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Expense">Despesa</SelectItem>
-                    <SelectItem value="Revenue">Receita</SelectItem>
-                    <SelectItem value="Aporte">Aporte</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Valor</Label>
-                <Input
-                  name="amount"
-                  type="number"
-                  step="0.01"
-                  required
-                  defaultValue={editingTx ? Math.abs(editingTx.amount) : ''}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Descrição</Label>
-              <Input name="description" required defaultValue={editingTx?.description || ''} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {formType === 'Aporte' ? (
-                <div className="space-y-2">
-                  <Label>Meta</Label>
-                  <Select value={selectedGoalId} onValueChange={setSelectedGoalId}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {goals.map((g) => (
-                        <SelectItem key={g.id} value={g.id}>
-                          {g.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
-                  <Select name="category" defaultValue={editingTx?.category || ''}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((c) => (
-                        <SelectItem key={c.id} value={c.name}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              {formType !== 'Revenue' && formType !== 'Aporte' && (
-                <div className="space-y-2">
-                  <Label>Classificação</Label>
-                  <Select name="expenseType" defaultValue={editingTx?.expenseType || 'variable'}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="variable">Variável</SelectItem>
-                      <SelectItem value="fixed">Fixo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label>Membro</Label>
-                <Select name="member_id" defaultValue={editingTx?.member_id || 'none'}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um membro..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhum</SelectItem>
-                    {familyMembers.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter className="mt-6">
-              <Button type="submit" className="w-full bg-[#126eda] text-white">
-                Salvar
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+        editingTx={editingTx}
+        onSubmit={handleFormSubmit}
+        goals={goals}
+        categories={categories}
+        familyMembers={familyMembers}
+      />
+
       <DataImportDialog open={openImport} onOpenChange={setOpenImport} importType={importType} />
     </div>
   )
