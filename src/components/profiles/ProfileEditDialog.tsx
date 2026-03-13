@@ -254,7 +254,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               <p className="text-sm font-medium mb-2">Duração do Plano Estimada</p>
               <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground flex items-center justify-between gap-2 border border-border">
                 <span className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-[#126eda]" />
+                  <Target className="w-4 h-4 text-primary" />
                   Tempo até aposentadoria:
                 </span>
                 <span className="font-medium text-foreground">
@@ -270,9 +270,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-[#126eda] text-white hover:bg-[#126eda]/90">
-                Salvar
-              </Button>
+              <Button type="submit">Salvar</Button>
             </DialogFooter>
           </form>
         </Form>

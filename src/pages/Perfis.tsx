@@ -126,11 +126,7 @@ export default function Perfis() {
           <p className="text-muted-foreground mt-1">{description}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <Button
-            className="gap-2 bg-[#126eda] text-white hover:bg-[#126eda]/90"
-            onClick={() => setEditingProfile({})}
-            disabled={!canAddProfile}
-          >
+          <Button className="gap-2" onClick={() => setEditingProfile({})} disabled={!canAddProfile}>
             <Plus className="w-4 h-4" /> Novo Perfil
           </Button>
           {!canAddProfile && (
