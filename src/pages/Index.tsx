@@ -66,7 +66,7 @@ export default function Index() {
 
   return (
     <div className="space-y-6 animate-slide-in-up">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
             {isBusiness ? 'Visão Empresarial' : 'Visão Geral'}
@@ -77,79 +77,84 @@ export default function Index() {
               : 'Bem-vindo de volta. Acompanhe seu progresso rumo à independência.'}
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start sm:self-auto">
-          <Button
-            variant={showComparison ? 'secondary' : 'outline'}
-            size="sm"
-            className="h-9 bg-muted/50 border-0 focus:ring-1 hover:bg-muted"
-            onClick={() => setShowComparison(!showComparison)}
-          >
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Comparar
-          </Button>
 
-          {timeframe === 'monthly' && (
-            <div className="flex items-center bg-muted/50 rounded-md p-0.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-sm"
-                onClick={() => setSelectedMonth(selectedMonth === 0 ? 11 : selectedMonth - 1)}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Select
-                value={selectedMonth.toString()}
-                onValueChange={(v) => setSelectedMonth(Number(v))}
-              >
-                <SelectTrigger className="h-8 w-[80px] text-xs bg-transparent border-0 focus:ring-0">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((m, i) => (
-                    <SelectItem key={i} value={i.toString()}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-sm"
-                onClick={() => setSelectedMonth(selectedMonth === 11 ? 0 : selectedMonth + 1)}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
+        <div className="flex flex-col gap-3 w-full md:w-auto">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:items-center">
+            <ToggleGroup
+              type="single"
+              value={timeframe}
+              onValueChange={(v) => v && setTimeframe(v as 'monthly' | 'annual')}
+              className="bg-muted/50 p-1 rounded-lg grid grid-cols-2 sm:flex w-full sm:w-auto"
+            >
+              <ToggleGroupItem value="monthly" className="text-xs h-8">
+                Mensal
+              </ToggleGroupItem>
+              <ToggleGroupItem value="annual" className="text-xs h-8">
+                Anual
+              </ToggleGroupItem>
+            </ToggleGroup>
 
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="h-9 w-[90px] text-xs bg-muted/50 border-0 focus:ring-1">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableYears.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <Button
+              variant={showComparison ? 'secondary' : 'outline'}
+              size="sm"
+              className="h-10 bg-muted/50 border-0 focus:ring-1 hover:bg-muted w-full sm:w-auto"
+              onClick={() => setShowComparison(!showComparison)}
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Comparar
+            </Button>
+          </div>
 
-          <ToggleGroup
-            type="single"
-            value={timeframe}
-            onValueChange={(v) => v && setTimeframe(v as 'monthly' | 'annual')}
-            className="bg-muted/50 p-1 rounded-lg"
-          >
-            <ToggleGroupItem value="monthly" className="px-4 text-xs h-8">
-              Mensal
-            </ToggleGroupItem>
-            <ToggleGroupItem value="annual" className="px-4 text-xs h-8">
-              Anual
-            </ToggleGroupItem>
-          </ToggleGroup>
+          <div className="flex items-center gap-2 w-full">
+            {timeframe === 'monthly' && (
+              <div className="flex flex-1 sm:flex-none items-center justify-between bg-muted/50 rounded-md p-0.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-sm shrink-0"
+                  onClick={() => setSelectedMonth(selectedMonth === 0 ? 11 : selectedMonth - 1)}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Select
+                  value={selectedMonth.toString()}
+                  onValueChange={(v) => setSelectedMonth(Number(v))}
+                >
+                  <SelectTrigger className="h-8 w-full sm:w-[100px] text-xs bg-transparent border-0 focus:ring-0 justify-center text-center">
+                    <SelectValue placeholder="Mês" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((m, i) => (
+                      <SelectItem key={i} value={i.toString()}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-sm shrink-0"
+                  onClick={() => setSelectedMonth(selectedMonth === 11 ? 0 : selectedMonth + 1)}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="h-9 w-[100px] sm:w-[90px] text-xs bg-muted/50 border-0 focus:ring-1 shrink-0">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableYears.map((y) => (
+                  <SelectItem key={y} value={y}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 

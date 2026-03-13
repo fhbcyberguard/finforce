@@ -56,7 +56,7 @@ export default function SimulatorControls({
 
       <div className="space-y-3 pt-2">
         <div className="flex justify-between items-center">
-          <Label>Idade Projetada p/ Liberdade</Label>
+          <Label>Liberdade Projetada</Label>
           <span className="font-mono text-sm font-medium text-primary">
             {retirementAge === Infinity ? 'Sem previsão' : `${Math.ceil(retirementAge)} anos`}
           </span>
