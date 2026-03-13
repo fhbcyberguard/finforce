@@ -1,24 +1,24 @@
-import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
-import logoImg from '../assets/copia-de-logo-drowp-horizontal-3e587.png'
+import logoImg from '@/assets/finforce-logo-0eb9e.png'
 
 interface LogoProps {
   className?: string
-  imageClassName?: string
-  to?: string
+  collapsed?: boolean
 }
 
-export function Logo({ className, imageClassName, to = '/' }: LogoProps) {
+export function Logo({ className, collapsed }: LogoProps) {
   return (
-    <Link
-      to={to}
-      className={cn('flex items-center gap-2 transition-opacity hover:opacity-90', className)}
+    <div
+      className={cn('flex items-center', collapsed ? 'justify-center w-8' : 'w-auto', className)}
     >
       <img
         src={logoImg}
-        alt="FinForce Logo"
-        className={cn('h-10 sm:h-12 w-auto object-contain', imageClassName)}
+        alt="FinForce"
+        className={cn(
+          'h-8 origin-left transition-all duration-300',
+          collapsed ? 'w-8 object-cover object-left' : 'w-auto object-contain',
+        )}
       />
-    </Link>
+    </div>
   )
 }

@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Card,
   CardContent,
@@ -8,122 +11,98 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Loader2, Eye, EyeOff } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
 import { Logo } from '@/components/Logo'
+import { Loader2 } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const { signIn } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const { signIn } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (email && password) {
-      setIsLoading(true)
-      const { error } = await signIn(email, password)
-      setIsLoading(false)
+    setIsLoading(true)
 
-      if (error) {
-        toast({
-          title: 'Erro no login',
-          description: error.message,
-          variant: 'destructive',
-        })
-      } else {
-        toast({
-          title: 'Login realizado com sucesso',
-          description: 'Bem-vindo de volta ao FinForce.',
-        })
-        navigate('/dashboard')
-      }
+    try {
+      const { error } = await signIn(email, password)
+      if (error) throw error
+      navigate('/')
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao entrar',
+        description: error.message || 'Verifique suas credenciais e tente novamente.',
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 animate-fade-in">
-      <Card className="w-full max-w-md border-border/50 shadow-lg">
-        <CardHeader className="space-y-2 text-center pb-6">
-          <div className="flex justify-center mb-4">
-            <Logo imageClassName="h-16 sm:h-20 w-auto drop-shadow-sm" />
-          </div>
-          <CardTitle className="text-2xl font-bold tracking-tight sr-only">FinForce</CardTitle>
-          <CardDescription>Acesse a gestão financeira da sua família</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2 text-left">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="nome@familia.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2 text-left">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Senha</Label>
-                <a href="#" className="text-xs text-primary hover:underline">
-                  Esqueci minha senha
-                </a>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 px-4 py-12">
+      <Link to="/" className="mb-8 hover:opacity-80 transition-opacity">
+        <Logo className="h-10 md:h-12 scale-110 md:scale-125" />
+      </Link>
+
+      <div className="w-full max-w-md animate-fade-in-up">
+        <Card className="w-full shadow-lg border-muted">
+          <CardHeader className="text-center space-y-2">
+            <CardTitle className="text-2xl font-bold">Bem-vindo de volta</CardTitle>
+            <CardDescription className="text-base">
+              Entre com suas credenciais para acessar o FinForce
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleLogin}>
+            <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-11"
+                />
               </div>
-              <div className="relative">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Senha</Label>
+                  <Link to="#" className="text-sm font-medium text-primary hover:underline">
+                    Esqueceu a senha?
+                  </Link>
+                </div>
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="pr-10"
+                  className="h-11"
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-10 w-10 text-muted-foreground hover:text-foreground"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </Button>
               </div>
-            </div>
-            <Button
-              type="submit"
-              className="w-full mt-4 bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Entrar na Conta
-            </Button>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4 pt-2">
+              <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                Entrar
+              </Button>
+              <div className="text-sm text-center text-muted-foreground">
+                Não tem uma conta?{' '}
+                <Link to="/registro" className="font-semibold text-primary hover:underline">
+                  Cadastre-se
+                </Link>
+              </div>
+            </CardFooter>
           </form>
-          <p className="text-sm text-center text-muted-foreground mt-6">
-            Não tem uma conta?{' '}
-            <Link
-              to="/registro"
-              className="text-primary hover:underline font-medium text-[#03f2ff]"
-            >
-              Cadastre-se
-            </Link>
-          </p>
-        </CardContent>
-        <CardFooter className="justify-center pt-2 pb-4">
-          <p className="text-xs text-muted-foreground text-center">
-            Ao continuar, você concorda com nossos Termos de Serviço.
-          </p>
-        </CardFooter>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }

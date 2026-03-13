@@ -1,308 +1,104 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import {
-  Waves,
-  TrendingUp,
-  ShieldCheck,
-  BrainCircuit,
-  CheckCircle2,
-  User,
-  Building2,
-  Briefcase,
-} from 'lucide-react'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { ArrowRight, Shield, TrendingUp, Users } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 
 export default function Landing() {
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground selection:bg-primary/30">
-      <header className="px-4 lg:px-6 h-16 flex items-center border-b border-border/50 backdrop-blur-md sticky top-0 z-50 bg-background/80">
-        <Logo />
-        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link
-            className="text-sm font-medium hover:text-primary transition-colors hidden sm:block"
-            to="#entry-options"
-          >
-            Modos
-          </Link>
-          <Link
-            className="text-sm font-medium hover:text-primary transition-colors hidden sm:block"
-            to="#features"
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="container mx-auto px-4 h-20 flex items-center justify-between">
+        <Logo className="h-8 md:h-10" />
+        <nav className="hidden md:flex items-center gap-6">
+          <a
+            href="#features"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Recursos
-          </Link>
-          <Link
-            className="text-sm font-medium hover:text-primary transition-colors hidden sm:block"
-            to="#pricing"
+          </a>
+          <a
+            href="#about"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            Planos
-          </Link>
-          <Link className="text-sm font-medium hover:text-primary transition-colors" to="/login">
-            Entrar
-          </Link>
-          <Button asChild size="sm">
-            <Link to="/registro">Começar</Link>
-          </Button>
+            Sobre
+          </a>
         </nav>
+        <div className="flex items-center gap-2 md:gap-4">
+          <Button variant="ghost" asChild className="hidden sm:inline-flex">
+            <Link to="/login">Entrar</Link>
+          </Button>
+          <Button asChild>
+            <Link to="/registro">Começar Agora</Link>
+          </Button>
+        </div>
       </header>
+
       <main className="flex-1">
-        <section className="w-full py-16 md:py-24 lg:py-32 xl:py-40">
-          <div className="container px-4 md:px-6 mx-auto text-center">
-            <div className="flex flex-col items-center space-y-6">
-              <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground mb-4">
-                Lançamento Exclusivo
-              </div>
-              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl max-w-4xl text-balance">
-                Controle, invista e proteja seu dinheiro em um único lugar.
-              </h1>
-              <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl leading-relaxed">
-                O FinForce combina engenharia financeira, psicologia comportamental e segurança
-                bancária para ajudar você e sua família a tomar decisões financeiras mais
-                inteligentes.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                <Button asChild size="lg" className="h-12 px-8 text-base">
-                  <Link to="#pricing">Ver Planos</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base">
-                  <Link to="#features">Ver Como Funciona</Link>
-                </Button>
-              </div>
-            </div>
+        <section className="container mx-auto px-4 py-20 md:py-32 text-center max-w-5xl flex flex-col items-center animate-fade-in-up">
+          <Logo className="mb-8 scale-125 md:scale-150 transform hidden sm:block" />
+          <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-[#01f2ff] to-[#016ad9] text-transparent bg-clip-text">
+            Gestão Financeira Familiar Inteligente
+          </h1>
+          <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+            O FinForce gerencia o fluxo de caixa familiar e projeta a sua independência financeira
+            com foco em segurança e mudança de comportamento.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
+            <Button size="lg" className="gap-2 w-full sm:w-auto" asChild>
+              <Link to="/registro">
+                Criar Conta Gratuita <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
+              <Link to="/login">Acessar minha conta</Link>
+            </Button>
           </div>
         </section>
 
-        <section
-          id="entry-options"
-          className="w-full py-16 md:py-24 bg-muted/10 border-y border-border/50"
-        >
-          <div className="container px-4 md:px-6 mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Escolha seu Perfil</h2>
-              <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                Nossas solutions se adaptam perfeitamente ao seu momento de vida e trabalho.
-              </p>
-            </div>
+        <section id="features" className="bg-muted/40 py-24">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center mb-16">Por que escolher o FinForce?</h2>
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              <Card className="flex flex-col border-border/50 bg-card/50 hover:border-primary/50 transition-colors">
-                <CardHeader>
-                  <div className="p-3 bg-primary/10 w-fit rounded-lg text-primary mb-4">
-                    <User className="w-6 h-6" />
-                  </div>
-                  <CardTitle>Para Você</CardTitle>
-                  <CardDescription className="text-sm mt-2 leading-relaxed">
-                    Pessoa física | Gestão financeira pessoal e familiar
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="flex flex-col border-border/50 bg-card/50 hover:border-primary/50 transition-colors">
-                <CardHeader>
-                  <div className="p-3 bg-primary/10 w-fit rounded-lg text-primary mb-4">
-                    <Building2 className="w-6 h-6" />
-                  </div>
-                  <CardTitle>Para Sua Empresa</CardTitle>
-                  <CardDescription className="text-sm mt-2 leading-relaxed">
-                    Pessoa jurídica | Gestão financeira empresarial e equipes
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-              <Card className="flex flex-col border-border/50 bg-card/50 hover:border-primary/50 transition-colors">
-                <CardHeader>
-                  <div className="p-3 bg-primary/10 w-fit rounded-lg text-primary mb-4">
-                    <Briefcase className="w-6 h-6" />
-                  </div>
-                  <CardTitle>Híbrido</CardTitle>
-                  <CardDescription className="text-sm mt-2 leading-relaxed">
-                    Profissional liberal/MEI | Alternância entre perfis pessoal e empresarial
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="w-full py-16 md:py-24">
-          <div className="container px-4 md:px-6 mx-auto">
-            <div className="grid gap-12 lg:grid-cols-3">
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="bg-primary/10 p-4 rounded-full text-primary">
-                  <TrendingUp className="h-8 w-8" />
+              <div className="bg-background p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow">
+                <div className="bg-primary/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                  <Shield className="h-8 w-8 text-[#016ad9]" />
                 </div>
-                <h3 className="text-xl font-bold">Simulador de Liberdade</h3>
-                <p className="text-muted-foreground">
-                  Projete seu futuro financeiro ajustando aportes, taxas e idade. Veja a curva de
-                  juros compostos trabalhar ao vivo.
+                <h3 className="text-xl font-semibold mb-3">Segurança em 1º Lugar</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Seus dados financeiros são processados e mantidos em total segurança e
+                  privacidade.
                 </p>
               </div>
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="bg-primary/10 p-4 rounded-full text-primary">
-                  <ShieldCheck className="h-8 w-8" />
+              <div className="bg-background p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow">
+                <div className="bg-primary/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                  <TrendingUp className="h-8 w-8 text-[#01f2ff]" />
                 </div>
-                <h3 className="text-xl font-bold">Segurança Robusta</h3>
-                <p className="text-muted-foreground">
-                  Autenticação 2FA, controle de sessões e Open Finance preparado para proteger os
-                  dados da sua família.
+                <h3 className="text-xl font-semibold mb-3">Projeção de Metas</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Acompanhe sua evolução patrimonial e saiba exatamente quando atingirá sua
+                  independência.
                 </p>
               </div>
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="bg-primary/10 p-4 rounded-full text-primary">
-                  <BrainCircuit className="h-8 w-8" />
+              <div className="bg-background p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow">
+                <div className="bg-primary/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                  <Users className="h-8 w-8 text-[#016ad9]" />
                 </div>
-                <h3 className="text-xl font-bold">Inteligência Comportamental</h3>
-                <p className="text-muted-foreground">
-                  Gatilhos reflexivos baseados em TCC (Terapia Cognitivo-Comportamental) para evitar
-                  decisões impulsivas.
+                <h3 className="text-xl font-semibold mb-3">Gestão Familiar</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  Compartilhe o acesso com sua família através de perfis personalizados e relatórios
+                  integrados.
                 </p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        <section
-          id="pricing"
-          className="w-full py-16 md:py-24 bg-muted/10 border-t border-border/50"
-        >
-          <div className="container px-4 md:px-6 mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Planos Integrados Hotmart
-              </h2>
-              <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
-                Escolha o nível de acesso ideal para o seu momento financeiro. Cancelamento fácil a
-                qualquer momento.
-              </p>
-            </div>
-            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-              {/* Plano Básico */}
-              <Card className="flex flex-col border-border/50">
-                <CardHeader>
-                  <CardTitle>Básico</CardTitle>
-                  <CardDescription>Para indivíduos focados no controle essencial.</CardDescription>
-                  <div className="mt-4 text-4xl font-bold">
-                    R$ 29<span className="text-lg text-muted-foreground font-normal">/mês</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ul className="space-y-3 text-sm">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> 1 Perfil (Pessoal ou
-                      Empresarial)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Fluxo de Caixa e Cartões
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Categorias Customizáveis
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Metas Simples
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" variant="outline">
-                    Assinar Básico
-                  </Button>
-                </CardFooter>
-              </Card>
-
-              {/* Plano Médio (Pro) */}
-              <Card className="flex flex-col border-primary shadow-lg relative transform md:-translate-y-4">
-                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">
-                  MAIS POPULAR
-                </div>
-                <CardHeader>
-                  <CardTitle>Médio (Pro)</CardTitle>
-                  <CardDescription>Recursos avançados para acelerar sua jornada.</CardDescription>
-                  <div className="mt-4 text-4xl font-bold">
-                    R$ 59<span className="text-lg text-muted-foreground font-normal">/mês</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ul className="space-y-3 text-sm">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Tudo do plano Básico
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Até 5 Perfis (Familiar
-                      ou Equipe)
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Controle de
-                      Investimentos
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Simulador de Riqueza
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full">Assinar Pro</Button>
-                </CardFooter>
-              </Card>
-
-              {/* Plano Top */}
-              <Card className="flex flex-col border-border/50">
-                <CardHeader>
-                  <CardTitle>Top (Família/Empresa)</CardTitle>
-                  <CardDescription>
-                    Para famílias completas e gestão empresarial robusta.
-                  </CardDescription>
-                  <div className="mt-4 text-4xl font-bold">
-                    R$ 99<span className="text-lg text-muted-foreground font-normal">/mês</span>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ul className="space-y-3 text-sm">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Tudo do plano Pro
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Perfis Ilimitados
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Relatórios Avançados
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Suporte Prioritário e
-                      API
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full" variant="outline">
-                    Assinar Top
-                  </Button>
-                </CardFooter>
-              </Card>
             </div>
           </div>
         </section>
       </main>
-      <footer className="w-full border-t border-border/50 bg-muted/5 py-8">
-        <div className="container px-4 md:px-6 mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Waves className="h-5 w-5 text-primary" />
-            <span className="font-semibold">FinForce</span>
-          </div>
+
+      <footer className="border-t py-12 mt-auto">
+        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+          <Logo className="opacity-70 hover:opacity-100 transition-opacity" />
           <p className="text-sm text-muted-foreground">
-            © 2026 FinForce App. Todos os direitos reservados.
+            &copy; {new Date().getFullYear()} FinForce. Todos os direitos reservados.
           </p>
-          <div className="flex gap-4">
-            <Link to="#" className="text-sm text-muted-foreground hover:text-foreground">
-              Termos
-            </Link>
-            <Link to="#" className="text-sm text-muted-foreground hover:text-foreground">
-              Privacidade
-            </Link>
-          </div>
         </div>
       </footer>
     </div>
