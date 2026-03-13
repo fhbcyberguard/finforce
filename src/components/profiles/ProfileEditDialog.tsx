@@ -40,7 +40,7 @@ const schema = z.object({
     .regex(/^[^0-9]*$/, 'O nome não deve conter números'),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   role: z.string().min(1, 'O papel é obrigatório'),
-  currentAge: z.coerce.number().min(0, 'Idade inválida').optional(),
+  birthDate: z.string().optional(),
   avatar: z.string().optional().nullable(),
 })
 
@@ -61,7 +61,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       name: profile.name || '',
       email: profile.email || '',
       role: profile.role || '',
-      currentAge: profile.currentAge || 0,
+      birthDate: profile.birthDate || '',
       avatar: profile.avatar || null,
     },
   })
@@ -72,7 +72,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
         name: profile.name || '',
         email: profile.email || '',
         role: profile.role || '',
-        currentAge: profile.currentAge || 0,
+        birthDate: profile.birthDate || '',
         avatar: profile.avatar || null,
       })
     }
@@ -97,6 +97,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               name: data.name,
               email: data.email || null,
               role: data.role,
+              birth_date: data.birthDate || null,
             })
             .select()
             .single()
@@ -113,13 +114,13 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       toast({ title: 'Perfil criado', description: 'Membro adicionado com sucesso.' })
     } else {
       if (user && profile.id.length > 10) {
-        // Naive check for uuid vs random string
         await supabase
           .from('members')
           .update({
             name: data.name,
             email: data.email || null,
             role: data.role,
+            birth_date: data.birthDate || null,
           })
           .eq('id', profile.id)
 
@@ -136,7 +137,10 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
     onOpenChange(false)
   }
 
-  const age = form.watch('currentAge') || 0
+  const dob = form.watch('birthDate')
+  const age = dob
+    ? Math.floor((Date.now() - new Date(dob).getTime()) / (1000 * 60 * 60 * 24 * 365.25))
+    : 0
   const targetAge = simulatorSettings?.idade || 60
   const duration = Math.max(0, targetAge - age)
 
@@ -233,12 +237,12 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               />
               <FormField
                 control={form.control}
-                name="currentAge"
+                name="birthDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Idade Atual</FormLabel>
+                    <FormLabel>Data de Nascimento</FormLabel>
                     <FormControl>
-                      <Input type="number" min="0" {...field} />
+                      <Input type="date" {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -250,7 +254,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               <p className="text-sm font-medium mb-2">Duração do Plano Estimada</p>
               <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground flex items-center justify-between gap-2 border border-border">
                 <span className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-primary" />
+                  <Target className="w-4 h-4 text-[#126eda]" />
                   Tempo até aposentadoria:
                 </span>
                 <span className="font-medium text-foreground">
@@ -266,7 +270,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90">
+              <Button type="submit" className="bg-[#126eda] text-white hover:bg-[#126eda]/90">
                 Salvar
               </Button>
             </DialogFooter>

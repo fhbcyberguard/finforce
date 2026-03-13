@@ -37,9 +37,11 @@ export type Profile = {
   isArchived?: boolean
   context?: ContextType
   currentAge?: number
+  birthDate?: string
   retirementPlanDuration?: number
   profile_id?: string | null
 }
+
 export type Account = (typeof MOCK_ACCOUNTS)[0] & { context?: ContextType }
 export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & {
   isArchived?: boolean
@@ -73,6 +75,8 @@ export type Transaction = {
   expenseType?: 'fixed' | 'variable'
   cardId?: string
   goalId?: string
+  bankBroker?: string
+  assetName?: string
   context?: ContextType
 }
 

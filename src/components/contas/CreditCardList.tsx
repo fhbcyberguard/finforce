@@ -89,7 +89,7 @@ export function CreditCardList() {
           return (
             <Card
               key={card.id}
-              className="border-border/50 hover:border-primary/20 transition-colors relative group"
+              className="border-border/50 hover:border-[#126eda]/20 transition-colors relative group"
             >
               <CardContent className="p-5">
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
@@ -122,7 +122,7 @@ export function CreditCardList() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="font-semibold flex items-center gap-2">
-                      <CardIcon className="w-4 h-4 text-primary" />
+                      <CardIcon className="w-4 h-4 text-[#126eda]" />
                       {card.name || card.bank}
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -146,7 +146,7 @@ export function CreditCardList() {
                       R$ {card.availableLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
-                  <Progress value={percent} className="h-2" />
+                  <Progress value={percent} className="h-2 [&>div]:bg-[#126eda]" />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>
                       Usado: R$ {usedLimit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -176,7 +176,7 @@ export function CreditCardList() {
           {editingCard && (
             <form className="space-y-4" onSubmit={saveEdit}>
               <div className="space-y-2">
-                <Label>Nome do Cartão</Label>
+                <Label>Identificação</Label>
                 <Input name="name" defaultValue={editingCard.name || editingCard.bank} required />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -229,7 +229,10 @@ export function CreditCardList() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="w-full">
+                <Button
+                  type="submit"
+                  className="w-full bg-[#126eda] text-white hover:bg-[#126eda]/90"
+                >
                   Salvar Alterações
                 </Button>
               </DialogFooter>

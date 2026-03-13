@@ -47,7 +47,7 @@ export function AddCreditCardForm() {
     <Card className="border-border/50 h-full">
       <CardHeader>
         <CardTitle className="text-lg flex items-center gap-2">
-          <CreditCard className="w-5 h-5" /> Adicionar Cartão
+          <CreditCard className="w-5 h-5 text-[#126eda]" /> Adicionar Cartão
         </CardTitle>
         <CardDescription>
           Insira apenas os últimos 4 dígitos. Dados protegidos no dispositivo.
@@ -56,7 +56,7 @@ export function AddCreditCardForm() {
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label>Nome (Nomenclatura do Cartão)</Label>
+            <Label>Identificação</Label>
             <Input name="name" placeholder="Ex: Cartão da Loja, Nubank Principal" required />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -114,7 +114,10 @@ export function AddCreditCardForm() {
               <Input name="bestDay" type="number" min="1" max="31" placeholder="3" required />
             </div>
           </div>
-          <Button type="submit" className="w-full mt-2">
+          <Button
+            type="submit"
+            className="w-full mt-2 bg-[#126eda] text-white hover:bg-[#126eda]/90"
+          >
             Registrar Cartão Seguro
           </Button>
         </form>

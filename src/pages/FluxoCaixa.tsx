@@ -14,8 +14,6 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-  SelectGroup,
-  SelectLabel,
 } from '@/components/ui/select'
 import {
   Dialog,
@@ -137,6 +135,49 @@ export default function FluxoCaixa() {
     }
   }
 
+  const handleExport = () => {
+    const headers = [
+      'Data',
+      'Descrição',
+      'Valor',
+      'Tipo',
+      'Categoria',
+      'Perfil Responsável',
+      'Conta/Cartão',
+      'Banco/Investidora',
+      'Ativo',
+    ]
+
+    const rows = transactions.map((tx) => {
+      const acc = accounts.find((a) => a.id === tx.account)?.bank || tx.account || ''
+      const card = creditCards.find((c) => c.id === tx.cardId)?.name || ''
+      const accOrCard = card ? `${acc} (${card})` : acc
+
+      return [
+        tx.date,
+        `"${tx.description}"`,
+        tx.amount.toString(),
+        tx.type,
+        `"${tx.category}"`,
+        `"${tx.profile || ''}"`,
+        `"${accOrCard}"`,
+        `"${tx.bankBroker || ''}"`,
+        `"${tx.assetName || ''}"`,
+      ].join(',')
+    })
+
+    const csvContent = [headers.join(','), ...rows].join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'transacoes_finflow.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast({ title: 'Exportação Concluída', description: 'O arquivo CSV foi baixado com sucesso.' })
+  }
+
   const handleSave = async (txToSave: Transaction) => {
     if (!user) return
 
@@ -154,6 +195,8 @@ export default function FluxoCaixa() {
       has_attachment: txToSave.hasAttachment,
       profile: txToSave.profile,
       goal_id: txToSave.goalId || null,
+      bank_broker: txToSave.bankBroker || null,
+      asset_name: txToSave.assetName || null,
     }
 
     if (editingTx) {
@@ -254,6 +297,8 @@ export default function FluxoCaixa() {
       hasAttachment: !!fileName || (editingTx?.hasAttachment ?? false),
       profile: fd.get('profile') as string,
       expenseType,
+      bankBroker: type === 'Aporte' ? (fd.get('bankBroker') as string) : undefined,
+      assetName: type === 'Aporte' ? (fd.get('assetName') as string) : undefined,
     }
 
     if (amount < -1000 && !editingTx && !isGain && type !== 'Transfer') {
@@ -399,8 +444,12 @@ export default function FluxoCaixa() {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            <Button variant="outline" className="gap-2 flex-1 sm:flex-none" onClick={handleExport}>
+              <Download className="w-4 h-4 text-[#126eda]" /> Exportar
+            </Button>
+
             <Button
-              className="gap-2 w-full sm:w-auto"
+              className="gap-2 w-full sm:w-auto bg-[#126eda] text-white hover:bg-[#126eda]/90"
               onClick={() => {
                 resetForm()
                 setOpenAdd(true)
@@ -417,7 +466,7 @@ export default function FluxoCaixa() {
               if (!o) resetForm()
             }}
           >
-            <DialogContent className="sm:max-w-[550px]">
+            <DialogContent className="sm:max-w-[650px]">
               <DialogHeader>
                 <DialogTitle>{editingTx ? 'Editar Transação' : 'Registrar Transação'}</DialogTitle>
               </DialogHeader>
@@ -449,7 +498,7 @@ export default function FluxoCaixa() {
                       <SelectContent>
                         <SelectItem value="Expense">Despesa</SelectItem>
                         <SelectItem value="Revenue">Receita</SelectItem>
-                        <SelectItem value="Aporte">Aporte (Metas)</SelectItem>
+                        <SelectItem value="Aporte">Aporte (Investimentos/Metas)</SelectItem>
                         <SelectItem value="Pix">Pix</SelectItem>
                         <SelectItem value="Transfer">Transferência</SelectItem>
                       </SelectContent>
@@ -481,33 +530,51 @@ export default function FluxoCaixa() {
                 </div>
 
                 <div
-                  className={`grid ${isGainType || formType === 'Transfer' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}
+                  className={`grid ${formType === 'Aporte' ? 'grid-cols-1 sm:grid-cols-3' : isGainType || formType === 'Transfer' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}
                 >
                   {formType === 'Aporte' ? (
-                    <div className="space-y-2">
-                      <Label>Destino do Aporte (Meta)</Label>
-                      <Select value={selectedGoalId} onValueChange={setSelectedGoalId} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a meta" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {goals.length === 0 ? (
-                            <SelectItem value="none" disabled>
-                              Nenhuma meta cadastrada
-                            </SelectItem>
-                          ) : (
-                            goals.map((g) => (
-                              <SelectItem key={g.id} value={g.id}>
-                                <div className="flex items-center gap-2">
-                                  <DynamicIcon name={g.icon || 'Target'} className="w-4 h-4" />
-                                  {g.name}
-                                </div>
+                    <>
+                      <div className="space-y-2">
+                        <Label>Destino do Aporte (Meta)</Label>
+                        <Select value={selectedGoalId} onValueChange={setSelectedGoalId} required>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a meta" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {goals.length === 0 ? (
+                              <SelectItem value="none" disabled>
+                                Nenhuma meta cadastrada
                               </SelectItem>
-                            ))
-                          )}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                            ) : (
+                              goals.map((g) => (
+                                <SelectItem key={g.id} value={g.id}>
+                                  <div className="flex items-center gap-2">
+                                    <DynamicIcon name={g.icon || 'Target'} className="w-4 h-4" />
+                                    {g.name}
+                                  </div>
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Banco/Investidora</Label>
+                        <Input
+                          name="bankBroker"
+                          placeholder="Ex: NuInvest, XP"
+                          defaultValue={editingTx?.bankBroker || ''}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Ativo</Label>
+                        <Input
+                          name="assetName"
+                          placeholder="Ex: PETR4, Tesouro"
+                          defaultValue={editingTx?.assetName || ''}
+                        />
+                      </div>
+                    </>
                   ) : (
                     <div className="space-y-2">
                       <Label>Categoria</Label>
@@ -666,7 +733,10 @@ export default function FluxoCaixa() {
                 )}
 
                 <DialogFooter className="mt-6 pt-4 border-t">
-                  <Button type="submit" className="w-full">
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#126eda] text-white hover:bg-[#126eda]/90"
+                  >
                     {editingTx ? 'Salvar Alterações' : 'Salvar Transação'}
                   </Button>
                 </DialogFooter>
@@ -707,12 +777,12 @@ export default function FluxoCaixa() {
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`p-2 rounded-full ${isGain ? (tx.type === 'Aporte' ? 'bg-primary/10' : 'bg-emerald-500/10') : tx.type === 'Transfer' ? 'bg-primary/10' : 'bg-rose-500/10'}`}
+                      className={`p-2 rounded-full ${isGain ? (tx.type === 'Aporte' ? 'bg-[#126eda]/10' : 'bg-emerald-500/10') : tx.type === 'Transfer' ? 'bg-[#126eda]/10' : 'bg-rose-500/10'}`}
                     >
                       {catIcon ? (
                         <DynamicIcon
                           name={catIcon}
-                          className={`w-4 h-4 ${isGain ? (tx.type === 'Aporte' ? 'text-primary' : 'text-emerald-500') : tx.type === 'Transfer' ? 'text-primary' : 'text-rose-500'}`}
+                          className={`w-4 h-4 ${isGain ? (tx.type === 'Aporte' ? 'text-[#126eda]' : 'text-emerald-500') : tx.type === 'Transfer' ? 'text-[#126eda]' : 'text-rose-500'}`}
                         />
                       ) : (
                         getIconForType(tx.type, isGain)
@@ -736,7 +806,7 @@ export default function FluxoCaixa() {
                         {tx.type === 'Aporte' ? (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-normal border-primary/30 text-primary bg-primary/5"
+                            className="text-[10px] font-normal border-[#126eda]/30 text-[#126eda] bg-[#126eda]/5"
                           >
                             Aporte
                           </Badge>
@@ -762,6 +832,17 @@ export default function FluxoCaixa() {
                             {tx.expenseType === 'fixed' ? 'Custo Fixo' : 'Custo Variável'}
                           </Badge>
                         ) : null}
+
+                        {tx.type === 'Aporte' && tx.bankBroker && (
+                          <span className="text-[10px] text-muted-foreground bg-muted border border-border/50 px-1.5 py-0.5 rounded">
+                            🏦 {tx.bankBroker}
+                          </span>
+                        )}
+                        {tx.type === 'Aporte' && tx.assetName && (
+                          <span className="text-[10px] text-muted-foreground bg-muted border border-border/50 px-1.5 py-0.5 rounded">
+                            📈 {tx.assetName}
+                          </span>
+                        )}
 
                         <span className="text-xs text-muted-foreground font-medium">{accName}</span>
                         {card && (
