@@ -163,51 +163,6 @@ export default function FluxoCaixa() {
     }
   }, [openAdd, editingTx, accounts, goals])
 
-  if (isSyncing) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-10 w-1/3" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-          <Skeleton className="h-24" />
-        </div>
-        <Skeleton className="h-64 w-full" />
-      </div>
-    )
-  }
-
-  const handleCardChange = (cardId: string) => {
-    setSelectedCard(cardId)
-    if (cardId !== 'none') {
-      const card = creditCards.find((c) => c.id === cardId)
-      if (card && card.accountId && card.accountId !== 'none') {
-        setSelectedAccount(card.accountId)
-      }
-    }
-  }
-
-  const handlePrevMonth = () => {
-    if (selectedMonth === 0) {
-      setSelectedMonth(11)
-      setSelectedYear((parseInt(selectedYear) - 1).toString())
-    } else {
-      setSelectedMonth(selectedMonth - 1)
-    }
-  }
-
-  const handleNextMonth = () => {
-    if (selectedMonth === 11) {
-      setSelectedMonth(0)
-      setSelectedYear((parseInt(selectedYear) + 1).toString())
-    } else {
-      setSelectedMonth(selectedMonth + 1)
-    }
-  }
-
   const filteredTransactions = useMemo(() => {
     const yearToUse = selectedYear || new Date().getFullYear().toString()
     const monthStr = (selectedMonth + 1).toString().padStart(2, '0')
@@ -254,6 +209,51 @@ export default function FluxoCaixa() {
     const total = incomeTxs.reduce((acc, t) => acc + Math.abs(t.amount), 0)
     return monthsSet > 0 ? total / monthsSet : 0
   }, [transactions])
+
+  if (isSyncing) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-1/3" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
+    )
+  }
+
+  const handleCardChange = (cardId: string) => {
+    setSelectedCard(cardId)
+    if (cardId !== 'none') {
+      const card = creditCards.find((c) => c.id === cardId)
+      if (card && card.accountId && card.accountId !== 'none') {
+        setSelectedAccount(card.accountId)
+      }
+    }
+  }
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11)
+      setSelectedYear((parseInt(selectedYear) - 1).toString())
+    } else {
+      setSelectedMonth(selectedMonth - 1)
+    }
+  }
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0)
+      setSelectedYear((parseInt(selectedYear) + 1).toString())
+    } else {
+      setSelectedMonth(selectedMonth + 1)
+    }
+  }
 
   const handleExport = () => {
     const headers = [
