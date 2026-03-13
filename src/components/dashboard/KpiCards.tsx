@@ -3,7 +3,7 @@ import { Wallet, TrendingUp, DollarSign, Clock, Coins, Activity } from 'lucide-r
 import useAppStore from '@/stores/useAppStore'
 
 export default function KpiCards() {
-  const { assets, transactions, timeframe } = useAppStore()
+  const { assets, transactions, timeframe, simulatorSettings } = useAppStore()
 
   const now = new Date()
   const currentMonth = now.toISOString().slice(0, 7)
@@ -53,14 +53,24 @@ export default function KpiCards() {
       .reduce((sum, t) => sum + t.amount, 0),
   )
 
-  // Time to freedom calculation
+  // Time to freedom calculation based directly on Retirement Plan configurations (Simulator)
   const totalMonthlyExpenses = isAnnual
     ? (fixedExpenses + variableExpenses) / 12
     : fixedExpenses + variableExpenses
+    
   const targetPatrimony = (totalMonthlyExpenses > 0 ? totalMonthlyExpenses : 1000) * 300
   const shortfall = targetPatrimony - patrimony
-  const averageMonthlyAporte = 2000 // Assumed average contribution
-  const yearsToFreedom = shortfall > 0 ? (shortfall / averageMonthlyAporte / 12).toFixed(1) : '0'
+  const averageMonthlyAporte = simulatorSettings?.aporte || 0
+  
+  let yearsToFreedomStr = 'N/A'
+  
+  if (shortfall <= 0) {
+    yearsToFreedomStr = 'Alcançado'
+  } else if (averageMonthlyAporte > 0) {
+    yearsToFreedomStr = (shortfall / averageMonthlyAporte / 12).toFixed(1) + ' Anos'
+  } else {
+    yearsToFreedomStr = 'Aporte Zero'
+  }
 
   const kpis = [
     {
@@ -102,9 +112,9 @@ export default function KpiCards() {
     },
     {
       title: 'Tempo p/ Liberdade',
-      value: `${yearsToFreedom} Anos`,
+      value: yearsToFreedomStr,
       icon: Clock,
-      desc: `com aporte médio`,
+      desc: averageMonthlyAporte > 0 ? `com aporte de R$ ${averageMonthlyAporte}` : 'configure seu plano',
     },
   ]
 
@@ -122,7 +132,9 @@ export default function KpiCards() {
             <kpi.icon className="h-4 w-4 text-muted-foreground shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl lg:text-2xl font-bold truncate">{kpi.value}</div>
+            <div className={`text-xl lg:text-2xl font-bold truncate ${kpi.value === 'Aporte Zero' ? 'text-muted-foreground/50 text-lg' : ''}`}>
+              {kpi.value}
+            </div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 truncate">
               {kpi.trend && (
                 <span

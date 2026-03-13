@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Lightbulb, Clock, Save } from 'lucide-react'
+import { Lightbulb, Clock, Save, AlertTriangle } from 'lucide-react'
 import { Typewriter } from '../Typewriter'
 import SimulatorControls from './SimulatorControls'
 import SimulatorChart from './SimulatorChart'
@@ -26,41 +26,53 @@ export default function Simulator() {
 
   const patrimony = useMemo(() => assets.reduce((sum, a) => sum + a.value, 0), [assets])
 
-  const { freedomText, hasReached } = useMemo(() => {
+  const { freedomText, hasReached, isStalled } = useMemo(() => {
     const monthlyRate = Math.pow(1 + retorno / 100, 1 / 12) - 1
     const target = Math.round((rendaDesejada * 12) / (retorno / 100))
 
-    let monthsToFreedom = 0
-    if (patrimony < target) {
+    if (patrimony >= target) {
+      return { freedomText: 'Você já alcançou!', hasReached: true, isStalled: false }
+    }
+
+    let monthsToFreedom = Infinity
+
+    if (aporte > 0) {
       if (monthlyRate > 0) {
         const num = (target + aporte / monthlyRate) / (patrimony + aporte / monthlyRate)
         if (num > 0) {
           monthsToFreedom = Math.log(num) / Math.log(1 + monthlyRate)
         }
       } else {
-        monthsToFreedom = (target - patrimony) / (aporte || 1)
+        monthsToFreedom = (target - patrimony) / aporte
       }
+    }
+
+    if (aporte <= 0 || monthsToFreedom === Infinity) {
+      return { freedomText: 'Aporte necessário', hasReached: false, isStalled: true }
     }
 
     const years = Math.floor(monthsToFreedom / 12)
     const months = Math.ceil(monthsToFreedom % 12)
 
     return {
-      freedomText: patrimony >= target ? 'Você já alcançou!' : `${years} anos e ${months} meses`,
-      hasReached: patrimony >= target,
+      freedomText: `${years} anos e ${months} meses`,
+      hasReached: false,
+      isStalled: false
     }
   }, [aporte, retorno, rendaDesejada, patrimony])
 
   const handleSaveScenario = () => {
     setSimulatorSettings({ aporte, retorno, idade, rendaDesejada })
     toast({
-      title: 'Cenário Salvo',
-      description: 'Suas projeções de independência financeira foram atualizadas e persisitdas.',
+      title: 'Plano Salvo',
+      description: 'Suas projeções do Plano de Aposentadoria foram atualizadas.',
     })
   }
 
   // CBT Question Generator
   const getInsight = () => {
+    if (aporte <= 0)
+      return `Sem aportes, seu patrimônio depende apenas do tempo e rendimento. Você está confortável em pausar seus investimentos agora?`
     if (idade < 40)
       return `Aposentar-se aos ${idade} anos exige sacrifício extremo agora. Cuidado com o burnout. Está valendo a pena?`
     if (aporte > 10000)
@@ -77,30 +89,32 @@ export default function Simulator() {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Simulador: Ponto de Liberdade</CardTitle>
+            <CardTitle>Plano de Aposentadoria</CardTitle>
             <CardDescription>
               Projete o cruzamento entre seu patrimônio e custo de vida desejado.
             </CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={handleSaveScenario} className="gap-2">
             <Save className="w-4 h-4" />
-            Salvar Cenário
+            Salvar Plano
           </Button>
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-6">
-        <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className={`bg-primary/5 border p-4 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${isStalled ? 'border-amber-500/50 bg-amber-500/5' : 'border-primary/20'}`}>
           <div>
-            <h3 className="font-semibold text-primary flex items-center gap-2">
-              <Clock className="w-5 h-5" /> Tempo de Liberdade Estimado
+            <h3 className="font-semibold flex items-center gap-2">
+              {isStalled ? <AlertTriangle className="w-5 h-5 text-amber-500" /> : <Clock className="w-5 h-5 text-primary" />}
+              <span className={isStalled ? 'text-amber-600 dark:text-amber-500' : 'text-primary'}>
+                Tempo de Liberdade Estimado
+              </span>
             </h3>
             <p className="text-sm text-muted-foreground mt-1">
-              Projeção baseada no patrimônio de R$ {patrimony.toLocaleString('pt-BR')} e aporte de
-              R$ {aporte.toLocaleString('pt-BR')}
+              Projeção baseada no patrimônio atual de R$ {patrimony.toLocaleString('pt-BR')} e aportes.
             </p>
           </div>
           <div
-            className={`text-2xl md:text-3xl font-bold text-left sm:text-right ${hasReached ? 'text-emerald-500' : 'text-primary'}`}
+            className={`text-2xl md:text-3xl font-bold text-left sm:text-right ${hasReached ? 'text-emerald-500' : isStalled ? 'text-muted-foreground' : 'text-primary'}`}
           >
             {freedomText}
           </div>
@@ -119,7 +133,15 @@ export default function Simulator() {
               setRendaDesejada={setRendaDesejada}
             />
           </div>
-          <div className="md:col-span-8">
+          <div className="md:col-span-8 relative">
+            {isStalled && (
+               <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-[1px] rounded-lg">
+                  <div className="bg-background border shadow-lg p-4 rounded-lg text-center max-w-[280px]">
+                     <p className="text-sm font-medium text-muted-foreground">Gráfico indisponível</p>
+                     <p className="text-xs text-muted-foreground mt-1">Ajuste o valor do aporte para visualizar a projeção patrimonial no tempo.</p>
+                  </div>
+               </div>
+            )}
             <SimulatorChart
               aporte={aporte}
               retorno={retorno}
@@ -132,8 +154,8 @@ export default function Simulator() {
         <div className="mt-auto p-4 rounded-lg bg-secondary/10 border border-secondary/20">
           <div className="flex gap-3 items-start">
             <Lightbulb className="w-5 h-5 text-secondary shrink-0 mt-0.5" />
-            <p className="text-sm font-medium text-foreground/80 leading-relaxed">
-              <Typewriter text={`Gatilho de Reflexão: ${getInsight()}`} speed={40} />
+            <p className="text-sm font-medium text-foreground/80 leading-relaxed min-h-[40px]">
+              <Typewriter text={`Gatilho de Reflexão: ${getInsight()}`} speed={30} />
             </p>
           </div>
         </div>

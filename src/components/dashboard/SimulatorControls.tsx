@@ -32,7 +32,7 @@ export default function SimulatorControls({
         </div>
         <Slider
           value={[aporte]}
-          min={100}
+          min={0}
           max={20000}
           step={100}
           onValueChange={([v]) => setAporte(v)}
@@ -55,7 +55,7 @@ export default function SimulatorControls({
 
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <Label>Idade de Aposentadoria</Label>
+          <Label>Idade de Aposentadoria / Liberdade</Label>
           <span className="font-mono text-sm font-medium">{idade} anos</span>
         </div>
         <Slider value={[idade]} min={30} max={80} step={1} onValueChange={([v]) => setIdade(v)} />
@@ -74,7 +74,7 @@ export default function SimulatorControls({
           />
         </div>
         <p className="text-[10px] text-muted-foreground mt-1">
-          Alvo estimado: R${' '}
+          Alvo estimado de patrimônio: R${' '}
           {Math.round((rendaDesejada * 12) / (retorno / 100)).toLocaleString('pt-BR')}
         </p>
       </div>

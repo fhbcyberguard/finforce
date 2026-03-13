@@ -1,10 +1,12 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { AlertCircle, Calendar } from 'lucide-react'
+import { AlertCircle, Calendar, ShieldCheck } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 
 export default function AlertsPanel() {
-  const { alerts } = useAppStore()
+  const { alerts, accounts } = useAppStore()
+  
+  const hasAccounts = accounts.length > 0
 
   const formatDays = (dateStr: string) => {
     const date = new Date(dateStr)
@@ -14,6 +16,27 @@ export default function AlertsPanel() {
     if (diffDays === 1) return 'Vence amanhã'
     if (diffDays === 2) return 'Vence em 2 dias (D-2)'
     return `Vence em ${diffDays} dias`
+  }
+
+  // If there are no accounts registered, show an inactive state to avoid ghost alerts
+  if (!hasAccounts) {
+    return (
+      <Card className="h-full border-border/50 opacity-60">
+        <CardHeader className="pb-3 border-b border-border/40">
+          <CardTitle className="text-lg flex items-center gap-2 text-muted-foreground">
+            <ShieldCheck className="w-5 h-5" />
+            Alertas e Vencimentos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center justify-center h-[200px] gap-3">
+             <AlertCircle className="w-8 h-8 text-muted-foreground/50" />
+             <p>Nenhuma conta vinculada neste perfil.</p>
+             <p className="text-xs">Cadastre contas e despesas para ativar o monitoramento inteligente de faturas.</p>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

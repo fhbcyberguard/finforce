@@ -8,15 +8,21 @@ import { SpendingChart } from '../components/dashboard/SpendingChart'
 import { GoalWidget } from '../components/dashboard/GoalWidget'
 
 export default function Index() {
-  const { timeframe, setTimeframe } = useAppStore()
+  const { timeframe, setTimeframe, currentContext } = useAppStore()
+
+  const isBusiness = currentContext === 'business'
 
   return (
     <div className="space-y-6 animate-slide-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Visão Geral</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            {isBusiness ? 'Visão Empresarial' : 'Visão Geral'}
+          </h1>
           <p className="text-muted-foreground">
-            Bem-vindo de volta. Acompanhe seu progresso rumo à independência.
+            {isBusiness 
+              ? 'Gerencie o fluxo de caixa e a saúde financeira do seu negócio.' 
+              : 'Bem-vindo de volta. Acompanhe seu progresso rumo à independência.'}
           </p>
         </div>
         <ToggleGroup

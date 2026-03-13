@@ -9,16 +9,18 @@ import {
   MOCK_ALERTS,
 } from '@/lib/mockData'
 
-export type Profile = (typeof MOCK_PROFILES)[0] & { isArchived?: boolean }
-export type Account = (typeof MOCK_ACCOUNTS)[0]
-export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & { isArchived?: boolean }
-export type Asset = (typeof MOCK_ASSETS)[0]
-export type Goal = (typeof MOCK_GOALS)[0]
-export type Alert = (typeof MOCK_ALERTS)[0]
+export type ContextType = 'personal' | 'business'
+export type Profile = (typeof MOCK_PROFILES)[0] & { isArchived?: boolean; context?: ContextType }
+export type Account = (typeof MOCK_ACCOUNTS)[0] & { context?: ContextType }
+export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & { isArchived?: boolean; context?: ContextType }
+export type Asset = (typeof MOCK_ASSETS)[0] & { context?: ContextType }
+export type Goal = (typeof MOCK_GOALS)[0] & { context?: ContextType }
+export type Alert = (typeof MOCK_ALERTS)[0] & { context?: ContextType }
 export type Transaction = (typeof MOCK_TRANSACTIONS)[0] & {
   profile?: string
   expenseType?: 'fixed' | 'variable'
   cardId?: string
+  context?: ContextType
 }
 
 interface SimulatorSettings {
@@ -40,6 +42,8 @@ interface AppState {
   searchQuery: string
   timeframe: 'monthly' | 'annual'
   simulatorSettings: SimulatorSettings
+  currentContext: ContextType
+  subscriptionPlan: 'basic' | 'medium' | 'master'
 }
 
 const loadData = <T>(key: string, mockData: T): T => {
@@ -70,6 +74,8 @@ const getInitialState = (): AppState => ({
   logoUrl: localStorage.getItem('finflow_logo') || '',
   searchQuery: '',
   timeframe: 'monthly',
+  currentContext: (localStorage.getItem('finflow_context') as ContextType) || 'personal',
+  subscriptionPlan: (localStorage.getItem('finflow_plan') as any) || 'basic',
 })
 
 let state: AppState = getInitialState()
@@ -94,6 +100,8 @@ function updateState(partial: Partial<AppState>) {
   if (partial.simulatorSettings)
     localStorage.setItem('finflow_simulator', JSON.stringify(partial.simulatorSettings))
   if (partial.logoUrl !== undefined) localStorage.setItem('finflow_logo', partial.logoUrl)
+  if (partial.currentContext) localStorage.setItem('finflow_context', partial.currentContext)
+  if (partial.subscriptionPlan) localStorage.setItem('finflow_plan', partial.subscriptionPlan)
   emit()
 }
 
@@ -106,11 +114,35 @@ export default function useAppStore() {
     () => state,
   )
 
+  const ctx = store.currentContext || 'personal'
+
+  // Helper to get only items for the current context
+  const filterCtx = <T extends { context?: string }>(arr: T[]) =>
+    arr.filter((a) => (a.context || 'personal') === ctx)
+
+  // Helper to merge updated contextual items with items from other contexts
+  const mergeCtx = <T extends { context?: string }>(all: T[], updated: T[]) => {
+    const others = all.filter((a) => (a.context || 'personal') !== ctx)
+    const ctxUpdated = updated.map((a) => ({ ...a, context: a.context || ctx }))
+    return [...others, ...ctxUpdated] as T[]
+  }
+
   return {
     ...store,
+    // Return filtered state
+    profiles: filterCtx(store.profiles),
+    accounts: filterCtx(store.accounts),
+    creditCards: filterCtx(store.creditCards),
+    assets: filterCtx(store.assets),
+    goals: filterCtx(store.goals),
+    transactions: filterCtx(store.transactions),
+    alerts: filterCtx(store.alerts),
+
+    // Override setters to merge data contextually
     setProfiles: (profiles: Profile[]) => {
-      const deletedProfiles = state.profiles.filter((p) => !profiles.some((np) => np.id === p.id))
-      let newTx = state.transactions
+      const filteredProfiles = filterCtx(state.profiles)
+      const deletedProfiles = filteredProfiles.filter((p) => !profiles.some((np) => np.id === p.id))
+      let newTx = filterCtx(state.transactions)
 
       if (deletedProfiles.length > 0) {
         const deletedNames = deletedProfiles.map((p) => p.name)
@@ -118,14 +150,14 @@ export default function useAppStore() {
       }
 
       const renamedProfiles = profiles.filter((p) => {
-        const old = state.profiles.find((op) => op.id === p.id)
+        const old = filteredProfiles.find((op) => op.id === p.id)
         return old && old.name !== p.name
       })
 
       if (renamedProfiles.length > 0) {
         newTx = newTx.map((t) => {
           const matchedRenamed = renamedProfiles.find((rp) => {
-            const old = state.profiles.find((op) => op.id === rp.id)
+            const old = filteredProfiles.find((op) => op.id === rp.id)
             return old?.name === t.profile
           })
           if (matchedRenamed) return { ...t, profile: matchedRenamed.name }
@@ -133,35 +165,52 @@ export default function useAppStore() {
         })
       }
 
-      updateState({ profiles, transactions: newTx })
+      updateState({
+        profiles: mergeCtx(state.profiles, profiles),
+        transactions: mergeCtx(state.transactions, newTx),
+      })
     },
-    setAccounts: (accounts: Account[]) => updateState({ accounts }),
+
+    setAccounts: (accounts: Account[]) =>
+      updateState({ accounts: mergeCtx(state.accounts, accounts) }),
+
     setCreditCards: (creditCards: CreditCard[]) => {
-      const deletedCardIds = state.creditCards
+      const filteredCards = filterCtx(state.creditCards)
+      const deletedCardIds = filteredCards
         .filter((c) => !creditCards.some((nc) => nc.id === c.id))
         .map((c) => c.id)
 
       if (deletedCardIds.length > 0) {
-        // Cascade delete transactions and alerts when a card is deleted
-        const remainingTx = state.transactions.filter(
+        const remainingTx = filterCtx(state.transactions).filter(
           (t) => !t.cardId || !deletedCardIds.includes(t.cardId),
         )
-        const remainingAlerts = state.alerts.filter(
+        const remainingAlerts = filterCtx(state.alerts).filter(
           (a) => !a.cardId || !deletedCardIds.includes(a.cardId),
         )
-        updateState({ creditCards, transactions: remainingTx, alerts: remainingAlerts })
+        updateState({
+          creditCards: mergeCtx(state.creditCards, creditCards),
+          transactions: mergeCtx(state.transactions, remainingTx),
+          alerts: mergeCtx(state.alerts, remainingAlerts),
+        })
       } else {
-        updateState({ creditCards })
+        updateState({ creditCards: mergeCtx(state.creditCards, creditCards) })
       }
     },
-    setAssets: (assets: Asset[]) => updateState({ assets }),
-    setGoals: (goals: Goal[]) => updateState({ goals }),
-    setTransactions: (transactions: Transaction[]) => updateState({ transactions }),
-    setAlerts: (alerts: Alert[]) => updateState({ alerts }),
+
+    setAssets: (assets: Asset[]) => updateState({ assets: mergeCtx(state.assets, assets) }),
+    setGoals: (goals: Goal[]) => updateState({ goals: mergeCtx(state.goals, goals) }),
+    setTransactions: (transactions: Transaction[]) =>
+      updateState({ transactions: mergeCtx(state.transactions, transactions) }),
+    setAlerts: (alerts: Alert[]) => updateState({ alerts: mergeCtx(state.alerts, alerts) }),
+
+    // Global setters
     setSimulatorSettings: (simulatorSettings: SimulatorSettings) =>
       updateState({ simulatorSettings }),
     setLogoUrl: (logoUrl: string) => updateState({ logoUrl }),
     setSearchQuery: (searchQuery: string) => updateState({ searchQuery }),
     setTimeframe: (timeframe: 'monthly' | 'annual') => updateState({ timeframe }),
+    setCurrentContext: (currentContext: ContextType) => updateState({ currentContext }),
+    setSubscriptionPlan: (subscriptionPlan: 'basic' | 'medium' | 'master') =>
+      updateState({ subscriptionPlan }),
   }
 }

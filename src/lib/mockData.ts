@@ -6,6 +6,7 @@ export const MOCK_ALERTS = [
     dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
     type: 'urgent',
     cardId: '1',
+    context: 'personal',
   },
   {
     id: '2',
@@ -13,6 +14,7 @@ export const MOCK_ALERTS = [
     amount: 185.4,
     dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
     type: 'urgent',
+    context: 'personal',
   },
   {
     id: '3',
@@ -20,20 +22,31 @@ export const MOCK_ALERTS = [
     amount: 850.0,
     dueDate: new Date(Date.now() + 86400000 * 5).toISOString(),
     type: 'normal',
+    context: 'personal',
+  },
+  {
+    id: '4',
+    title: 'Imposto DAS',
+    amount: 1250.0,
+    dueDate: new Date(Date.now() + 86400000 * 4).toISOString(),
+    type: 'urgent',
+    context: 'business',
   },
 ]
 
 export const MOCK_ASSETS = [
-  { id: '1', name: 'CDB Banco Inter', category: 'Renda Fixa', value: 45000, rate: '110% CDI' },
+  { id: '1', name: 'CDB Banco Inter', category: 'Renda Fixa', value: 45000, rate: '110% CDI', context: 'personal' },
   {
     id: '2',
     name: 'Tesouro IPCA+ 2035',
     category: 'Tesouro Direto',
     value: 25000,
     rate: 'IPCA + 5.5%',
+    context: 'personal',
   },
-  { id: '3', name: 'FII HGLG11', category: 'FIIs', value: 15000, rate: 'Div 0.8% a.m' },
-  { id: '4', name: 'Ações WEGE3', category: 'Ações', value: 8500, rate: '-' },
+  { id: '3', name: 'FII HGLG11', category: 'FIIs', value: 15000, rate: 'Div 0.8% a.m', context: 'personal' },
+  { id: '4', name: 'Ações WEGE3', category: 'Ações', value: 8500, rate: '-', context: 'personal' },
+  { id: '5', name: 'Caixa Empresa', category: 'Renda Fixa', value: 35000, rate: '100% CDI', context: 'business' },
 ]
 
 export const MOCK_ACCOUNTS = [
@@ -45,6 +58,7 @@ export const MOCK_ACCOUNTS = [
     connected: true,
     agency: '0001',
     account: '12345-6',
+    context: 'personal',
   },
   {
     id: '2',
@@ -54,8 +68,19 @@ export const MOCK_ACCOUNTS = [
     connected: true,
     agency: '7890',
     account: '98765-4',
+    context: 'personal',
   },
-  { id: '3', bank: 'XP Investimentos', type: 'Corretora', balance: 0.0, connected: false },
+  { id: '3', bank: 'XP Investimentos', type: 'Corretora', balance: 0.0, connected: false, context: 'personal' },
+  {
+    id: '4',
+    bank: 'Inter Empresas',
+    type: 'Conta Corrente PJ',
+    balance: 24500.0,
+    connected: true,
+    agency: '0001',
+    account: '55555-5',
+    context: 'business',
+  },
 ]
 
 export const MOCK_CREDIT_CARDS = [
@@ -68,6 +93,7 @@ export const MOCK_CREDIT_CARDS = [
     availableLimit: 12450.5,
     bestPurchaseDay: 5,
     dueDate: 15,
+    context: 'personal',
   },
   {
     id: '2',
@@ -78,6 +104,18 @@ export const MOCK_CREDIT_CARDS = [
     availableLimit: 1200.0,
     bestPurchaseDay: 28,
     dueDate: 5,
+    context: 'personal',
+  },
+  {
+    id: '3',
+    bank: 'Cora',
+    brand: 'Visa Business',
+    lastDigits: '9988',
+    totalLimit: 15000,
+    availableLimit: 14500.0,
+    bestPurchaseDay: 10,
+    dueDate: 20,
+    context: 'business',
   },
 ]
 
@@ -88,6 +126,7 @@ export const MOCK_PROFILES = [
     role: 'Admin',
     limit: 5000,
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=4',
+    context: 'personal',
   },
   {
     id: '2',
@@ -95,6 +134,7 @@ export const MOCK_PROFILES = [
     role: 'Admin',
     limit: 5000,
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
+    context: 'personal',
   },
   {
     id: '3',
@@ -102,6 +142,7 @@ export const MOCK_PROFILES = [
     role: 'Dependente',
     limit: 800,
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=7',
+    context: 'personal',
   },
 ]
 
@@ -116,6 +157,7 @@ export const MOCK_TRANSACTIONS = [
     account: 'Nubank',
     recurrence: 'none',
     expenseType: 'variable',
+    context: 'personal',
   },
   {
     id: '2',
@@ -126,6 +168,7 @@ export const MOCK_TRANSACTIONS = [
     type: 'Revenue',
     account: 'Itaú',
     recurrence: 'monthly',
+    context: 'personal',
   },
   {
     id: '3',
@@ -136,6 +179,7 @@ export const MOCK_TRANSACTIONS = [
     type: 'Transfer',
     account: 'Itaú',
     recurrence: 'none',
+    context: 'personal',
   },
   {
     id: '4',
@@ -148,6 +192,7 @@ export const MOCK_TRANSACTIONS = [
     recurrence: 'none',
     hasAttachment: true,
     expenseType: 'variable',
+    context: 'personal',
   },
   {
     id: '5',
@@ -160,6 +205,30 @@ export const MOCK_TRANSACTIONS = [
     cardId: '1',
     recurrence: 'none',
     expenseType: 'fixed',
+    context: 'personal',
+  },
+  {
+    id: '6',
+    date: new Date().toISOString().split('T')[0],
+    description: 'Venda Consultoria',
+    amount: 15000.0,
+    category: 'Receita > Serviços',
+    type: 'Revenue',
+    account: 'Conta PJ',
+    recurrence: 'none',
+    context: 'business',
+  },
+  {
+    id: '7',
+    date: new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0],
+    description: 'Software CRM',
+    amount: -450.0,
+    category: 'Despesa > Ferramentas',
+    type: 'Expense',
+    account: 'Conta PJ',
+    recurrence: 'monthly',
+    expenseType: 'fixed',
+    context: 'business',
   },
 ]
 
@@ -181,6 +250,7 @@ export const MOCK_GOALS = [
     currentValue: 32000,
     targetDate: '2025-12-01',
     monthlyDeposit: 1500,
+    context: 'personal',
   },
   {
     id: '2',
@@ -189,6 +259,16 @@ export const MOCK_GOALS = [
     currentValue: 5000,
     targetDate: '2026-07-15',
     monthlyDeposit: 1000,
+    context: 'personal',
+  },
+  {
+    id: '3',
+    name: 'Capital de Giro',
+    targetValue: 100000,
+    currentValue: 35000,
+    targetDate: '2026-12-31',
+    monthlyDeposit: 2000,
+    context: 'business',
   },
 ]
 
