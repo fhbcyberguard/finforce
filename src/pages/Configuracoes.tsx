@@ -30,6 +30,7 @@ import {
   Building2,
 } from 'lucide-react'
 import { MOCK_ACCOUNTS, MOCK_PROFILES } from '@/lib/mockData'
+import { SecuritySettings } from '../components/settings/SecuritySettings'
 
 export default function Configuracoes() {
   const { theme, setTheme } = useTheme()
@@ -314,6 +315,8 @@ export default function Configuracoes() {
         </TabsContent>
 
         <TabsContent value="seguranca" className="space-y-6">
+          <SecuritySettings />
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-border/50">
               <CardHeader>

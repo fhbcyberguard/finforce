@@ -23,7 +23,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 
 const navigation = [
-  { title: 'Dashboard', url: '/', icon: LayoutDashboard },
+  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Patrimônio', url: '/patrimonio', icon: PieChart },
   { title: 'Fluxo de Caixa', url: '/fluxo', icon: ArrowRightLeft },
   { title: 'Cartões e Contas', url: '/contas', icon: CreditCard },

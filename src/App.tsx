@@ -11,6 +11,8 @@ import FluxoCaixa from './pages/FluxoCaixa'
 import Configuracoes from './pages/Configuracoes'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
+import Registro from './pages/Registro'
+import Landing from './pages/Landing'
 import { ThemeProvider } from './components/ThemeProvider'
 
 const App = () => (
@@ -20,9 +22,11 @@ const App = () => (
         <Toaster />
         <Sonner />
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<Registro />} />
           <Route element={<Layout />}>
-            <Route path="/" element={<Index />} />
+            <Route path="/dashboard" element={<Index />} />
             <Route path="/patrimonio" element={<Patrimonio />} />
             <Route path="/fluxo" element={<FluxoCaixa />} />
             <Route path="/contas" element={<Contas />} />

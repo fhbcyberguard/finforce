@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import {
   Card,
   CardContent,
@@ -27,7 +27,7 @@ export default function Login() {
         title: 'Login realizado com sucesso',
         description: 'Bem-vindo de volta ao FinFlow.',
       })
-      navigate('/')
+      navigate('/dashboard')
     }
   }
 
@@ -36,9 +36,12 @@ export default function Login() {
       <Card className="w-full max-w-md border-border/50 shadow-lg">
         <CardHeader className="space-y-2 text-center pb-6">
           <div className="flex justify-center mb-2">
-            <div className="bg-primary/20 p-3 rounded-xl text-primary">
+            <Link
+              to="/"
+              className="bg-primary/20 p-3 rounded-xl text-primary hover:bg-primary/30 transition-colors"
+            >
               <Waves className="w-8 h-8" />
-            </div>
+            </Link>
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">FinFlow</CardTitle>
           <CardDescription>Acesse a gestão financeira da sua família</CardDescription>
@@ -76,6 +79,12 @@ export default function Login() {
               Entrar na Conta
             </Button>
           </form>
+          <p className="text-sm text-center text-muted-foreground mt-6">
+            Não tem uma conta?{' '}
+            <Link to="/registro" className="text-primary hover:underline font-medium">
+              Cadastre-se
+            </Link>
+          </p>
         </CardContent>
         <CardFooter className="justify-center pt-2 pb-4">
           <p className="text-xs text-muted-foreground text-center">
