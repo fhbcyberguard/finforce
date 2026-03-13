@@ -266,7 +266,7 @@ export default function FluxoCaixa() {
       recurrence: txToSave.recurrence,
       installments: txToSave.installments || null,
       has_attachment: txToSave.hasAttachment,
-      profile: txToSave.profile,
+      profile: txToSave.profile || null,
       goal_id: txToSave.goalId || null,
       bank_broker: txToSave.bankBroker || null,
       asset_name: txToSave.assetName || null,
@@ -335,6 +335,8 @@ export default function FluxoCaixa() {
     } else category = fd.get('category') as string
 
     const rawExpenseType = fd.get('expenseType') as 'fixed' | 'variable' | null
+    const rawProfile = fd.get('profile') as string
+
     const newTx: Transaction = {
       id: editingTx ? editingTx.id : '',
       date: fd.get('date') as string,
@@ -348,7 +350,7 @@ export default function FluxoCaixa() {
       recurrence: recurrenceType,
       installments: recurrenceType === 'installment' ? Number(fd.get('installments')) : undefined,
       hasAttachment: !!fileName || (editingTx?.hasAttachment ?? false),
-      profile: fd.get('profile') as string,
+      profile: rawProfile === 'none' ? undefined : rawProfile,
       expenseType: !isGain && type !== 'Transfer' ? rawExpenseType || 'variable' : undefined,
       bankBroker: type === 'Aporte' ? (fd.get('bankBroker') as string) : undefined,
       assetName: type === 'Aporte' ? (fd.get('assetName') as string) : undefined,
@@ -642,12 +644,12 @@ export default function FluxoCaixa() {
                                 🏦 {tx.bankBroker}
                               </span>
                             )}
-                            {tx.account && (
+                            {tx.account && tx.account !== 'none' && (
                               <span className="text-[10px] text-muted-foreground">
                                 💳 {tx.account}
                               </span>
                             )}
-                            {tx.profile && (
+                            {tx.profile && tx.profile !== 'none' && (
                               <span className="text-[10px] text-primary/80 font-medium">
                                 👤 {tx.profile}
                               </span>
@@ -803,7 +805,7 @@ export default function FluxoCaixa() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Banco/Investidora</Label>
+                    <Label>Banco/Investidora (Opcional)</Label>
                     <Input
                       name="bankBroker"
                       placeholder="Ex: NuInvest"
@@ -811,7 +813,7 @@ export default function FluxoCaixa() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Ativo</Label>
+                    <Label>Ativo (Opcional)</Label>
                     <Input
                       name="assetName"
                       placeholder="Ex: PETR4"
@@ -845,7 +847,11 @@ export default function FluxoCaixa() {
               {!isGainType && formType !== 'Transfer' && (
                 <div className="space-y-2">
                   <Label>Classificação</Label>
-                  <Select name="expenseType" defaultValue={editingTx?.expenseType || 'variable'}>
+                  <Select
+                    name="expenseType"
+                    required
+                    defaultValue={editingTx?.expenseType || 'variable'}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -860,16 +866,13 @@ export default function FluxoCaixa() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 items-end">
               <div className="space-y-2">
-                <Label>Perfil Responsável</Label>
-                <Select
-                  name="profile"
-                  required
-                  defaultValue={editingTx?.profile || profiles[0]?.name}
-                >
+                <Label>Perfil Responsável (Opcional)</Label>
+                <Select name="profile" defaultValue={editingTx?.profile || 'none'}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Nenhum" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {profiles.map((p) => (
                       <SelectItem key={p.id} value={p.name}>
                         {p.name}
@@ -880,7 +883,12 @@ export default function FluxoCaixa() {
               </div>
               <div className="space-y-2">
                 <Label>Recorrência</Label>
-                <Select name="recurrence" value={recurrenceType} onValueChange={setRecurrenceType}>
+                <Select
+                  name="recurrence"
+                  required
+                  value={recurrenceType}
+                  onValueChange={setRecurrenceType}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -944,7 +952,7 @@ export default function FluxoCaixa() {
 
             {isPix && (
               <div className="space-y-2 pt-2">
-                <Label>Anexo</Label>
+                <Label>Anexo (Opcional)</Label>
                 <Button
                   type="button"
                   variant="outline"
