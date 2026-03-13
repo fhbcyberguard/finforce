@@ -51,6 +51,16 @@ import {
   UserMinus,
 } from 'lucide-react'
 
+const planLabels: Record<string, string> = {
+  basica_mensal: 'Básica Mensal',
+  basica_anual: 'Básica Anual',
+  pro_mensal: 'Pro Mensal',
+  pro_anual: 'Pro Anual',
+  top_mensal: 'Top Mensal',
+  top_anual: 'Top Anual',
+  canceled: 'Cancelado',
+}
+
 export default function Clients() {
   const { isMasterAdmin, loading } = useAuth()
   const { toast } = useToast()
@@ -75,7 +85,7 @@ export default function Clients() {
 
   const [editFullName, setEditFullName] = useState('')
   const [editEmail, setEditEmail] = useState('')
-  const [editPlan, setEditPlan] = useState('basic')
+  const [editPlan, setEditPlan] = useState('basica_mensal')
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -151,7 +161,7 @@ export default function Clients() {
     setUserToEdit(profile)
     setEditFullName(profile.full_name || '')
     setEditEmail(profile.email || '')
-    setEditPlan(profile.plan || 'basic')
+    setEditPlan(profile.plan || 'basica_mensal')
     setIsEditDialogOpen(true)
   }
 
@@ -276,16 +286,20 @@ export default function Clients() {
                     <TableCell className="text-muted-foreground">{p.email || '—'}</TableCell>
                     <TableCell>
                       <Badge
-                        variant={p.plan === 'canceled' ? 'destructive' : 'outline'}
+                        variant="outline"
                         className={cn(
                           'uppercase text-[10px] font-bold tracking-wider',
-                          p.plan === 'premium' &&
+                          p.plan?.includes('top') &&
+                            'text-purple-600 border-purple-600/30 bg-purple-600/5',
+                          p.plan?.includes('pro') &&
                             'text-[#126eda] border-[#126eda]/30 bg-[#126eda]/5',
-                          p.plan === 'basic' &&
-                            'text-muted-foreground border-muted-foreground/30 bg-muted/50',
+                          p.plan?.includes('basica') &&
+                            'text-emerald-600 border-emerald-600/30 bg-emerald-600/5',
+                          p.plan === 'canceled' &&
+                            'bg-destructive/10 text-destructive border-destructive/20',
                         )}
                       >
-                        {p.plan === 'canceled' ? 'Cancelado' : p.plan || 'basic'}
+                        {planLabels[p.plan] || p.plan || 'Desconhecido'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
@@ -432,9 +446,13 @@ export default function Clients() {
                   <SelectValue placeholder="Selecione um plano" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="basic">Basic</SelectItem>
-                  <SelectItem value="premium">Premium</SelectItem>
-                  <SelectItem value="canceled">Cancelado</SelectItem>
+                  <SelectItem value="basica_mensal">Básica Mensal</SelectItem>
+                  <SelectItem value="basica_anual">Básica Anual</SelectItem>
+                  <SelectItem value="pro_mensal">Pro Mensal</SelectItem>
+                  <SelectItem value="pro_anual">Pro Anual</SelectItem>
+                  <SelectItem value="top_mensal">Top Mensal</SelectItem>
+                  <SelectItem value="top_anual">Top Anual</SelectItem>
+                  <SelectItem value="canceled">Assinatura Cancelada</SelectItem>
                 </SelectContent>
               </Select>
             </div>
