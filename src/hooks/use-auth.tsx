@@ -9,6 +9,7 @@ export interface Profile {
   avatar_url: string | null
   email?: string | null
   plan?: string
+  profile_type?: string | null
   birth_date?: string | null
   created_at?: string
 }
@@ -18,7 +19,12 @@ interface AuthContextType {
   session: Session | null
   profile: Profile | null
   isMasterAdmin: boolean
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    profileType?: string,
+  ) => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<{ error: any }>
   loading: boolean
@@ -72,12 +78,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    profileType: string = 'personal',
+  ) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, profile_type: profileType },
         emailRedirectTo: `${window.location.origin}/`,
       },
     })

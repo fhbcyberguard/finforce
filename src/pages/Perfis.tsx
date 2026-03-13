@@ -17,11 +17,12 @@ export default function Perfis() {
   const [deletingProfile, setDeletingProfile] = useState<Profile | null>(null)
   const [archivedOpen, setArchivedOpen] = useState(false)
 
-  const isBusiness = currentContext === 'business'
+  // Use the synced DB profile type primarily, fall back to state context
+  const isBusiness = userProfile?.profile_type === 'enterprise' || currentContext === 'business'
   const title = isBusiness ? 'Perfil Empresarial' : 'Perfil Pessoal'
   const description = isBusiness
     ? 'Gerencie o acesso e orçamentos da sua equipe.'
-    : 'Gerencie o acesso e orçamentos de cada membro.'
+    : 'Gerencie o acesso e orçamentos de cada membro da família.'
 
   useEffect(() => {
     if (!user) return
@@ -46,7 +47,8 @@ export default function Perfis() {
             profiles (
               full_name,
               email,
-              avatar_url
+              avatar_url,
+              profile_type
             )
           `)
           .eq('family_id', family.id)
@@ -63,7 +65,7 @@ export default function Perfis() {
               birthDate: m.birth_date || null,
               limit: 0,
               avatar: p?.avatar_url || null,
-              context: 'personal',
+              context: p?.profile_type === 'enterprise' ? 'business' : 'personal',
               isArchived: false,
             }
           })
@@ -100,17 +102,25 @@ export default function Perfis() {
           ? 'Básico'
           : plan.replace('_', ' ').toUpperCase()
 
+  const typeDisplay = userProfile?.profile_type === 'enterprise' ? 'Empresarial' : 'Pessoal'
+
   return (
     <div className="space-y-6 animate-slide-in-up pb-12">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
             <Badge
               variant={isPremiumOrTeam ? 'default' : 'secondary'}
               className="uppercase text-[10px] font-bold tracking-wider"
             >
               Plano {planDisplay}
+            </Badge>
+            <Badge
+              variant="outline"
+              className="uppercase text-[10px] font-bold tracking-wider text-muted-foreground"
+            >
+              Conta {typeDisplay}
             </Badge>
           </div>
           <p className="text-muted-foreground mt-1">{description}</p>

@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
   Form,
   FormControl,
@@ -33,6 +34,7 @@ const registerSchema = z
         'A senha deve conter no mín. 8 caracteres, maiúsculas, minúsculas, números e símbolos (@$!%*?&)',
       ),
     confirmPassword: z.string(),
+    profileType: z.enum(['personal', 'enterprise']),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: 'As senhas não coincidem',
@@ -51,12 +53,18 @@ export default function Registro() {
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      profileType: 'personal',
+    },
   })
 
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true)
-    const { error } = await signUp(data.email, data.password, data.name)
+    const { error } = await signUp(data.email, data.password, data.name, data.profileType)
     setIsLoading(false)
 
     if (error) {
@@ -100,6 +108,42 @@ export default function Registro() {
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="profileType"
+                render={({ field }) => (
+                  <FormItem className="space-y-3 pt-2">
+                    <FormLabel>Tipo de Conta</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-row space-x-4"
+                      >
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="personal" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer text-sm">
+                            Pessoal
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-2 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="enterprise" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer text-sm">
+                            Empresarial
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="email"
