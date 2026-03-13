@@ -10,6 +10,9 @@ import {
   LogOut,
   ShieldAlert,
   Target,
+  ChevronsUpDown,
+  Briefcase,
+  User,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -22,6 +25,12 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from '@/components/ui/sidebar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore from '@/stores/useAppStore'
 
@@ -38,7 +47,7 @@ export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const { logoUrl, currentContext } = useAppStore()
+  const { logoUrl, currentContext, setCurrentContext } = useAppStore()
 
   const handleLogout = () => {
     toast({
@@ -50,15 +59,59 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="inset">
-      <SidebarHeader className="p-4 flex flex-row items-center gap-2">
-        {logoUrl ? (
-          <img src={logoUrl} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-muted" />
-        ) : (
-          <div className="bg-[#1E3A5F] p-1.5 rounded-lg text-[#2EC4B6]">
-            <Waves className="w-6 h-6" />
-          </div>
-        )}
-        <span className="font-bold text-lg tracking-tight">FinFlow</span>
+      <SidebarHeader className="p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-[#1E3A5F] text-[#2EC4B6]">
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt="Logo"
+                        className="size-8 rounded-lg object-contain bg-muted"
+                      />
+                    ) : (
+                      <Waves className="size-5" />
+                    )}
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-bold tracking-tight text-base">FinFlow</span>
+                    <span className="truncate text-xs font-medium text-muted-foreground">
+                      {currentContext === 'business' ? 'Perfil Empresarial' : 'Perfil Pessoal'}
+                    </span>
+                  </div>
+                  <ChevronsUpDown className="ml-auto size-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                align="start"
+                side="bottom"
+                sideOffset={4}
+              >
+                <DropdownMenuItem
+                  onClick={() => setCurrentContext('personal')}
+                  className="cursor-pointer gap-2"
+                >
+                  <User className="size-4" />
+                  <span>Perfil Pessoal</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setCurrentContext('business')}
+                  className="cursor-pointer gap-2"
+                >
+                  <Briefcase className="size-4" />
+                  <span>Perfil Empresarial</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

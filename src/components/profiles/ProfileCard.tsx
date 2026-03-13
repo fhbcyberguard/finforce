@@ -21,7 +21,7 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
     toast({ title: 'Perfil restaurado', description: 'O perfil voltou a ficar ativo no sistema.' })
   }
 
-  const contextLabel = profile.context === 'business' ? 'perfil empresarial' : 'perfil pessoal'
+  const contextLabel = profile.context === 'business' ? 'Perfil Empresarial' : 'Perfil Pessoal'
 
   return (
     <Card
