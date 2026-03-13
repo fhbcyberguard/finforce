@@ -77,7 +77,7 @@ export function ImpulseControlDialog({
             {title}
           </DialogTitle>
           <div
-            className={`pt-4 pb-2 text-sm text-muted-foreground italic border-l-2 pl-4 ml-1 rounded-r-md ${isSuccess ? 'border-emerald-500 bg-emerald-500/5' : 'border-primary bg-primary/5'}`}
+            className={`pt-4 pb-2 text-sm text-muted-foreground italic border-l-2 pl-4 ml-1 rounded-r-md whitespace-normal break-words ${isSuccess ? 'border-emerald-500 bg-emerald-500/5' : 'border-primary bg-primary/5'}`}
           >
             <Typewriter text={reflectionText} speed={30} />
           </div>

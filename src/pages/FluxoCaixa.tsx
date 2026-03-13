@@ -394,6 +394,10 @@ export default function FluxoCaixa() {
         goalNameLower.includes('aposentadoria')
 
       const isEmergency =
+        catLower.includes('reserva de emergência') ||
+        catLower.includes('reserva de emergencia') ||
+        accNameLower.includes('reserva de emergência') ||
+        accNameLower.includes('reserva de emergencia') ||
         catLower.includes('emergência') ||
         catLower.includes('emergencia') ||
         accNameLower.includes('emergência') ||
