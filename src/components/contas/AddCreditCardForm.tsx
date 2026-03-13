@@ -26,7 +26,8 @@ export function AddCreditCardForm() {
     e.preventDefault()
     if (!user) return
 
-    const fd = new FormData(e.currentTarget)
+    const form = e.currentTarget
+    const fd = new FormData(form)
     const cardName = fd.get('name') as string
     const limit = Number(fd.get('limit'))
     const dueDate = Number(fd.get('dueDate'))
@@ -68,7 +69,9 @@ export function AddCreditCardForm() {
         title: 'Cartão Registrado',
         description: 'O novo cartão já está disponível no seu painel.',
       })
-      e.currentTarget.reset()
+      if (form) {
+        form.reset()
+      }
     } else {
       toast({
         title: 'Erro ao salvar',
