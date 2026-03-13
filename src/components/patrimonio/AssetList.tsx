@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import useAppStore from '@/stores/useAppStore'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -25,7 +25,7 @@ import { useToast } from '@/hooks/use-toast'
 import { ImpulseControlDialog } from '../ImpulseControlDialog'
 
 export default function AssetList({ className }: { className?: string }) {
-  const { assets, setAssets } = useAppStore()
+  const { assets, setAssets, searchQuery } = useAppStore()
   const [open, setOpen] = useState(false)
   const [assetToDelete, setAssetToDelete] = useState<string | null>(null)
   const { toast } = useToast()
@@ -49,6 +49,15 @@ export default function AssetList({ className }: { className?: string }) {
     setAssets(assets.filter((a) => a.id !== assetToDelete))
     toast({ title: 'Ativo removido', description: 'O ativo foi retirado da sua carteira.' })
   }
+
+  const filteredAssets = useMemo(() => {
+    if (!searchQuery) return assets
+    const lowerQuery = searchQuery.toLowerCase()
+    return assets.filter(
+      (a) =>
+        a.name.toLowerCase().includes(lowerQuery) || a.category.toLowerCase().includes(lowerQuery),
+    )
+  }, [assets, searchQuery])
 
   return (
     <Card className={className}>
@@ -105,7 +114,7 @@ export default function AssetList({ className }: { className?: string }) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 mt-2">
-          {assets.map((asset) => (
+          {filteredAssets.map((asset) => (
             <div
               key={asset.id}
               className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors relative overflow-hidden"
@@ -132,9 +141,9 @@ export default function AssetList({ className }: { className?: string }) {
               </Button>
             </div>
           ))}
-          {assets.length === 0 && (
+          {filteredAssets.length === 0 && (
             <p className="text-center text-sm text-muted-foreground py-8">
-              Nenhum ativo registrado.
+              Nenhum ativo encontrado.
             </p>
           )}
         </div>
@@ -146,7 +155,7 @@ export default function AssetList({ className }: { className?: string }) {
         onConfirm={confirmDelete}
         title="Excluir Ativo / Resgate?"
         description="Você está prestes a remover este ativo da sua carteira."
-        reflectionText="O resgate antes do prazo pode causar perdas. Tem certeza de que esta movimentação é necessária?"
+        reflectionText="Remover este patrimônio impacta seu Ponto de Liberdade. Você revisou sua estratégia de diversificação?"
         confirmText="Sim, Confirmar Resgate"
       />
     </Card>

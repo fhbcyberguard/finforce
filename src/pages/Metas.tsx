@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import useAppStore from '@/stores/useAppStore'
+import { useState, useEffect } from 'react'
+import useAppStore, { Goal } from '@/stores/useAppStore'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,11 +10,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Target, Plus, Trash2, Calendar as CalIcon, Calculator } from 'lucide-react'
+import { Target, Plus, Trash2, Calendar as CalIcon, Calculator, Edit2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { differenceInMonths, addMonths, format } from 'date-fns'
@@ -22,42 +21,74 @@ import { differenceInMonths, addMonths, format } from 'date-fns'
 export default function Metas() {
   const { goals, setGoals } = useAppStore()
   const [open, setOpen] = useState(false)
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null)
   const { toast } = useToast()
 
   const [calcMode, setCalcMode] = useState<'date' | 'deposit'>('date')
+  const [name, setName] = useState('')
   const [targetVal, setTargetVal] = useState('')
   const [currentVal, setCurrentVal] = useState('')
   const [targetDate, setTargetDate] = useState('')
   const [monthlyDep, setMonthlyDep] = useState('')
 
-  const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (editingGoal) {
+      setName(editingGoal.name)
+      setTargetVal(editingGoal.targetValue.toString())
+      setCurrentVal(editingGoal.currentValue.toString())
+      setTargetDate(editingGoal.targetDate)
+      setMonthlyDep(editingGoal.monthlyDeposit.toString())
+      setCalcMode('date')
+      setOpen(true)
+    } else if (!open) {
+      setName('')
+      setTargetVal('')
+      setCurrentVal('')
+      setTargetDate('')
+      setMonthlyDep('')
+    }
+  }, [editingGoal, open])
+
+  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const fd = new FormData(e.currentTarget)
+
+    const calculatedTargetDate =
+      calcMode === 'date'
+        ? targetDate
+        : format(
+            addMonths(
+              new Date(),
+              Math.ceil((Number(targetVal) - Number(currentVal)) / Number(monthlyDep)),
+            ),
+            'yyyy-MM-dd',
+          )
+
+    const calculatedMonthlyDep =
+      calcMode === 'deposit'
+        ? Number(monthlyDep)
+        : (Number(targetVal) - Number(currentVal)) /
+          Math.max(1, differenceInMonths(new Date(targetDate), new Date()))
+
     const newGoal = {
-      id: Math.random().toString(),
-      name: fd.get('name') as string,
+      id: editingGoal ? editingGoal.id : Math.random().toString(),
+      name,
       targetValue: Number(targetVal),
       currentValue: Number(currentVal),
-      targetDate:
-        calcMode === 'date'
-          ? targetDate
-          : format(
-              addMonths(
-                new Date(),
-                Math.ceil((Number(targetVal) - Number(currentVal)) / Number(monthlyDep)),
-              ),
-              'yyyy-MM-dd',
-            ),
-      monthlyDeposit:
-        calcMode === 'deposit'
-          ? Number(monthlyDep)
-          : (Number(targetVal) - Number(currentVal)) /
-            Math.max(1, differenceInMonths(new Date(targetDate), new Date())),
+      targetDate: calculatedTargetDate,
+      monthlyDeposit: calculatedMonthlyDep,
     }
-    setGoals([...goals, newGoal])
+
+    if (editingGoal) {
+      setGoals(goals.map((g) => (g.id === editingGoal.id ? newGoal : g)))
+      toast({ title: 'Meta Atualizada', description: 'Seu plano foi modificado com sucesso.' })
+    } else {
+      setGoals([...goals, newGoal])
+      toast({ title: 'Meta Criada', description: 'Seu novo plano foi salvo com sucesso.' })
+    }
+
     setOpen(false)
-    toast({ title: 'Meta Criada', description: 'Seu plano foi salvo com sucesso.' })
+    setEditingGoal(null)
   }
 
   const confirmDelete = () => {
@@ -83,91 +114,107 @@ export default function Metas() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Metas e Sonhos</h1>
           <p className="text-muted-foreground">Planeje e calcule o tempo para suas conquistas.</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" /> Nova Meta
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Planejar Nova Meta</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleAdd} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Nome da Meta / Sonho</Label>
-                <Input name="name" required placeholder="Ex: Viagem, Carro Novo" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Valor Alvo (R$)</Label>
-                  <Input
-                    type="number"
-                    required
-                    value={targetVal}
-                    onChange={(e) => setTargetVal(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Valor Atual (R$)</Label>
-                  <Input
-                    type="number"
-                    required
-                    value={currentVal}
-                    onChange={(e) => setCurrentVal(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="pt-2 border-t">
-                <Label className="mb-2 block">O que você deseja calcular?</Label>
-                <Tabs
-                  value={calcMode}
-                  onValueChange={(v: any) => setCalcMode(v)}
-                  className="w-full mb-4"
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="date">Descobrir Aporte</TabsTrigger>
-                    <TabsTrigger value="deposit">Descobrir Tempo</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                {calcMode === 'date' ? (
-                  <div className="space-y-2">
-                    <Label>Data Desejada</Label>
-                    <Input
-                      type="date"
-                      required
-                      value={targetDate}
-                      onChange={(e) => setTargetDate(e.target.value)}
-                      min={format(new Date(), 'yyyy-MM-dd')}
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Label>Aporte Mensal (R$)</Label>
-                    <Input
-                      type="number"
-                      required
-                      value={monthlyDep}
-                      onChange={(e) => setMonthlyDep(e.target.value)}
-                    />
-                  </div>
-                )}
-                {calculatedMsg && (
-                  <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-md flex items-center gap-2 text-primary font-medium text-sm">
-                    <Calculator className="w-4 h-4" />
-                    {calculatedMsg}
-                  </div>
-                )}
-              </div>
-              <DialogFooter className="mt-6 pt-4">
-                <Button type="submit" className="w-full">
-                  Salvar Meta
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button
+          className="gap-2"
+          onClick={() => {
+            setEditingGoal(null)
+            setOpen(true)
+          }}
+        >
+          <Plus className="w-4 h-4" /> Nova Meta
+        </Button>
       </div>
+
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          setOpen(o)
+          if (!o) setEditingGoal(null)
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editingGoal ? 'Editar Meta' : 'Planejar Nova Meta'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Nome da Meta / Sonho</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="Ex: Viagem, Carro Novo"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Valor Alvo (R$)</Label>
+                <Input
+                  type="number"
+                  required
+                  value={targetVal}
+                  onChange={(e) => setTargetVal(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Valor Atual (R$)</Label>
+                <Input
+                  type="number"
+                  required
+                  value={currentVal}
+                  onChange={(e) => setCurrentVal(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="pt-2 border-t">
+              <Label className="mb-2 block">O que você deseja calcular?</Label>
+              <Tabs
+                value={calcMode}
+                onValueChange={(v: any) => setCalcMode(v)}
+                className="w-full mb-4"
+              >
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="date">Descobrir Aporte</TabsTrigger>
+                  <TabsTrigger value="deposit">Descobrir Tempo</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              {calcMode === 'date' ? (
+                <div className="space-y-2">
+                  <Label>Data Desejada</Label>
+                  <Input
+                    type="date"
+                    required
+                    value={targetDate}
+                    onChange={(e) => setTargetDate(e.target.value)}
+                    min={format(new Date(), 'yyyy-MM-dd')}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Aporte Mensal (R$)</Label>
+                  <Input
+                    type="number"
+                    required
+                    value={monthlyDep}
+                    onChange={(e) => setMonthlyDep(e.target.value)}
+                  />
+                </div>
+              )}
+              {calculatedMsg && (
+                <div className="mt-4 p-3 bg-primary/10 border border-primary/20 rounded-md flex items-center gap-2 text-primary font-medium text-sm">
+                  <Calculator className="w-4 h-4" />
+                  {calculatedMsg}
+                </div>
+              )}
+            </div>
+            <DialogFooter className="mt-6 pt-4">
+              <Button type="submit" className="w-full">
+                {editingGoal ? 'Salvar Alterações' : 'Salvar Meta'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {goals.map((goal) => {
@@ -193,14 +240,24 @@ export default function Metas() {
                   <div className="bg-primary/10 p-2 rounded-lg text-primary">
                     <Target className="w-5 h-5" />
                   </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => setGoalToDelete(goal.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => setEditingGoal(goal)}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setGoalToDelete(goal.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">{goal.name}</h3>
@@ -246,7 +303,7 @@ export default function Metas() {
         onConfirm={confirmDelete}
         title="Desistir da Meta?"
         description="Você está prestes a excluir este planejamento."
-        reflectionText="Esta meta não é mais importante ou você precisa de um novo plano? Lembre-se do impacto de desistir dos seus sonhos."
+        reflectionText="Esta meta deixou de ser importante ou precisa de um novo plano? Pense nos seus valores de longo prazo."
         confirmText="Sim, Excluir"
       />
     </div>

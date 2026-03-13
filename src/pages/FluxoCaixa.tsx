@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import useAppStore from '@/stores/useAppStore'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { useState, useMemo } from 'react'
+import useAppStore, { Transaction } from '@/stores/useAppStore'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +19,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog'
 import {
@@ -27,6 +26,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import {
   ArrowDownRight,
@@ -38,20 +38,50 @@ import {
   Upload,
   Paperclip,
   Download,
+  MoreVertical,
+  Edit2,
+  Trash2,
 } from 'lucide-react'
 import { MOCK_CATEGORIES } from '@/lib/mockData'
 import { useToast } from '@/hooks/use-toast'
 import { CsvImportDialog } from '@/components/fluxo/CsvImportDialog'
+import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 
 export default function FluxoCaixa() {
-  const { transactions, setTransactions, profiles } = useAppStore()
+  const { transactions, setTransactions, profiles, searchQuery } = useAppStore()
   const [openAdd, setOpenAdd] = useState(false)
   const [openImport, setOpenImport] = useState(false)
   const [isPix, setIsPix] = useState(false)
   const [fileName, setFileName] = useState('')
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null)
+
+  // TCC Trigger State
+  const [pendingLargeExpense, setPendingLargeExpense] = useState<Transaction | null>(null)
+
   const { toast } = useToast()
 
-  const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
+  const resetForm = () => {
+    setEditingTx(null)
+    setFileName('')
+    setIsPix(false)
+  }
+
+  const handleSave = (txToSave: Transaction) => {
+    if (editingTx) {
+      setTransactions(transactions.map((t) => (t.id === editingTx.id ? txToSave : t)))
+      toast({
+        title: 'Transação atualizada',
+        description: 'O registro foi modificado com sucesso.',
+      })
+    } else {
+      setTransactions([txToSave, ...transactions])
+      toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
+    }
+    setOpenAdd(false)
+    resetForm()
+  }
+
+  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     const type = fd.get('type') as string
@@ -60,22 +90,37 @@ export default function FluxoCaixa() {
     if (type === 'Expense' || type === 'Pix' || type === 'Transfer') amount = -Math.abs(amount)
     else amount = Math.abs(amount)
 
-    const newTx = {
-      id: Math.random().toString(),
-      date: new Date().toISOString().split('T')[0],
+    const newTx: Transaction = {
+      id: editingTx ? editingTx.id : Math.random().toString(),
+      date: editingTx ? editingTx.date : new Date().toISOString().split('T')[0],
       description: fd.get('description') as string,
       amount,
       category: fd.get('category') as string,
       type,
       account: fd.get('account') as string,
       recurrence: fd.get('recurrence') as string,
-      hasAttachment: !!fileName,
+      hasAttachment: !!fileName || (editingTx?.hasAttachment ?? false),
       profile: fd.get('profile') as string,
     }
-    setTransactions([newTx, ...transactions])
-    setOpenAdd(false)
-    setFileName('')
-    toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
+
+    // TCC Trigger Condition: Large Expense
+    if (amount < -1000 && !editingTx) {
+      setPendingLargeExpense(newTx)
+      setOpenAdd(false) // Hide main form temporarily
+    } else {
+      handleSave(newTx)
+    }
+  }
+
+  const handleDelete = (id: string) => {
+    setTransactions(transactions.filter((t) => t.id !== id))
+    toast({ title: 'Transação removida', description: 'O registro foi apagado.' })
+  }
+
+  const openEdit = (tx: Transaction) => {
+    setEditingTx(tx)
+    setIsPix(tx.type === 'Pix')
+    setOpenAdd(true)
   }
 
   const getIcon = (type: string) => {
@@ -92,6 +137,18 @@ export default function FluxoCaixa() {
         return <ArrowDownRight className="w-4 h-4" />
     }
   }
+
+  const filteredTransactions = useMemo(() => {
+    if (!searchQuery) return transactions
+    const lower = searchQuery.toLowerCase()
+    return transactions.filter(
+      (t) =>
+        t.description.toLowerCase().includes(lower) ||
+        t.category.toLowerCase().includes(lower) ||
+        (t.profile && t.profile.toLowerCase().includes(lower)) ||
+        t.account.toLowerCase().includes(lower),
+    )
+  }, [transactions, searchQuery])
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -121,17 +178,28 @@ export default function FluxoCaixa() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Dialog open={openAdd} onOpenChange={setOpenAdd}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 w-full sm:w-auto">
-                <Plus className="w-4 h-4" /> Nova Transação
-              </Button>
-            </DialogTrigger>
+          <Button
+            className="gap-2 w-full sm:w-auto"
+            onClick={() => {
+              resetForm()
+              setOpenAdd(true)
+            }}
+          >
+            <Plus className="w-4 h-4" /> Nova Transação
+          </Button>
+
+          <Dialog
+            open={openAdd}
+            onOpenChange={(o) => {
+              setOpenAdd(o)
+              if (!o) resetForm()
+            }}
+          >
             <DialogContent className="sm:max-w-[550px]">
               <DialogHeader>
-                <DialogTitle>Registrar Transação</DialogTitle>
+                <DialogTitle>{editingTx ? 'Editar Transação' : 'Registrar Transação'}</DialogTitle>
               </DialogHeader>
-              <form onSubmit={handleAdd} className="space-y-4 mt-4">
+              <form onSubmit={handleFormSubmit} className="space-y-4 mt-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Tipo</Label>
@@ -139,7 +207,7 @@ export default function FluxoCaixa() {
                       name="type"
                       required
                       onValueChange={(v) => setIsPix(v === 'Pix')}
-                      defaultValue="Expense"
+                      defaultValue={editingTx?.type || 'Expense'}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione" />
@@ -154,19 +222,35 @@ export default function FluxoCaixa() {
                   </div>
                   <div className="space-y-2">
                     <Label>Valor (R$)</Label>
-                    <Input name="amount" type="number" step="0.01" placeholder="0.00" required />
+                    <Input
+                      name="amount"
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      required
+                      defaultValue={editingTx ? Math.abs(editingTx.amount) : ''}
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Descrição</Label>
-                  <Input name="description" placeholder="Ex: Conta de Luz" required />
+                  <Input
+                    name="description"
+                    placeholder="Ex: Conta de Luz"
+                    required
+                    defaultValue={editingTx?.description || ''}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Categoria</Label>
-                    <Select name="category" required defaultValue="Moradia > Luz">
+                    <Select
+                      name="category"
+                      required
+                      defaultValue={editingTx?.category || 'Moradia > Luz'}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -186,7 +270,11 @@ export default function FluxoCaixa() {
                   </div>
                   <div className="space-y-2">
                     <Label>Perfil Responsável</Label>
-                    <Select name="profile" required defaultValue={profiles[0]?.name}>
+                    <Select
+                      name="profile"
+                      required
+                      defaultValue={editingTx?.profile || profiles[0]?.name}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -204,7 +292,7 @@ export default function FluxoCaixa() {
                 <div className="grid grid-cols-2 gap-4 pt-2 items-end">
                   <div className="space-y-2">
                     <Label>Conta Origem/Destino</Label>
-                    <Select name="account" required defaultValue="Nubank">
+                    <Select name="account" required defaultValue={editingTx?.account || 'Nubank'}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -217,7 +305,7 @@ export default function FluxoCaixa() {
                   </div>
                   <div className="space-y-2">
                     <Label>Recorrência</Label>
-                    <Select name="recurrence" defaultValue="none">
+                    <Select name="recurrence" defaultValue={editingTx?.recurrence || 'none'}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -261,7 +349,7 @@ export default function FluxoCaixa() {
 
                 <DialogFooter className="mt-6 pt-4 border-t">
                   <Button type="submit" className="w-full">
-                    Salvar Transação
+                    {editingTx ? 'Salvar Alterações' : 'Salvar Transação'}
                   </Button>
                 </DialogFooter>
               </form>
@@ -273,10 +361,10 @@ export default function FluxoCaixa() {
       <Card className="border-border/50">
         <CardContent className="p-0">
           <div className="divide-y divide-border/50 max-h-[600px] overflow-y-auto">
-            {transactions.map((tx) => (
+            {filteredTransactions.map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                className="group flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="p-2 rounded-full bg-secondary/20">{getIcon(tx.type)}</div>
@@ -303,19 +391,46 @@ export default function FluxoCaixa() {
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className={`font-mono font-medium ${tx.amount > 0 ? 'text-emerald-500' : ''}`}>
-                    {tx.amount > 0 ? '+' : ''}R$ {Math.abs(tx.amount).toFixed(2)}
-                  </p>
-                  {(tx.type === 'Pix' || tx.hasAttachment) && (
-                    <span className="text-[10px] text-muted-foreground flex items-center justify-end gap-1 mt-1">
-                      <Paperclip className="w-3 h-3" /> anexo
-                    </span>
-                  )}
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p
+                      className={`font-mono font-medium ${tx.amount > 0 ? 'text-emerald-500' : ''}`}
+                    >
+                      {tx.amount > 0 ? '+' : ''}R$ {Math.abs(tx.amount).toFixed(2)}
+                    </p>
+                    {(tx.type === 'Pix' || tx.hasAttachment) && (
+                      <span className="text-[10px] text-muted-foreground flex items-center justify-end gap-1 mt-1">
+                        <Paperclip className="w-3 h-3" /> anexo
+                      </span>
+                    )}
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => openEdit(tx)}>
+                        <Edit2 className="w-4 h-4 mr-2" /> Editar
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                        onClick={() => handleDelete(tx.id)}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             ))}
-            {transactions.length === 0 && (
+            {filteredTransactions.length === 0 && (
               <div className="p-8 text-center text-muted-foreground">
                 Nenhuma transação encontrada.
               </div>
@@ -325,6 +440,26 @@ export default function FluxoCaixa() {
       </Card>
 
       <CsvImportDialog open={openImport} onOpenChange={setOpenImport} />
+
+      <ImpulseControlDialog
+        open={!!pendingLargeExpense}
+        onOpenChange={(o) => {
+          if (!o && pendingLargeExpense) {
+            setPendingLargeExpense(null)
+          }
+        }}
+        onConfirm={() => {
+          if (pendingLargeExpense) {
+            handleSave(pendingLargeExpense)
+            setPendingLargeExpense(null)
+          }
+        }}
+        title="Alerta de Gasto Elevado"
+        description="Você está registrando uma saída de valor substancial."
+        reflectionText="Este gasto está acima da sua média. Ele está alinhado com seu propósito financeiro?"
+        confirmText="Confirmar Gasto"
+        destructive={false}
+      />
     </div>
   )
 }

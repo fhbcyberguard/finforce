@@ -23,6 +23,7 @@ interface AppState {
   goals: Goal[]
   transactions: Transaction[]
   logoUrl: string
+  searchQuery: string
 }
 
 const loadData = <T>(key: string, mockData: T): T => {
@@ -42,6 +43,7 @@ const getInitialState = (): AppState => ({
   goals: loadData('finflow_goals', MOCK_GOALS),
   transactions: loadData('finflow_transactions', MOCK_TRANSACTIONS),
   logoUrl: localStorage.getItem('finflow_logo') || '',
+  searchQuery: '',
 })
 
 let state: AppState = getInitialState()
@@ -84,5 +86,6 @@ export default function useAppStore() {
     setGoals: (goals: Goal[]) => updateState({ goals }),
     setTransactions: (transactions: Transaction[]) => updateState({ transactions }),
     setLogoUrl: (logoUrl: string) => updateState({ logoUrl }),
+    setSearchQuery: (searchQuery: string) => updateState({ searchQuery }),
   }
 }

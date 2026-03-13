@@ -35,6 +35,7 @@ const schema = z.object({
   name: z.string().min(1, 'O nome é obrigatório'),
   role: z.string().min(1, 'O papel é obrigatório'),
   limit: z.coerce.number().min(0, 'O limite não pode ser negativo'),
+  avatar: z.string().url('Deve ser uma URL válida').optional().or(z.literal('')),
 })
 
 interface ProfileEditDialogProps {
@@ -53,6 +54,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       name: profile.name || '',
       role: profile.role || '',
       limit: profile.limit || 0,
+      avatar: profile.avatar || '',
     },
   })
 
@@ -62,6 +64,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
         name: profile.name || '',
         role: profile.role || '',
         limit: profile.limit || 0,
+        avatar: profile.avatar || '',
       })
     }
   }, [profile, open, form])
@@ -72,15 +75,21 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
     if (isNew) {
       const newProfile = {
         id: Math.random().toString(36).substring(2, 9),
-        avatar: `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${Math.floor(
-          Math.random() * 100,
-        )}`,
+        avatar:
+          data.avatar ||
+          `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${Math.floor(
+            Math.random() * 100,
+          )}`,
         ...data,
       }
       setProfiles([...profiles, newProfile])
       toast({ title: 'Perfil criado', description: 'Novo membro adicionado com sucesso.' })
     } else {
-      setProfiles(profiles.map((p) => (p.id === profile.id ? { ...p, ...data } : p)))
+      setProfiles(
+        profiles.map((p) =>
+          p.id === profile.id ? { ...p, ...data, avatar: data.avatar || p.avatar } : p,
+        ),
+      )
       toast({ title: 'Perfil atualizado', description: 'Dados salvos com sucesso.' })
     }
     onOpenChange(false)
@@ -106,6 +115,19 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                   <FormLabel>Nome Customizado</FormLabel>
                   <FormControl>
                     <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="avatar"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>URL da Foto (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

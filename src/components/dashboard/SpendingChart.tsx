@@ -10,12 +10,14 @@ import {
 } from '@/components/ui/chart'
 import useAppStore from '@/stores/useAppStore'
 
+// High Contrast Palette: Teal, Green, Gold
 const COLORS = [
-  'hsl(var(--primary))',
-  'hsl(var(--secondary))',
-  'hsl(var(--accent))',
-  'hsl(var(--destructive))',
-  'hsl(var(--chart-4))',
+  '#2EC4B6', // Teal
+  '#59C3C3', // Light Teal/Green
+  '#F4D03F', // Gold
+  '#E74C3C', // Red
+  '#8E44AD', // Purple
+  '#3498DB', // Blue
 ]
 
 export function SpendingChart() {
@@ -101,8 +103,8 @@ export function SpendingChart() {
                 />
                 <Tooltip content={<ChartTooltipContent />} />
                 <ChartLegend verticalAlign="top" content={<ChartLegendContent />} />
-                {chartCats.map((cat) => (
-                  <Bar key={cat} dataKey={cat} fill={`var(--color-${cat})`} stackId="a" />
+                {chartCats.map((cat, i) => (
+                  <Bar key={cat} dataKey={cat} fill={COLORS[i % COLORS.length]} stackId="a" />
                 ))}
               </BarChart>
             </ChartContainer>
@@ -123,6 +125,8 @@ export function SpendingChart() {
                     <Cell
                       key={entry.name}
                       fill={config[entry.name]?.color || COLORS[idx % COLORS.length]}
+                      stroke="#1E3A5F"
+                      strokeWidth={2}
                     />
                   ))}
                 </Pie>

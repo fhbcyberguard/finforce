@@ -4,11 +4,11 @@ import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 import useAppStore from '@/stores/useAppStore'
 
 const COLORS = [
-  'hsl(var(--primary))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
+  '#2EC4B6', // Teal
+  '#59C3C3', // Light Teal/Green
+  '#F4D03F', // Gold
+  '#E74C3C', // Red
+  '#8E44AD', // Purple
 ]
 
 export default function AllocationChart({ className }: { className?: string }) {
@@ -39,7 +39,7 @@ export default function AllocationChart({ className }: { className?: string }) {
             </div>
           ) : (
             <ChartContainer
-              config={{ value: { label: 'Valor', color: 'hsl(var(--primary))' } }}
+              config={{ value: { label: 'Valor', color: COLORS[0] } }}
               className="h-full"
             >
               <PieChart>
@@ -53,7 +53,12 @@ export default function AllocationChart({ className }: { className?: string }) {
                   dataKey="value"
                 >
                   {data.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      stroke="#1E3A5F"
+                      strokeWidth={2}
+                    />
                   ))}
                 </Pie>
                 <Tooltip content={<ChartTooltipContent />} />

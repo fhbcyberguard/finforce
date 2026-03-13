@@ -3,7 +3,7 @@ import { Bell, Search, Settings, LogOut, Users, Waves } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { SidebarTrigger } from '@/components/ui/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,9 @@ export function Header() {
   const urgentAlerts = MOCK_ALERTS.filter((a) => a.type === 'urgent').length
   const navigate = useNavigate()
   const { toast } = useToast()
-  const { logoUrl } = useAppStore()
+  const { logoUrl, searchQuery, setSearchQuery, profiles } = useAppStore()
+
+  const mainProfile = profiles[0]
 
   const handleLogout = () => {
     toast({
@@ -48,6 +50,8 @@ export function Header() {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Pesquisar transações ou ativos..."
             className="w-full bg-muted/50 pl-9 rounded-full border-none focus-visible:ring-1"
           />
@@ -71,17 +75,20 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary">
               <AvatarImage
-                src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=4"
+                src={
+                  mainProfile?.avatar ||
+                  'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=4'
+                }
                 alt="User"
               />
-              <AvatarFallback>C</AvatarFallback>
+              <AvatarFallback>{mainProfile?.name.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 mt-1">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Carlos Silva</p>
-                <p className="text-xs leading-none text-muted-foreground">carlos@familia.com</p>
+                <p className="text-sm font-medium leading-none">{mainProfile?.name || 'Usuário'}</p>
+                <p className="text-xs leading-none text-muted-foreground">conta@familia.com</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
