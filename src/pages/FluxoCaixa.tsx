@@ -179,7 +179,7 @@ export default function FluxoCaixa() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', 'transacoes_finflow.csv')
+    link.setAttribute('download', 'transacoes_finforce.csv')
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

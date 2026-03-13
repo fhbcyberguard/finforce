@@ -122,22 +122,22 @@ const defaultSimulator: SimulatorSettings = {
 }
 
 const getInitialState = (): AppState => ({
-  profiles: loadData('finflow_profiles', [] as Profile[]),
-  accounts: loadData('finflow_accounts', MOCK_ACCOUNTS),
-  creditCards: loadData('finflow_credit_cards', MOCK_CREDIT_CARDS as CreditCard[]),
-  assets: loadData('finflow_assets', MOCK_ASSETS),
-  goals: loadData('finflow_goals', MOCK_GOALS),
-  transactions: loadData('finflow_transactions', [] as Transaction[]),
-  alerts: loadData('finflow_alerts', MOCK_ALERTS),
-  categories: loadData('finflow_categories', []),
-  simulatorSettings: loadData('finflow_simulator', defaultSimulator),
-  logoUrl: localStorage.getItem('finflow_logo') || '',
+  profiles: loadData('finforce_profiles', [] as Profile[]),
+  accounts: loadData('finforce_accounts', MOCK_ACCOUNTS),
+  creditCards: loadData('finforce_credit_cards', MOCK_CREDIT_CARDS as CreditCard[]),
+  assets: loadData('finforce_assets', MOCK_ASSETS),
+  goals: loadData('finforce_goals', MOCK_GOALS),
+  transactions: loadData('finforce_transactions', [] as Transaction[]),
+  alerts: loadData('finforce_alerts', MOCK_ALERTS),
+  categories: loadData('finforce_categories', []),
+  simulatorSettings: loadData('finforce_simulator', defaultSimulator),
+  logoUrl: localStorage.getItem('finforce_logo') || '',
   searchQuery: '',
   timeframe: 'monthly',
   selectedYear: new Date().getFullYear().toString(),
-  currentContext: (localStorage.getItem('finflow_context') as ContextType) || 'personal',
-  subscriptionPlan: (localStorage.getItem('finflow_plan') as any) || 'basic',
-  categoryColors: loadData('finflow_category_colors', {}),
+  currentContext: (localStorage.getItem('finforce_context') as ContextType) || 'personal',
+  subscriptionPlan: (localStorage.getItem('finforce_plan') as any) || 'basic',
+  categoryColors: loadData('finforce_category_colors', {}),
 })
 
 let state: AppState = getInitialState()
@@ -150,24 +150,24 @@ function emit() {
 
 function updateState(partial: Partial<AppState>) {
   state = { ...state, ...partial }
-  if (partial.profiles) localStorage.setItem('finflow_profiles', JSON.stringify(partial.profiles))
-  if (partial.accounts) localStorage.setItem('finflow_accounts', JSON.stringify(partial.accounts))
+  if (partial.profiles) localStorage.setItem('finforce_profiles', JSON.stringify(partial.profiles))
+  if (partial.accounts) localStorage.setItem('finforce_accounts', JSON.stringify(partial.accounts))
   if (partial.creditCards)
-    localStorage.setItem('finflow_credit_cards', JSON.stringify(partial.creditCards))
-  if (partial.assets) localStorage.setItem('finflow_assets', JSON.stringify(partial.assets))
-  if (partial.goals) localStorage.setItem('finflow_goals', JSON.stringify(partial.goals))
+    localStorage.setItem('finforce_credit_cards', JSON.stringify(partial.creditCards))
+  if (partial.assets) localStorage.setItem('finforce_assets', JSON.stringify(partial.assets))
+  if (partial.goals) localStorage.setItem('finforce_goals', JSON.stringify(partial.goals))
   if (partial.transactions)
-    localStorage.setItem('finflow_transactions', JSON.stringify(partial.transactions))
-  if (partial.alerts) localStorage.setItem('finflow_alerts', JSON.stringify(partial.alerts))
+    localStorage.setItem('finforce_transactions', JSON.stringify(partial.transactions))
+  if (partial.alerts) localStorage.setItem('finforce_alerts', JSON.stringify(partial.alerts))
   if (partial.categories)
-    localStorage.setItem('finflow_categories', JSON.stringify(partial.categories))
+    localStorage.setItem('finforce_categories', JSON.stringify(partial.categories))
   if (partial.simulatorSettings)
-    localStorage.setItem('finflow_simulator', JSON.stringify(partial.simulatorSettings))
-  if (partial.logoUrl !== undefined) localStorage.setItem('finflow_logo', partial.logoUrl)
-  if (partial.currentContext) localStorage.setItem('finflow_context', partial.currentContext)
-  if (partial.subscriptionPlan) localStorage.setItem('finflow_plan', partial.subscriptionPlan)
+    localStorage.setItem('finforce_simulator', JSON.stringify(partial.simulatorSettings))
+  if (partial.logoUrl !== undefined) localStorage.setItem('finforce_logo', partial.logoUrl)
+  if (partial.currentContext) localStorage.setItem('finforce_context', partial.currentContext)
+  if (partial.subscriptionPlan) localStorage.setItem('finforce_plan', partial.subscriptionPlan)
   if (partial.categoryColors)
-    localStorage.setItem('finflow_category_colors', JSON.stringify(partial.categoryColors))
+    localStorage.setItem('finforce_category_colors', JSON.stringify(partial.categoryColors))
   emit()
 }
 

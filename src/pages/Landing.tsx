@@ -63,7 +63,7 @@ export default function Landing() {
                 Controle, invista e proteja seu dinheiro em um único lugar.
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl leading-relaxed">
-                O FinFlow combina engenharia financeira, psicologia comportamental e segurança
+                O FinForce combina engenharia financeira, psicologia comportamental e segurança
                 bancária para ajudar você e sua família a tomar decisões financeiras mais
                 inteligentes.
               </p>
@@ -290,10 +290,10 @@ export default function Landing() {
         <div className="container px-4 md:px-6 mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <Waves className="h-5 w-5 text-primary" />
-            <span className="font-semibold">FinFlow</span>
+            <span className="font-semibold">FinForce</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © 2026 FinFlow App. Todos os direitos reservados.
+            © 2026 FinForce App. Todos os direitos reservados.
           </p>
           <div className="flex gap-4">
             <Link to="#" className="text-sm text-muted-foreground hover:text-foreground">

@@ -41,7 +41,7 @@ export default function Login() {
       } else {
         toast({
           title: 'Login realizado com sucesso',
-          description: 'Bem-vindo de volta ao FinFlow.',
+          description: 'Bem-vindo de volta ao FinForce.',
         })
         navigate('/dashboard')
       }
@@ -55,7 +55,7 @@ export default function Login() {
           <div className="flex justify-center mb-4">
             <Logo imageClassName="h-16 sm:h-20 w-auto drop-shadow-sm" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight sr-only">FinFlow</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight sr-only">FinForce</CardTitle>
           <CardDescription>Acesse a gestão financeira da sua família</CardDescription>
         </CardHeader>
         <CardContent>

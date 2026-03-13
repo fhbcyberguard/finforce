@@ -76,7 +76,7 @@ export default function Registro() {
     } else {
       toast({
         title: 'Conta criada com sucesso!',
-        description: 'Bem-vindo ao FinFlow.',
+        description: 'Bem-vindo ao FinForce.',
       })
       navigate('/dashboard')
     }
