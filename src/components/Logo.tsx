@@ -16,7 +16,7 @@ export function Logo({ className, imageClassName }: LogoProps) {
       <img
         src={logoImg}
         alt="FinFlow Logo"
-        className={cn('h-8 sm:h-10 w-auto object-contain', imageClassName)}
+        className={cn('h-10 sm:h-12 w-auto object-contain', imageClassName)}
       />
     </Link>
   )
