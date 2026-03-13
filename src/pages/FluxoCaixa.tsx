@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import useAppStore, { Transaction } from '@/stores/useAppStore'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -42,6 +42,7 @@ import {
   MoreVertical,
   Edit2,
   Trash2,
+  CreditCard,
 } from 'lucide-react'
 import { MOCK_CATEGORIES } from '@/lib/mockData'
 import { useToast } from '@/hooks/use-toast'
@@ -49,14 +50,25 @@ import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 
 export default function FluxoCaixa() {
-  const { transactions, setTransactions, profiles, searchQuery, timeframe, setTimeframe } =
-    useAppStore()
+  const {
+    transactions,
+    setTransactions,
+    profiles,
+    accounts,
+    creditCards,
+    searchQuery,
+    timeframe,
+    setTimeframe,
+  } = useAppStore()
   const [openAdd, setOpenAdd] = useState(false)
   const [openImport, setOpenImport] = useState(false)
   const [importType, setImportType] = useState<'csv' | 'ofx' | null>(null)
   const [isPix, setIsPix] = useState(false)
   const [fileName, setFileName] = useState('')
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
+
+  const [selectedAccount, setSelectedAccount] = useState<string>('')
+  const [selectedCard, setSelectedCard] = useState<string>('none')
 
   // TCC Trigger State
   const [pendingLargeExpense, setPendingLargeExpense] = useState<Transaction | null>(null)
@@ -67,6 +79,33 @@ export default function FluxoCaixa() {
     setEditingTx(null)
     setFileName('')
     setIsPix(false)
+    setSelectedAccount(accounts[0]?.id || '')
+    setSelectedCard('none')
+  }
+
+  useEffect(() => {
+    if (openAdd) {
+      if (editingTx) {
+        const foundAcc = accounts.find(
+          (a) => a.id === editingTx.account || a.bank === editingTx.account,
+        )
+        setSelectedAccount(foundAcc ? foundAcc.id : accounts[0]?.id || '')
+        setSelectedCard(editingTx.cardId || 'none')
+      } else {
+        setSelectedAccount(accounts[0]?.id || '')
+        setSelectedCard('none')
+      }
+    }
+  }, [openAdd, editingTx, accounts])
+
+  const handleCardChange = (cardId: string) => {
+    setSelectedCard(cardId)
+    if (cardId !== 'none') {
+      const card = creditCards.find((c) => c.id === cardId)
+      if (card && card.accountId && card.accountId !== 'none') {
+        setSelectedAccount(card.accountId)
+      }
+    }
   }
 
   const handleSave = (txToSave: Transaction) => {
@@ -97,6 +136,9 @@ export default function FluxoCaixa() {
     const expenseType =
       type === 'Expense' || type === 'Pix' ? rawExpenseType || 'variable' : undefined
 
+    const accountField = selectedAccount === 'none' ? '' : selectedAccount
+    const cardField = selectedCard === 'none' ? undefined : selectedCard
+
     const newTx: Transaction = {
       id: editingTx ? editingTx.id : Math.random().toString(),
       date: editingTx ? editingTx.date : new Date().toISOString().split('T')[0],
@@ -104,17 +146,17 @@ export default function FluxoCaixa() {
       amount,
       category: fd.get('category') as string,
       type,
-      account: fd.get('account') as string,
+      account: accountField,
+      cardId: cardField,
       recurrence: fd.get('recurrence') as string,
       hasAttachment: !!fileName || (editingTx?.hasAttachment ?? false),
       profile: fd.get('profile') as string,
       expenseType,
     }
 
-    // TCC Trigger Condition: Large Expense
     if (amount < -1000 && !editingTx) {
       setPendingLargeExpense(newTx)
-      setOpenAdd(false) // Hide main form temporarily
+      setOpenAdd(false)
     } else {
       handleSave(newTx)
     }
@@ -338,7 +380,7 @@ export default function FluxoCaixa() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 pt-2 items-end">
+                <div className="grid grid-cols-2 gap-4 pt-2 items-end">
                   <div className="space-y-2 col-span-1">
                     <Label>Perfil</Label>
                     <Select
@@ -359,19 +401,6 @@ export default function FluxoCaixa() {
                     </Select>
                   </div>
                   <div className="space-y-2 col-span-1">
-                    <Label>Conta</Label>
-                    <Select name="account" required defaultValue={editingTx?.account || 'Nubank'}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Nubank">Nubank</SelectItem>
-                        <SelectItem value="Itaú">Itaú</SelectItem>
-                        <SelectItem value="Dinheiro">Dinheiro</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2 col-span-1">
                     <Label>Recorrência</Label>
                     <Select name="recurrence" defaultValue={editingTx?.recurrence || 'none'}>
                       <SelectTrigger>
@@ -382,6 +411,56 @@ export default function FluxoCaixa() {
                         <SelectItem value="weekly">Semanal</SelectItem>
                         <SelectItem value="monthly">Mensal</SelectItem>
                         <SelectItem value="yearly">Anual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2 items-end">
+                  <div className="space-y-2 col-span-1">
+                    <Label>Conta Registrada</Label>
+                    <Select
+                      name="account"
+                      required
+                      value={selectedAccount}
+                      onValueChange={setSelectedAccount}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {accounts.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            Nenhuma conta cadastrada
+                          </SelectItem>
+                        ) : (
+                          accounts.map((a) => (
+                            <SelectItem key={a.id} value={a.id}>
+                              {a.bank}
+                            </SelectItem>
+                          ))
+                        )}
+                        {selectedAccount &&
+                          selectedAccount !== 'none' &&
+                          !accounts.find((a) => a.id === selectedAccount) && (
+                            <SelectItem value={selectedAccount}>{selectedAccount}</SelectItem>
+                          )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 col-span-1">
+                    <Label>Cartão (Opcional)</Label>
+                    <Select value={selectedCard} onValueChange={handleCardChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sem cartão" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhum</SelectItem>
+                        {creditCards.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name || c.bank}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -429,83 +508,94 @@ export default function FluxoCaixa() {
       <Card className="border-border/50">
         <CardContent className="p-0">
           <div className="divide-y divide-border/50 max-h-[600px] overflow-y-auto">
-            {filteredTransactions.map((tx) => (
-              <div
-                key={tx.id}
-                className="group flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 rounded-full bg-secondary/20">{getIcon(tx.type)}</div>
-                  <div>
-                    <p className="font-medium text-sm sm:text-base flex items-center gap-2">
-                      {tx.description}
-                      {tx.recurrence !== 'none' && (
-                        <Repeat className="w-3 h-3 text-muted-foreground" />
-                      )}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <Badge variant="secondary" className="text-[10px] font-normal">
-                        {tx.category}
-                      </Badge>
-                      {(tx.type === 'Expense' || tx.type === 'Pix') && tx.expenseType && (
-                        <Badge
-                          variant="outline"
-                          className={`text-[10px] font-normal ${tx.expenseType === 'fixed' ? 'border-blue-500/50 text-blue-500' : 'border-orange-500/50 text-orange-500'}`}
-                        >
-                          {tx.expenseType === 'fixed' ? 'Fixo' : 'Variável'}
+            {filteredTransactions.map((tx) => {
+              const acc = accounts.find((a) => a.id === tx.account)
+              const accName = acc ? acc.bank : tx.account
+              const card = creditCards.find((c) => c.id === tx.cardId)
+
+              return (
+                <div
+                  key={tx.id}
+                  className="group flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 rounded-full bg-secondary/20">{getIcon(tx.type)}</div>
+                    <div>
+                      <p className="font-medium text-sm sm:text-base flex items-center gap-2">
+                        {tx.description}
+                        {tx.recurrence !== 'none' && (
+                          <Repeat className="w-3 h-3 text-muted-foreground" />
+                        )}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-[10px] font-normal">
+                          {tx.category}
                         </Badge>
-                      )}
-                      <span className="text-xs text-muted-foreground">{tx.account}</span>
-                      <span className="text-xs text-muted-foreground">
-                        • {new Date(tx.date).toLocaleDateString('pt-BR')}
-                      </span>
-                      {tx.profile && (
-                        <span className="text-xs text-primary/70 font-medium ml-1">
-                          [{tx.profile}]
+                        {(tx.type === 'Expense' || tx.type === 'Pix') && tx.expenseType && (
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] font-normal ${tx.expenseType === 'fixed' ? 'border-blue-500/50 text-blue-500' : 'border-orange-500/50 text-orange-500'}`}
+                          >
+                            {tx.expenseType === 'fixed' ? 'Fixo' : 'Variável'}
+                          </Badge>
+                        )}
+                        <span className="text-xs text-muted-foreground font-medium">{accName}</span>
+                        {card && (
+                          <span className="text-[10px] text-muted-foreground bg-muted border border-border/50 px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <CreditCard className="w-3 h-3" /> {card.name || card.bank}
+                          </span>
+                        )}
+                        <span className="text-xs text-muted-foreground">
+                          • {new Date(tx.date).toLocaleDateString('pt-BR')}
+                        </span>
+                        {tx.profile && (
+                          <span className="text-xs text-primary/70 font-medium ml-1">
+                            [{tx.profile}]
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p
+                        className={`font-mono font-medium ${tx.amount > 0 ? 'text-emerald-500' : ''}`}
+                      >
+                        {tx.amount > 0 ? '+' : ''}R$ {Math.abs(tx.amount).toFixed(2)}
+                      </p>
+                      {(tx.type === 'Pix' || tx.hasAttachment) && (
+                        <span className="text-[10px] text-muted-foreground flex items-center justify-end gap-1 mt-1">
+                          <Paperclip className="w-3 h-3" /> anexo
                         </span>
                       )}
                     </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEdit(tx)}>
+                          <Edit2 className="w-4 h-4 mr-2" /> Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                          onClick={() => handleDelete(tx.id)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p
-                      className={`font-mono font-medium ${tx.amount > 0 ? 'text-emerald-500' : ''}`}
-                    >
-                      {tx.amount > 0 ? '+' : ''}R$ {Math.abs(tx.amount).toFixed(2)}
-                    </p>
-                    {(tx.type === 'Pix' || tx.hasAttachment) && (
-                      <span className="text-[10px] text-muted-foreground flex items-center justify-end gap-1 mt-1">
-                        <Paperclip className="w-3 h-3" /> anexo
-                      </span>
-                    )}
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEdit(tx)}>
-                        <Edit2 className="w-4 h-4 mr-2" /> Editar
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                        onClick={() => handleDelete(tx.id)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
-            ))}
+              )
+            })}
             {filteredTransactions.length === 0 && (
               <div className="p-8 text-center text-muted-foreground bg-muted/10 border border-dashed rounded-lg m-4">
                 Nenhuma transação encontrada no período.

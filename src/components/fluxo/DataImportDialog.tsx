@@ -35,7 +35,7 @@ export function DataImportDialog({
   onOpenChange: (o: boolean) => void
   importType: 'csv' | 'ofx' | null
 }) {
-  const { transactions, setTransactions, profiles } = useAppStore()
+  const { transactions, setTransactions, profiles, accounts } = useAppStore()
   const { toast } = useToast()
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<any[]>([])
@@ -46,6 +46,8 @@ export function DataImportDialog({
       setPreview([])
     }
   }, [open])
+
+  const defaultAcc = accounts[0]?.id || 'none'
 
   const parseCSV = (text: string) => {
     const lines = text.split('\n').filter((l) => l.trim().length > 0)
@@ -63,7 +65,7 @@ export function DataImportDialog({
         category: 'Outros > Importado',
         type: amount < 0 ? 'Expense' : 'Revenue',
         expenseType: amount < 0 ? 'variable' : undefined,
-        account: 'Importada',
+        account: defaultAcc,
         recurrence: 'none',
         profile: profiles[0]?.name || 'Admin',
         hasAttachment: false,
@@ -93,7 +95,7 @@ export function DataImportDialog({
         category: 'Outros > Importado',
         type: amount < 0 ? 'Expense' : 'Revenue',
         expenseType: amount < 0 ? 'variable' : undefined,
-        account: 'Importada OFX',
+        account: defaultAcc,
         recurrence: 'none',
         profile: profiles[0]?.name || 'Admin',
         hasAttachment: false,

@@ -20,6 +20,8 @@ export type Account = (typeof MOCK_ACCOUNTS)[0] & { context?: ContextType }
 export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & {
   isArchived?: boolean
   context?: ContextType
+  accountId?: string
+  name?: string
 }
 export type Asset = (typeof MOCK_ASSETS)[0] & { context?: ContextType }
 export type Goal = (typeof MOCK_GOALS)[0] & { context?: ContextType }
@@ -51,7 +53,7 @@ interface AppState {
   timeframe: 'monthly' | 'annual'
   simulatorSettings: SimulatorSettings
   currentContext: ContextType
-  subscriptionPlan: 'basic' | 'medium' | 'master'
+  subscriptionPlan: 'basic' | 'medium' | 'top'
   categoryColors: Record<string, string>
 }
 
@@ -74,10 +76,10 @@ const defaultSimulator: SimulatorSettings = {
 const getInitialState = (): AppState => ({
   profiles: loadData('finflow_profiles', MOCK_PROFILES as Profile[]),
   accounts: loadData('finflow_accounts', MOCK_ACCOUNTS),
-  creditCards: loadData('finflow_credit_cards', MOCK_CREDIT_CARDS),
+  creditCards: loadData('finflow_credit_cards', MOCK_CREDIT_CARDS as CreditCard[]),
   assets: loadData('finflow_assets', MOCK_ASSETS),
   goals: loadData('finflow_goals', MOCK_GOALS),
-  transactions: loadData('finflow_transactions', MOCK_TRANSACTIONS),
+  transactions: loadData('finflow_transactions', MOCK_TRANSACTIONS as Transaction[]),
   alerts: loadData('finflow_alerts', MOCK_ALERTS),
   simulatorSettings: loadData('finflow_simulator', defaultSimulator),
   logoUrl: localStorage.getItem('finflow_logo') || '',
@@ -217,7 +219,7 @@ export default function useAppStore() {
     setSearchQuery: (searchQuery: string) => updateState({ searchQuery }),
     setTimeframe: (timeframe: 'monthly' | 'annual') => updateState({ timeframe }),
     setCurrentContext: (currentContext: ContextType) => updateState({ currentContext }),
-    setSubscriptionPlan: (subscriptionPlan: 'basic' | 'medium' | 'master') =>
+    setSubscriptionPlan: (subscriptionPlan: 'basic' | 'medium' | 'top') =>
       updateState({ subscriptionPlan }),
     setCategoryColor: (category: string, color: string) =>
       updateState({ categoryColors: { ...state.categoryColors, [category]: color } }),

@@ -10,13 +10,20 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore, { CreditCard } from '@/stores/useAppStore'
 
 export function CreditCardList() {
-  const { creditCards, setCreditCards } = useAppStore()
+  const { creditCards, setCreditCards, accounts } = useAppStore()
   const { toast } = useToast()
   const [editingCard, setEditingCard] = useState<CreditCard | null>(null)
 
@@ -31,10 +38,7 @@ export function CreditCardList() {
   }
 
   const deleteCard = (id: string) => {
-    // Calling setCreditCards with a missing card triggers the cascading delete
-    // of transactions and alerts internally in useAppStore
     setCreditCards(creditCards.filter((c) => c.id !== id))
-
     toast({
       title: 'Cartão Excluído',
       description: 'Cartão, faturas pendentes e alertas associados foram removidos.',
@@ -48,8 +52,10 @@ export function CreditCardList() {
     const fd = new FormData(e.currentTarget)
     const updated = {
       ...editingCard,
+      name: fd.get('name') as string,
       bank: fd.get('bank') as string,
       brand: fd.get('brand') as string,
+      accountId: fd.get('accountId') as string,
       totalLimit: Number(fd.get('limit')),
       dueDate: Number(fd.get('dueDate')),
     }
@@ -78,6 +84,7 @@ export function CreditCardList() {
         {activeCards.map((card) => {
           const usedLimit = card.totalLimit - card.availableLimit
           const percent = card.totalLimit > 0 ? (usedLimit / card.totalLimit) * 100 : 0
+          const linkedAcc = accounts.find((a) => a.id === card.accountId)
 
           return (
             <Card
@@ -116,10 +123,15 @@ export function CreditCardList() {
                   <div>
                     <h3 className="font-semibold flex items-center gap-2">
                       <CardIcon className="w-4 h-4 text-primary" />
-                      {card.bank}
+                      {card.name || card.bank}
                     </h3>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {card.brand} •••• {card.lastDigits}
+                      {linkedAcc && (
+                        <span className="ml-2 bg-muted px-1.5 py-0.5 rounded text-foreground/80">
+                          Vinculado: {linkedAcc.bank}
+                        </span>
+                      )}
                     </p>
                   </div>
                   <div className="bg-secondary/20 px-2 py-1 rounded text-xs font-medium mr-16">
@@ -164,12 +176,34 @@ export function CreditCardList() {
           {editingCard && (
             <form className="space-y-4" onSubmit={saveEdit}>
               <div className="space-y-2">
-                <Label>Banco Emissor</Label>
-                <Input name="bank" defaultValue={editingCard.bank} required />
+                <Label>Nome do Cartão</Label>
+                <Input name="name" defaultValue={editingCard.name || editingCard.bank} required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Banco Emissor</Label>
+                  <Input name="bank" defaultValue={editingCard.bank} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>Bandeira</Label>
+                  <Input name="brand" defaultValue={editingCard.brand} required />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>Bandeira</Label>
-                <Input name="brand" defaultValue={editingCard.brand} required />
+                <Label>Conta Vinculada</Label>
+                <Select name="accountId" defaultValue={editingCard.accountId || 'none'}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Independente (Sem vínculo)</SelectItem>
+                    {accounts.map((a) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.bank}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

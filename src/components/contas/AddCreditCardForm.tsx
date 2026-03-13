@@ -2,13 +2,20 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Lock, CreditCard } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore from '@/stores/useAppStore'
 
 export function AddCreditCardForm() {
   const { toast } = useToast()
-  const { creditCards, setCreditCards } = useAppStore()
+  const { creditCards, setCreditCards, accounts } = useAppStore()
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -16,9 +23,11 @@ export function AddCreditCardForm() {
 
     const newCard = {
       id: Math.random().toString(),
+      name: fd.get('name') as string,
       bank: fd.get('bank') as string,
       brand: fd.get('brand') as string,
       lastDigits: fd.get('lastDigits') as string,
+      accountId: fd.get('accountId') as string,
       totalLimit: Number(fd.get('limit')),
       availableLimit: Number(fd.get('limit')),
       dueDate: Number(fd.get('dueDate')),
@@ -47,13 +56,35 @@ export function AddCreditCardForm() {
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
-            <Label>Emissor (Banco/Fintech)</Label>
-            <Input name="bank" placeholder="Ex: Itaú Personnalité" required />
+            <Label>Nome (Nomenclatura do Cartão)</Label>
+            <Input name="name" placeholder="Ex: Cartão da Loja, Nubank Principal" required />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label>Emissor (Banco/Fintech)</Label>
+              <Input name="bank" placeholder="Ex: Itaú Personnalité" required />
+            </div>
+            <div className="space-y-2">
               <Label>Bandeira</Label>
               <Input name="brand" placeholder="Mastercard, Visa" required />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Conta Vinculada</Label>
+              <Select name="accountId" defaultValue="none">
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Independente</SelectItem>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.bank}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Últimos 4 Dígitos</Label>

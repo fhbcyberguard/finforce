@@ -8,15 +8,15 @@ import { ProfileDeleteFlow } from '@/components/profiles/ProfileDeleteFlow'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 
 export default function Perfis() {
-  const { profiles, searchQuery, currentContext } = useAppStore()
+  const { profiles, searchQuery, currentContext, subscriptionPlan } = useAppStore()
   const [editingProfile, setEditingProfile] = useState<Partial<Profile> | null>(null)
   const [deletingProfile, setDeletingProfile] = useState<Profile | null>(null)
   const [archivedOpen, setArchivedOpen] = useState(false)
 
   const isBusiness = currentContext === 'business'
-  const title = isBusiness ? 'Perfis de Colaborador' : 'Membros Familiares'
+  const title = isBusiness ? 'Perfil Empresarial' : 'Perfil Pessoal'
   const description = isBusiness
-    ? 'Gerencie o acesso e orçamentos de cada colaborador.'
+    ? 'Gerencie o acesso e orçamentos da sua equipe.'
     : 'Gerencie o acesso e orçamentos de cada membro.'
 
   const filteredProfiles = useMemo(() => {
@@ -30,6 +30,9 @@ export default function Perfis() {
   const activeProfiles = filteredProfiles.filter((p) => !p.isArchived)
   const archivedProfiles = filteredProfiles.filter((p) => p.isArchived)
 
+  const limit = subscriptionPlan === 'basic' ? 1 : subscriptionPlan === 'medium' ? 5 : Infinity
+  const canAddProfile = activeProfiles.length < limit
+
   return (
     <div className="space-y-6 animate-slide-in-up pb-12">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -37,9 +40,16 @@ export default function Perfis() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
           <p className="text-muted-foreground">{description}</p>
         </div>
-        <Button className="gap-2" onClick={() => setEditingProfile({})}>
-          <Plus className="w-4 h-4" /> Novo Perfil
-        </Button>
+        <div className="flex flex-col items-end gap-1">
+          <Button className="gap-2" onClick={() => setEditingProfile({})} disabled={!canAddProfile}>
+            <Plus className="w-4 h-4" /> Novo Perfil
+          </Button>
+          {!canAddProfile && (
+            <span className="text-xs text-muted-foreground">
+              Limite do plano atingido ({limit}).
+            </span>
+          )}
+        </div>
       </div>
 
       {activeProfiles.length === 0 ? (

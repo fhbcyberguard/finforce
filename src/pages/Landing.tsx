@@ -1,6 +1,15 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { Waves, TrendingUp, ShieldCheck, BrainCircuit, CheckCircle2 } from 'lucide-react'
+import {
+  Waves,
+  TrendingUp,
+  ShieldCheck,
+  BrainCircuit,
+  CheckCircle2,
+  User,
+  Building2,
+  Briefcase,
+} from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -21,6 +30,12 @@ export default function Landing() {
           <span className="font-bold text-xl tracking-tight">FinFlow</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
+          <Link
+            className="text-sm font-medium hover:text-primary transition-colors hidden sm:block"
+            to="#entry-options"
+          >
+            Modos
+          </Link>
           <Link
             className="text-sm font-medium hover:text-primary transition-colors hidden sm:block"
             to="#features"
@@ -53,7 +68,7 @@ export default function Landing() {
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl leading-relaxed">
                 Integre engenharia financeira, psicologia comportamental (TCC) e segurança bancária
-                em uma única plataforma para sua família.
+                em uma única plataforma para sua família ou empresa.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <Button asChild size="lg" className="h-12 px-8 text-base">
@@ -68,9 +83,55 @@ export default function Landing() {
         </section>
 
         <section
-          id="features"
-          className="w-full py-16 md:py-24 bg-muted/30 border-y border-border/50"
+          id="entry-options"
+          className="w-full py-16 md:py-24 bg-muted/10 border-y border-border/50"
         >
+          <div className="container px-4 md:px-6 mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Escolha seu Perfil</h2>
+              <p className="text-muted-foreground mt-4 max-w-2xl mx-auto">
+                Nossas soluções se adaptam perfeitamente ao seu momento de vida e trabalho.
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <Card className="flex flex-col border-border/50 bg-card/50 hover:border-primary/50 transition-colors">
+                <CardHeader>
+                  <div className="p-3 bg-primary/10 w-fit rounded-lg text-primary mb-4">
+                    <User className="w-6 h-6" />
+                  </div>
+                  <CardTitle>Para Você</CardTitle>
+                  <CardDescription className="text-sm mt-2 leading-relaxed">
+                    Pessoa física | Gestão financeira pessoal e familiar
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+              <Card className="flex flex-col border-border/50 bg-card/50 hover:border-primary/50 transition-colors">
+                <CardHeader>
+                  <div className="p-3 bg-primary/10 w-fit rounded-lg text-primary mb-4">
+                    <Building2 className="w-6 h-6" />
+                  </div>
+                  <CardTitle>Para Sua Empresa</CardTitle>
+                  <CardDescription className="text-sm mt-2 leading-relaxed">
+                    Pessoa jurídica | Gestão financeira empresarial e equipes
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+              <Card className="flex flex-col border-border/50 bg-card/50 hover:border-primary/50 transition-colors">
+                <CardHeader>
+                  <div className="p-3 bg-primary/10 w-fit rounded-lg text-primary mb-4">
+                    <Briefcase className="w-6 h-6" />
+                  </div>
+                  <CardTitle>Híbrido</CardTitle>
+                  <CardDescription className="text-sm mt-2 leading-relaxed">
+                    Profissional liberal/MEI | Alternância entre perfis pessoal e empresarial
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        <section id="features" className="w-full py-16 md:py-24">
           <div className="container px-4 md:px-6 mx-auto">
             <div className="grid gap-12 lg:grid-cols-3">
               <div className="flex flex-col items-center text-center space-y-4">
@@ -107,7 +168,10 @@ export default function Landing() {
           </div>
         </section>
 
-        <section id="pricing" className="w-full py-16 md:py-24">
+        <section
+          id="pricing"
+          className="w-full py-16 md:py-24 bg-muted/10 border-t border-border/50"
+        >
           <div className="container px-4 md:px-6 mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -131,17 +195,17 @@ export default function Landing() {
                 <CardContent className="flex-1">
                   <ul className="space-y-3 text-sm">
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Gestão de Contas e
-                      Cartões
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> 1 Perfil (Pessoal ou
+                      Empresarial)
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Fluxo de Caixa Básico
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Fluxo de Caixa e Cartões
                     </li>
-                    <li className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 opacity-50" /> Simulador de Riqueza
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Categorias Customizáveis
                     </li>
-                    <li className="flex items-center gap-2 text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 opacity-50" /> Perfis Familiares
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Metas Simples
                     </li>
                   </ul>
                 </CardContent>
@@ -152,13 +216,13 @@ export default function Landing() {
                 </CardFooter>
               </Card>
 
-              {/* Plano Pro */}
+              {/* Plano Médio (Pro) */}
               <Card className="flex flex-col border-primary shadow-lg relative transform md:-translate-y-4">
                 <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg">
                   MAIS POPULAR
                 </div>
                 <CardHeader>
-                  <CardTitle>Pro</CardTitle>
+                  <CardTitle>Médio (Pro)</CardTitle>
                   <CardDescription>Recursos avançados para acelerar sua jornada.</CardDescription>
                   <div className="mt-4 text-4xl font-bold">
                     R$ 59<span className="text-lg text-muted-foreground font-normal">/mês</span>
@@ -170,16 +234,15 @@ export default function Landing() {
                       <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Tudo do plano Básico
                     </li>
                     <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Até 5 Perfis (Familiar
+                      ou Equipe)
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Controle de
+                      Investimentos
+                    </li>
+                    <li className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Simulador de Riqueza
-                      Avançado
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Alertas de Vencimento
-                      D-2
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Inteligência
-                      Comportamental
                     </li>
                   </ul>
                 </CardContent>
@@ -188,11 +251,13 @@ export default function Landing() {
                 </CardFooter>
               </Card>
 
-              {/* Plano Família */}
+              {/* Plano Top */}
               <Card className="flex flex-col border-border/50">
                 <CardHeader>
-                  <CardTitle>Família</CardTitle>
-                  <CardDescription>Para casais e famílias com múltiplos perfis.</CardDescription>
+                  <CardTitle>Top (Família/Empresa)</CardTitle>
+                  <CardDescription>
+                    Para famílias completas e gestão empresarial robusta.
+                  </CardDescription>
                   <div className="mt-4 text-4xl font-bold">
                     R$ 99<span className="text-lg text-muted-foreground font-normal">/mês</span>
                   </div>
@@ -203,19 +268,20 @@ export default function Landing() {
                       <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Tudo do plano Pro
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Até 5 Perfis Familiares
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Perfis Ilimitados
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Controle de Permissões
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Relatórios Avançados
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Relatórios Consolidados
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Suporte Prioritário e
+                      API
                     </li>
                   </ul>
                 </CardContent>
                 <CardFooter>
                   <Button className="w-full" variant="outline">
-                    Assinar Família
+                    Assinar Top
                   </Button>
                 </CardFooter>
               </Card>
@@ -223,7 +289,7 @@ export default function Landing() {
           </div>
         </section>
       </main>
-      <footer className="w-full border-t border-border/50 bg-muted/10 py-8">
+      <footer className="w-full border-t border-border/50 bg-muted/5 py-8">
         <div className="container px-4 md:px-6 mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <Waves className="h-5 w-5 text-primary" />
