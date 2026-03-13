@@ -39,11 +39,17 @@ export function TransactionFormDialog({
 }: TransactionFormDialogProps) {
   const [formType, setFormType] = useState('Expense')
   const [selectedGoalId, setSelectedGoalId] = useState('')
+  const [selectedMemberId, setSelectedMemberId] = useState('none')
 
   useEffect(() => {
     if (open) {
       setFormType(editingTx?.type || 'Expense')
       setSelectedGoalId(editingTx?.goalId || '')
+      setSelectedMemberId(editingTx?.member_id || 'none')
+    } else {
+      setFormType('Expense')
+      setSelectedGoalId('')
+      setSelectedMemberId('none')
     }
   }, [open, editingTx])
 
@@ -52,12 +58,12 @@ export function TransactionFormDialog({
     const fd = new FormData(e.currentTarget)
     await onSubmit({
       date: fd.get('date'),
-      type: fd.get('type'),
+      type: formType,
       amount: fd.get('amount'),
       description: fd.get('description'),
-      category: fd.get('category'),
+      category: formType === 'Aporte' ? '' : fd.get('category'),
       expenseType: fd.get('expenseType'),
-      member_id: fd.get('member_id'),
+      member_id: selectedMemberId,
       profile: fd.get('profile'),
       goal_id: selectedGoalId,
     })
@@ -82,12 +88,7 @@ export function TransactionFormDialog({
             </div>
             <div className="space-y-2">
               <Label>Tipo</Label>
-              <Select
-                name="type"
-                required
-                onValueChange={(v) => setFormType(v)}
-                defaultValue={editingTx?.type || 'Expense'}
-              >
+              <Select name="type" required value={formType} onValueChange={(v) => setFormType(v)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -163,7 +164,7 @@ export function TransactionFormDialog({
             )}
             <div className="space-y-2">
               <Label>Membro</Label>
-              <Select name="member_id" defaultValue={editingTx?.member_id || 'none'}>
+              <Select name="member_id" value={selectedMemberId} onValueChange={setSelectedMemberId}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um membro..." />
                 </SelectTrigger>

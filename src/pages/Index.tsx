@@ -21,6 +21,7 @@ import { SpendingChart } from '../components/dashboard/SpendingChart'
 import { GoalWidget } from '../components/dashboard/GoalWidget'
 import { SpendingByPersonChart } from '../components/dashboard/SpendingByPersonChart'
 import { HistoricalComparison } from '../components/dashboard/HistoricalComparison'
+import { RecentTransactions } from '../components/dashboard/RecentTransactions'
 
 export default function Index() {
   const {
@@ -206,6 +207,7 @@ export default function Index() {
             <SpendingByPersonChart />
           </div>
           <div className="flex flex-col gap-6">
+            <RecentTransactions />
             <AlertsPanel />
             <GoalWidget />
             <CreditCardWidget />

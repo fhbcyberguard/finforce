@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 import {
@@ -9,11 +9,21 @@ import {
 } from '@/components/ui/chart'
 import useAppStore from '@/stores/useAppStore'
 import { ChartColorEditor } from './ChartColorEditor'
+import { supabase } from '@/lib/supabase/client'
 
 const COLORS = ['#03F2FF', '#59C3C3', '#F4D03F', '#E74C3C', '#8E44AD', '#3498DB']
 
 export function SpendingByPersonChart() {
   const { transactions, timeframe, categoryColors, currentContext, selectedYear } = useAppStore()
+  const [members, setMembers] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      const { data } = await supabase.from('members').select('*')
+      if (data) setMembers(data)
+    }
+    fetchMembers()
+  }, [])
 
   const { pieData, config, chartProfiles, editorCategories } = useMemo(() => {
     const now = new Date()
@@ -32,7 +42,12 @@ export function SpendingByPersonChart() {
 
     const profileMap: Record<string, number> = {}
     currentExpenses.forEach((t) => {
-      const profileName = t.profile || 'Não atribuído'
+      let profileName = t.profile || 'Não atribuído'
+      if (t.member_id) {
+        const m = members.find((x) => x.id === t.member_id)
+        if (m) profileName = m.name
+        else if (t.members?.name) profileName = t.members.name
+      }
       profileMap[profileName] = (profileMap[profileName] || 0) + Math.abs(t.amount)
     })
 
@@ -40,9 +55,7 @@ export function SpendingByPersonChart() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
 
-    const allProfiles = Array.from(
-      new Set(currentExpenses.map((t) => t.profile || 'Não atribuído')),
-    )
+    const allProfiles = Object.keys(profileMap)
 
     const config: any = {}
     allProfiles.forEach((prof, idx) => {
@@ -61,20 +74,20 @@ export function SpendingByPersonChart() {
     }))
 
     return { pieData, config, chartProfiles, editorCategories }
-  }, [transactions, timeframe, categoryColors, selectedYear])
+  }, [transactions, timeframe, categoryColors, selectedYear, members])
 
   const title =
     currentContext === 'business' ? 'Gastos por Colaborador' : 'Gastos por Membro Familiar'
 
   return (
-    <Card className="border-border/50">
+    <Card className="border-border/50 shadow-subtle hover:shadow-md transition-all">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg">{title}</CardTitle>
         <ChartColorEditor categories={editorCategories} />
       </CardHeader>
       <CardContent>
         <div className="h-[280px] w-full">
-          {chartProfiles.length === 0 ? (
+          {chartProfiles.length === 0 || pieData.length === 0 ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-sm border border-dashed rounded-md bg-muted/10">
               Nenhum dado de gasto por pessoa disponível.
             </div>
