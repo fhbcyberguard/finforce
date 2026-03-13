@@ -87,8 +87,18 @@ export default function Perfis() {
   const archivedProfiles = filteredProfiles.filter((p) => p.isArchived)
 
   const plan = userProfile?.plan || 'basic'
-  const limit = plan === 'premium' ? Infinity : 1
+  const isPremiumOrTeam = plan !== 'basic' && plan !== 'canceled'
+  const limit = isPremiumOrTeam ? Infinity : 1
   const canAddProfile = activeProfiles.length < limit
+
+  const planDisplay =
+    plan === 'team'
+      ? 'Team'
+      : plan === 'premium'
+        ? 'Premium'
+        : plan === 'basic'
+          ? 'Básico'
+          : plan.replace('_', ' ').toUpperCase()
 
   return (
     <div className="space-y-6 animate-slide-in-up pb-12">
@@ -97,10 +107,10 @@ export default function Perfis() {
           <div className="flex items-center gap-3">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
             <Badge
-              variant={plan === 'premium' ? 'default' : 'secondary'}
+              variant={isPremiumOrTeam ? 'default' : 'secondary'}
               className="uppercase text-[10px] font-bold tracking-wider"
             >
-              Plano {plan === 'premium' ? 'Premium' : 'Básico'}
+              Plano {planDisplay}
             </Badge>
           </div>
           <p className="text-muted-foreground mt-1">{description}</p>
