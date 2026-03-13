@@ -16,6 +16,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import useAppStore from '@/stores/useAppStore'
 import { useToast } from '@/hooks/use-toast'
 
@@ -55,6 +62,7 @@ export function DataImportDialog({
         amount,
         category: 'Outros > Importado',
         type: amount < 0 ? 'Expense' : 'Revenue',
+        expenseType: amount < 0 ? 'variable' : undefined,
         account: 'Importada',
         recurrence: 'none',
         profile: profiles[0]?.name || 'Admin',
@@ -84,6 +92,7 @@ export function DataImportDialog({
         amount,
         category: 'Outros > Importado',
         type: amount < 0 ? 'Expense' : 'Revenue',
+        expenseType: amount < 0 ? 'variable' : undefined,
         account: 'Importada OFX',
         recurrence: 'none',
         profile: profiles[0]?.name || 'Admin',
@@ -135,7 +144,7 @@ export function DataImportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Importar Transações ({importType?.toUpperCase()})</DialogTitle>
         </DialogHeader>
@@ -163,10 +172,11 @@ export function DataImportDialog({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Categoria</TableHead>
-                    <TableHead>Valor</TableHead>
+                    <TableHead className="min-w-[120px]">Data</TableHead>
+                    <TableHead className="min-w-[200px]">Descrição</TableHead>
+                    <TableHead className="min-w-[150px]">Categoria</TableHead>
+                    <TableHead className="min-w-[130px]">Classificação</TableHead>
+                    <TableHead className="min-w-[120px]">Valor</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -189,6 +199,24 @@ export function DataImportDialog({
                           value={row.category}
                           onChange={(e) => updateField(idx, 'category', e.target.value)}
                         />
+                      </TableCell>
+                      <TableCell className="p-2">
+                        {row.type === 'Expense' ? (
+                          <Select
+                            value={row.expenseType}
+                            onValueChange={(v) => updateField(idx, 'expenseType', v)}
+                          >
+                            <SelectTrigger className="h-10">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="variable">Variável</SelectItem>
+                              <SelectItem value="fixed">Fixo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <span className="text-xs text-muted-foreground pl-2">-</span>
+                        )}
                       </TableCell>
                       <TableCell
                         className={`p-2 whitespace-nowrap font-medium ${row.amount > 0 ? 'text-emerald-500' : ''}`}
