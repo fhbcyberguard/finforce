@@ -1,11 +1,4 @@
 import { useSyncExternalStore, useMemo, useCallback } from 'react'
-import {
-  MOCK_ACCOUNTS,
-  MOCK_CREDIT_CARDS,
-  MOCK_ASSETS,
-  MOCK_GOALS,
-  MOCK_ALERTS,
-} from '@/lib/mockData'
 
 export type ContextType = 'personal' | 'business'
 
@@ -42,14 +35,39 @@ export type Profile = {
   profile_id?: string | null
 }
 
-export type Account = (typeof MOCK_ACCOUNTS)[0] & { context?: ContextType }
-export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & {
+export type Account = {
+  id: string
+  name: string
+  balance: number
+  type?: string | null
+  agency?: string | null
+  account_number?: string | null
+  color?: string | null
+  connected?: boolean | null
+  context?: ContextType
+}
+
+export type CreditCard = {
+  id: string
+  name: string
+  bank?: string
+  totalLimit: number
+  availableLimit: number
+  dueDate?: string | number
+  lastDigits?: string
   isArchived?: boolean
   context?: ContextType
   accountId?: string
-  name?: string
 }
-export type Asset = (typeof MOCK_ASSETS)[0] & { context?: ContextType }
+
+export type Asset = {
+  id: string
+  name: string
+  value: number
+  type: string
+  context?: ContextType
+}
+
 export type Goal = {
   id: string
   name: string
@@ -59,8 +77,18 @@ export type Goal = {
   monthlyDeposit: number
   icon?: string
   context?: ContextType
+  color?: string
 }
-export type Alert = (typeof MOCK_ALERTS)[0] & { context?: ContextType }
+
+export type Alert = {
+  id: string
+  title: string
+  amount: number
+  dueDate: string
+  type: string
+  context?: ContextType
+}
+
 export type Transaction = {
   id: string
   date: string
@@ -107,12 +135,12 @@ interface AppState {
   categoryColors: Record<string, string>
 }
 
-const loadData = <T>(key: string, mockData: T): T => {
+const loadData = <T>(key: string, defaultData: T): T => {
   try {
     const saved = localStorage.getItem(key)
-    return saved ? JSON.parse(saved) : mockData
+    return saved ? JSON.parse(saved) : defaultData
   } catch {
-    return mockData
+    return defaultData
   }
 }
 
@@ -124,12 +152,12 @@ const defaultSimulator: SimulatorSettings = {
 
 const getInitialState = (): AppState => ({
   profiles: loadData('finforce_profiles', [] as Profile[]),
-  accounts: loadData('finforce_accounts', MOCK_ACCOUNTS),
-  creditCards: loadData('finforce_credit_cards', MOCK_CREDIT_CARDS as CreditCard[]),
-  assets: loadData('finforce_assets', MOCK_ASSETS),
-  goals: loadData('finforce_goals', MOCK_GOALS),
+  accounts: loadData('finforce_accounts', [] as Account[]),
+  creditCards: loadData('finforce_credit_cards', [] as CreditCard[]),
+  assets: loadData('finforce_assets', [] as Asset[]),
+  goals: loadData('finforce_goals', [] as Goal[]),
   transactions: loadData('finforce_transactions', [] as Transaction[]),
-  alerts: loadData('finforce_alerts', MOCK_ALERTS),
+  alerts: loadData('finforce_alerts', [] as Alert[]),
   categories: loadData('finforce_categories', []),
   simulatorSettings: loadData('finforce_simulator', defaultSimulator),
   logoUrl: localStorage.getItem('finforce_logo') || '',
