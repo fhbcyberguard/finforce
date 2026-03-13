@@ -54,12 +54,7 @@ export function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button
-            asChild
-            variant="default"
-            size="sm"
-            className="hidden sm:flex bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
-          >
+          <Button asChild variant="default" size="sm" className="hidden sm:flex">
             <Link to="/login">Entrar</Link>
           </Button>
         )}

@@ -76,7 +76,7 @@ export function AppSidebar() {
                   >
                     <Link
                       to={item.url}
-                      className={location.pathname === item.url ? 'text-[#03f2ff]' : ''}
+                      className={location.pathname === item.url ? 'text-primary' : ''}
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -89,7 +89,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[#03f2ff]/70">Contexto de Gestão</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-primary/70">Contexto de Gestão</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -120,7 +120,7 @@ export function AppSidebar() {
 
         {isMasterAdmin && (
           <SidebarGroup>
-            <SidebarGroupLabel className="text-[#126eda]">Administração</SidebarGroupLabel>
+            <SidebarGroupLabel className="text-primary">Administração</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
@@ -133,8 +133,8 @@ export function AppSidebar() {
                       to="/admin/clients"
                       className={
                         location.pathname === '/admin/clients'
-                          ? 'text-[#126eda]'
-                          : 'hover:text-[#126eda] transition-colors'
+                          ? 'text-primary'
+                          : 'hover:text-primary transition-colors'
                       }
                     >
                       <ShieldCheck className="h-4 w-4" />
@@ -159,7 +159,7 @@ export function AppSidebar() {
               >
                 <Link
                   to={item.url}
-                  className={location.pathname === item.url ? 'text-[#03f2ff]' : ''}
+                  className={location.pathname === item.url ? 'text-primary' : ''}
                 >
                   <item.icon className="h-4 w-4" />
                   <span>{item.title}</span>

@@ -18,11 +18,11 @@ export function BusinessUpgradeModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md border-[#03f2ff]/20">
+      <DialogContent className="sm:max-w-md border-primary/20">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Building2 className="w-6 h-6 text-[#03f2ff]" />
-            <span className="text-[#03f2ff]">Perfil Empresarial</span>
+            <Building2 className="w-6 h-6 text-primary" />
+            <span className="text-primary">Perfil Empresarial</span>
           </DialogTitle>
           <DialogDescription className="pt-2 text-base">
             Desbloqueie o potencial máximo da sua gestão financeira com o plano Pro ou Família.
@@ -30,7 +30,7 @@ export function BusinessUpgradeModal({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-[#03f2ff] shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
               <h4 className="font-medium text-foreground">Gestão de Equipes</h4>
               <p className="text-sm text-muted-foreground">
@@ -39,7 +39,7 @@ export function BusinessUpgradeModal({
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <TrendingUp className="w-5 h-5 text-[#03f2ff] shrink-0 mt-0.5" />
+            <TrendingUp className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
               <h4 className="font-medium text-foreground">Relatórios Avançados</h4>
               <p className="text-sm text-muted-foreground">
@@ -48,7 +48,7 @@ export function BusinessUpgradeModal({
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Users className="w-5 h-5 text-[#03f2ff] shrink-0 mt-0.5" />
+            <Users className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
               <h4 className="font-medium text-foreground">Multi-Perfis Integrados</h4>
               <p className="text-sm text-muted-foreground">
@@ -58,10 +58,7 @@ export function BusinessUpgradeModal({
           </div>
         </div>
         <DialogFooter className="flex-col sm:flex-col gap-2 sm:space-x-0">
-          <Button
-            className="w-full bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90 text-md h-12"
-            onClick={() => onOpenChange(false)}
-          >
+          <Button className="w-full text-md h-12" onClick={() => onOpenChange(false)}>
             Fazer Upgrade Agora
           </Button>
           <Button
