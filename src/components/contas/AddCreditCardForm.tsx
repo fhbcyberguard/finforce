@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { CreditCard, Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore from '@/stores/useAppStore'
@@ -21,6 +22,7 @@ export function AddCreditCardForm() {
   const { toast } = useToast()
   const { creditCards, setCreditCards, accounts, currentContext } = useAppStore()
   const [isSaving, setIsSaving] = useState(false)
+  const [color, setColor] = useState('#000000')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -54,47 +56,43 @@ export function AddCreditCardForm() {
       closing_day: closingDate,
       account_id: accountId === 'none' ? null : accountId,
       last_digits: lastDigits || null,
+      color,
     }
 
-    // Cast payload as any since types.ts might not reflect the recent migration yet
     const { data, error } = await supabase
       .from('cards')
       .insert(payload as any)
       .select()
       .single()
-
     setIsSaving(false)
 
     if (!error && data) {
-      const newCard = {
-        id: data.id,
-        name: data.name,
-        bank: data.name,
-        totalLimit: Number(data.limit),
-        availableLimit: Number(data.limit),
-        dueDate: data.due_day || 1,
-        closingDate: data.closing_day || 1,
-        bestPurchaseDay: data.closing_day || 1,
-        accountId: data.account_id || 'none',
-        isArchived: data.is_archived || false,
-        context: currentContext,
-        lastDigits: (data as any).last_digits || undefined,
-      }
-
-      setCreditCards([...creditCards, newCard])
+      setCreditCards([
+        ...creditCards,
+        {
+          id: data.id,
+          name: data.name,
+          bank: data.name,
+          totalLimit: Number(data.limit),
+          availableLimit: Number(data.limit),
+          dueDate: data.due_day || 1,
+          closingDate: data.closing_day || 1,
+          bestPurchaseDay: data.closing_day || 1,
+          accountId: data.account_id || 'none',
+          isArchived: data.is_archived || false,
+          context: currentContext,
+          lastDigits: (data as any).last_digits || undefined,
+          color: data.color || undefined,
+        },
+      ])
       toast({
         title: 'Cartão Registrado',
         description: 'O novo cartão já está disponível no seu painel.',
       })
-      if (form) {
-        form.reset()
-      }
+      form.reset()
+      setColor('#000000')
     } else {
-      toast({
-        title: 'Erro ao salvar',
-        description: error?.message || 'Falha na comunicação com o servidor.',
-        variant: 'destructive',
-      })
+      toast({ title: 'Erro ao salvar', description: error?.message, variant: 'destructive' })
     }
   }
 
@@ -104,17 +102,21 @@ export function AddCreditCardForm() {
         <CardTitle className="text-lg flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-[#126eda]" /> Adicionar Cartão
         </CardTitle>
-        <CardDescription>
-          Gerencie o limite e o fechamento da fatura para o controle de gastos.
-        </CardDescription>
+        <CardDescription>Gerencie o limite e o fechamento da fatura.</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 space-y-2">
-              <Label>Identificação</Label>
-              <Input name="name" placeholder="Ex: Nubank Principal, Itaú Black" required />
+          <div className="flex gap-4">
+            <div className="space-y-2">
+              <Label>Cor</Label>
+              <ColorPicker value={color} onChange={setColor} />
             </div>
+            <div className="space-y-2 flex-1">
+              <Label>Identificação</Label>
+              <Input name="name" placeholder="Ex: Nubank, Itaú Black" required />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Últimos 4 dígitos</Label>
               <Input
@@ -123,11 +125,13 @@ export function AddCreditCardForm() {
                 maxLength={4}
                 pattern="\d{4}"
                 inputMode="numeric"
-                title="Exatamente 4 dígitos numéricos"
               />
             </div>
+            <div className="space-y-2">
+              <Label>Limite Global (R$)</Label>
+              <Input name="limit" type="number" step="0.01" placeholder="5000" required />
+            </div>
           </div>
-
           <div className="space-y-2">
             <Label>Conta Vinculada para Pagamento</Label>
             <Select name="accountId" defaultValue="none">
@@ -144,11 +148,6 @@ export function AddCreditCardForm() {
               </SelectContent>
             </Select>
           </div>
-
-          <div className="space-y-2">
-            <Label>Limite Global (R$)</Label>
-            <Input name="limit" type="number" step="0.01" placeholder="5000" required />
-          </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Dia de Fechamento</Label>
@@ -164,8 +163,7 @@ export function AddCreditCardForm() {
             disabled={isSaving}
             className="w-full mt-2 bg-[#126eda] text-white hover:bg-[#126eda]/90"
           >
-            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-            Registrar Cartão Seguro
+            {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Registrar Cartão
           </Button>
         </form>
       </CardContent>

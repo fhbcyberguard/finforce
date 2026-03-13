@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast'
 import useAppStore, { Category } from '@/stores/useAppStore'
 import { DynamicIcon } from '@/components/ui/dynamic-icon'
 import { IconPicker } from '@/components/ui/icon-picker'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { Trash2, Edit2, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
@@ -34,12 +35,14 @@ export function CategoriesTab() {
   const [name, setName] = useState('')
   const [type, setType] = useState('Expense')
   const [icon, setIcon] = useState('CircleDashed')
+  const [color, setColor] = useState('#64748b')
   const [editingId, setEditingId] = useState<string | null>(null)
 
   const resetForm = () => {
     setName('')
     setType('Expense')
     setIcon('CircleDashed')
+    setColor('#64748b')
     setEditingId(null)
   }
 
@@ -47,7 +50,7 @@ export function CategoriesTab() {
     e.preventDefault()
     if (!user) return
 
-    const payload = { name, type, icon, user_id: user.id }
+    const payload = { name, type, icon, color, user_id: user.id }
 
     if (editingId) {
       const { error } = await supabase.from('categories').update(payload).eq('id', editingId)
@@ -83,6 +86,7 @@ export function CategoriesTab() {
     setName(cat.name)
     setType(cat.type)
     setIcon(cat.icon)
+    setColor(cat.color || '#64748b')
     setEditingId(cat.id)
   }
 
@@ -97,6 +101,10 @@ export function CategoriesTab() {
             <div className="space-y-2">
               <Label>Ícone</Label>
               <IconPicker value={icon} onChange={setIcon} />
+            </div>
+            <div className="space-y-2">
+              <Label>Cor</Label>
+              <ColorPicker value={color} onChange={setColor} />
             </div>
             <div className="space-y-2 flex-1">
               <Label>Nome</Label>
@@ -154,9 +162,19 @@ export function CategoriesTab() {
               {categories.map((cat) => (
                 <TableRow key={cat.id}>
                   <TableCell>
-                    <DynamicIcon name={cat.icon} className="w-5 h-5 text-muted-foreground" />
+                    <DynamicIcon
+                      name={cat.icon}
+                      className="w-5 h-5"
+                      style={{ color: cat.color || 'var(--muted-foreground)' }}
+                    />
                   </TableCell>
-                  <TableCell className="font-medium">{cat.name}</TableCell>
+                  <TableCell className="font-medium flex items-center gap-2">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: cat.color || '#64748b' }}
+                    />
+                    {cat.name}
+                  </TableCell>
                   <TableCell>
                     {cat.type === 'Revenue' ? (
                       <span className="text-emerald-500 text-xs font-medium">Receita</span>

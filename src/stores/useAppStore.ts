@@ -7,17 +7,18 @@ export type Category = {
   name: string
   type: string
   icon: string
+  color?: string
   context?: ContextType
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: 'def-1', name: 'Renda Principal', type: 'Revenue', icon: 'Wallet' },
-  { id: 'def-2', name: 'Alimentação', type: 'Expense', icon: 'Utensils' },
-  { id: 'def-3', name: 'Moradia', type: 'Expense', icon: 'Home' },
-  { id: 'def-4', name: 'Transporte', type: 'Expense', icon: 'Car' },
-  { id: 'def-5', name: 'Saúde', type: 'Expense', icon: 'HeartPulse' },
-  { id: 'def-6', name: 'Lazer', type: 'Expense', icon: 'Tv' },
-  { id: 'def-7', name: 'Outros', type: 'Expense', icon: 'CircleDashed' },
+  { id: 'def-1', name: 'Renda Principal', type: 'Revenue', icon: 'Wallet', color: '#10b981' },
+  { id: 'def-2', name: 'Alimentação', type: 'Expense', icon: 'Utensils', color: '#f59e0b' },
+  { id: 'def-3', name: 'Moradia', type: 'Expense', icon: 'Home', color: '#3b82f6' },
+  { id: 'def-4', name: 'Transporte', type: 'Expense', icon: 'Car', color: '#6366f1' },
+  { id: 'def-5', name: 'Saúde', type: 'Expense', icon: 'HeartPulse', color: '#ec4899' },
+  { id: 'def-6', name: 'Lazer', type: 'Expense', icon: 'Tv', color: '#8b5cf6' },
+  { id: 'def-7', name: 'Outros', type: 'Expense', icon: 'CircleDashed', color: '#64748b' },
 ]
 
 export type Profile = {
@@ -27,6 +28,7 @@ export type Profile = {
   role: string
   limit: number
   avatar?: string | null
+  color?: string
   isArchived?: boolean
   context?: ContextType
   currentAge?: number
@@ -58,6 +60,7 @@ export type CreditCard = {
   dueDate?: number
   closingDate?: number
   bestPurchaseDay?: number
+  color?: string
   isArchived?: boolean
   context?: ContextType
   accountId?: string
@@ -81,8 +84,8 @@ export type Goal = {
   targetDate: string
   monthlyDeposit: number
   icon?: string
-  context?: ContextType
   color?: string
+  context?: ContextType
 }
 
 export type Alert = {

@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { ColorPicker } from '@/components/ui/color-picker'
 import useAppStore, { Profile } from '@/stores/useAppStore'
 import { useToast } from '@/hooks/use-toast'
 import { supabase } from '@/lib/supabase/client'
@@ -42,6 +43,7 @@ const schema = z.object({
   role: z.string().min(1, 'O papel é obrigatório'),
   birthDate: z.string().optional(),
   avatar: z.string().optional().nullable(),
+  color: z.string().optional(),
 })
 
 interface ProfileEditDialogProps {
@@ -64,6 +66,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       role: profile.role || '',
       birthDate: profile.birthDate || '',
       avatar: profile.avatar || null,
+      color: profile.color || '#64748b',
     },
   })
 
@@ -75,6 +78,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
         role: profile.role || '',
         birthDate: profile.birthDate || '',
         avatar: profile.avatar || null,
+        color: profile.color || '#64748b',
       })
     }
   }, [profile, open, form])
@@ -92,7 +96,6 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
           .select('id')
           .eq('owner_id', user.id)
           .single()
-
         if (family) {
           const { data: dbMember, error } = await supabase
             .from('members')
@@ -102,26 +105,20 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               email: data.email || null,
               role: data.role,
               birth_date: data.birthDate || null,
+              color: data.color,
             })
             .select()
             .single()
 
-          if (dbMember) {
-            newId = dbMember.id
-          } else if (error) {
+          if (dbMember) newId = dbMember.id
+          else if (error) {
             toast({ title: 'Erro ao criar', description: error.message, variant: 'destructive' })
             setIsSaving(false)
             return
           }
         }
       }
-      const newProfile = {
-        id: newId,
-        context: currentContext,
-        limit: 0,
-        ...data,
-      }
-      setProfiles([...profiles, newProfile])
+      setProfiles([...profiles, { id: newId, context: currentContext, limit: 0, ...data }])
       toast({ title: 'Perfil criado', description: 'Membro adicionado com sucesso.' })
     } else {
       if (user && profile.id && profile.id.length > 10) {
@@ -132,6 +129,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
             email: data.email || null,
             role: data.role,
             birth_date: data.birthDate || null,
+            color: data.color,
           })
           .eq('id', profile.id)
 
@@ -175,7 +173,10 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="flex flex-col items-center gap-3 mb-4">
-              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center group">
+              <div
+                className="relative h-20 w-20 rounded-full overflow-hidden border-4 bg-muted flex items-center justify-center group"
+                style={{ borderColor: form.watch('color') || 'var(--border)' }}
+              >
                 {form.watch('avatar') ? (
                   <img
                     src={form.watch('avatar') as string}
@@ -199,22 +200,35 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                   }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Clique para alterar a foto</p>
             </div>
 
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="color"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cor</FormLabel>
+                    <FormControl>
+                      <ColorPicker value={field.value} onChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -259,7 +273,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                 name="birthDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Data de Nascimento</FormLabel>
+                    <FormLabel>Nascimento</FormLabel>
                     <FormControl>
                       <Input type="date" {...field} value={field.value || ''} />
                     </FormControl>
@@ -268,23 +282,6 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                 )}
               />
             </div>
-
-            <div className="pt-2 border-t border-border/50">
-              <p className="text-sm font-medium mb-2">Duração do Plano Estimada</p>
-              <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground flex items-center justify-between gap-2 border border-border">
-                <span className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-primary" />
-                  Tempo até aposentadoria:
-                </span>
-                <span className="font-medium text-foreground">
-                  {duration > 0 ? `${duration} anos` : 'Atingido'}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1.5 opacity-80 text-right">
-                Baseado na idade alvo de {targetAge} anos.
-              </p>
-            </div>
-
             <DialogFooter className="mt-6">
               <Button
                 type="button"
@@ -295,8 +292,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                 Cancelar
               </Button>
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Salvar
+                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Salvar
               </Button>
             </DialogFooter>
           </form>

@@ -28,9 +28,15 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
       className={`flex flex-col border-border/50 hover:border-primary/30 transition-colors ${profile.isArchived ? 'grayscale-[0.5]' : ''}`}
     >
       <CardContent className="pt-6 flex flex-col items-center text-center flex-1">
-        <Avatar className="w-20 h-20 mb-4 ring-4 ring-background shadow-lg">
+        <Avatar
+          className="w-20 h-20 mb-4 shadow-lg border-4"
+          style={{ borderColor: profile.color || 'var(--primary)' }}
+        >
           {profile.avatar && <AvatarImage src={profile.avatar} />}
-          <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
+          <AvatarFallback
+            className="text-2xl font-semibold bg-primary/10"
+            style={{ color: profile.color || 'var(--primary)' }}
+          >
             {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
           </AvatarFallback>
         </Avatar>
@@ -41,7 +47,14 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
           )}
           <span className="text-xs font-normal text-muted-foreground mt-1">{contextLabel}</span>
         </h3>
-        <Badge variant="secondary" className="mt-3 mb-4">
+        <Badge
+          variant="secondary"
+          className="mt-3 mb-4"
+          style={{
+            backgroundColor: profile.color ? `${profile.color}20` : undefined,
+            color: profile.color,
+          }}
+        >
           {profile.role}
         </Badge>
       </CardContent>
@@ -54,14 +67,12 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
         >
           <Edit2 className="w-4 h-4 mr-2" /> Editar
         </Button>
-
         {profile.isArchived ? (
           <Button
             variant="ghost"
             size="sm"
             onClick={handleUnarchive}
             className="text-muted-foreground hover:text-primary"
-            title="Desarquivar"
           >
             <ArchiveRestore className="w-4 h-4 mr-2" /> Restaurar
           </Button>
@@ -71,7 +82,6 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
             size="sm"
             onClick={onDelete}
             className="text-muted-foreground hover:text-destructive"
-            title="Remover/Arquivar"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
