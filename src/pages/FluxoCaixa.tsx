@@ -50,6 +50,7 @@ import {
   DollarSign,
   ChevronLeft,
   ChevronRight,
+  BarChart2,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
@@ -394,71 +395,95 @@ export default function FluxoCaixa() {
 
   return (
     <div className="space-y-6 animate-slide-in-up">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div className="w-full lg:w-auto">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">
-            Fluxo de Caixa
+            Visão Empresarial
           </h1>
-          <p className="text-muted-foreground">Visão detalhada de entradas e saídas.</p>
+          <p className="text-muted-foreground text-sm sm:text-base mt-1">
+            Gerencie o fluxo de caixa e a saúde financeira do seu negócio.
+          </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-wrap items-start sm:items-center">
-          {timeframe === 'monthly' && (
-            <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handlePrevMonth}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Select
-                value={selectedMonth.toString()}
-                onValueChange={(v) => setSelectedMonth(Number(v))}
-              >
-                <SelectTrigger className="h-8 w-[110px] text-xs border-0 bg-transparent focus:ring-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {months.map((m, i) => (
-                    <SelectItem key={i} value={i.toString()}>
-                      {m}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleNextMonth}>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          )}
 
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="h-9 w-[90px] text-xs">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableYears.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-start sm:items-center">
+          <div className="flex w-full sm:w-auto gap-2">
+            {timeframe === 'monthly' && (
+              <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1 flex-1 sm:flex-none h-10">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={handlePrevMonth}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Select
+                  value={selectedMonth.toString()}
+                  onValueChange={(v) => setSelectedMonth(Number(v))}
+                >
+                  <SelectTrigger className="h-8 flex-1 sm:w-[110px] text-xs border-0 bg-transparent focus:ring-0 px-1 shadow-none">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((m, i) => (
+                      <SelectItem key={i} value={i.toString()}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0"
+                  onClick={handleNextMonth}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
 
-          <ToggleGroup
-            type="single"
-            value={timeframe}
-            onValueChange={(v) => v && setTimeframe(v as 'monthly' | 'annual')}
-            className="bg-muted/50 p-1 rounded-lg w-full sm:w-auto"
-          >
-            <ToggleGroupItem value="monthly" className="flex-1 sm:px-4 text-xs h-9">
-              Mensal
-            </ToggleGroupItem>
-            <ToggleGroupItem value="annual" className="flex-1 sm:px-4 text-xs h-9">
-              Anual
-            </ToggleGroupItem>
-          </ToggleGroup>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="h-10 w-[90px] text-xs shrink-0 bg-muted/50 border-0">
+                <SelectValue placeholder="Ano" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableYears.map((y) => (
+                  <SelectItem key={y} value={y}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <div className="flex gap-2 w-full sm:w-auto flex-wrap justify-end">
+          <div className="flex w-full sm:w-auto gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 sm:flex-none gap-2 bg-muted/50 border-0 h-10"
+            >
+              <BarChart2 className="w-4 h-4" /> Comparar
+            </Button>
+
+            <ToggleGroup
+              type="single"
+              value={timeframe}
+              onValueChange={(v) => v && setTimeframe(v as 'monthly' | 'annual')}
+              className="bg-muted/50 p-1 rounded-lg flex-1 sm:flex-none h-10"
+            >
+              <ToggleGroupItem value="monthly" className="flex-1 sm:px-4 text-xs h-8">
+                Mensal
+              </ToggleGroupItem>
+              <ToggleGroupItem value="annual" className="flex-1 sm:px-4 text-xs h-8">
+                Anual
+              </ToggleGroupItem>
+            </ToggleGroup>
+          </div>
+
+          <div className="flex gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap justify-start sm:justify-end mt-1 sm:mt-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
+                <Button variant="outline" className="gap-2 flex-1 sm:flex-none h-10">
                   <Upload className="w-4 h-4" /> Importar
                 </Button>
               </DropdownMenuTrigger>
@@ -482,12 +507,16 @@ export default function FluxoCaixa() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <Button variant="outline" className="gap-2 flex-1 sm:flex-none" onClick={handleExport}>
+            <Button
+              variant="outline"
+              className="gap-2 flex-1 sm:flex-none h-10"
+              onClick={handleExport}
+            >
               <Download className="w-4 h-4 text-[#126eda]" /> Exportar
             </Button>
 
             <Button
-              className="gap-2 w-full sm:w-auto bg-[#126eda] text-white hover:bg-[#126eda]/90"
+              className="gap-2 w-full sm:w-auto bg-[#126eda] text-white hover:bg-[#126eda]/90 h-10"
               onClick={() => {
                 resetForm()
                 setOpenAdd(true)
