@@ -60,7 +60,6 @@ import {
   RETIREMENT_WITHDRAWAL_PHRASES,
   EMERGENCY_WITHDRAWAL_PHRASES,
   HIGH_VALUE_PHRASES,
-  ADD_GOAL_PHRASES,
   getRandomPhrase,
 } from '@/lib/reflections'
 
@@ -230,9 +229,9 @@ export default function FluxoCaixa() {
       (t) => t.type === 'Revenue' || t.category.toLowerCase().includes('renda'),
     )
     if (incomeTxs.length === 0) return 0
-    const months = new Set(incomeTxs.map((t) => t.date.substring(0, 7))).size
+    const monthsSet = new Set(incomeTxs.map((t) => t.date.substring(0, 7))).size
     const total = incomeTxs.reduce((acc, t) => acc + Math.abs(t.amount), 0)
-    return months > 0 ? total / months : 0
+    return monthsSet > 0 ? total / monthsSet : 0
   }, [transactions])
 
   const handleExport = () => {
@@ -336,19 +335,7 @@ export default function FluxoCaixa() {
           }
         }
         setTransactions([{ ...txToSave, id: data.id }, ...transactions])
-
-        const catLower = txToSave.category.toLowerCase()
-        const acc = accounts.find((a) => a.id === txToSave.account)
-        const accNameLower = (acc?.name || txToSave.account || '').toLowerCase()
-        const isRetirementAddition =
-          (txToSave.type === 'Aporte' || txToSave.type === 'Revenue') &&
-          (catLower.includes('aposentadoria') || accNameLower.includes('aposentadoria'))
-
-        if (isRetirementAddition) {
-          toast({ title: 'Aposentadoria', description: getRandomPhrase(ADD_GOAL_PHRASES) })
-        } else {
-          toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
-        }
+        toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
       }
     }
     setOpenAdd(false)
@@ -396,9 +383,16 @@ export default function FluxoCaixa() {
       const catLower = category.toLowerCase()
       const acc = accounts.find((a) => a.id === selectedAccount)
       const accNameLower = (acc?.name || selectedAccount || '').toLowerCase()
+      const goalNameLower =
+        selectedGoalId && selectedGoalId !== 'none'
+          ? (goals.find((g) => g.id === selectedGoalId)?.name || '').toLowerCase()
+          : ''
 
       const isRetirement =
-        catLower.includes('aposentadoria') || accNameLower.includes('aposentadoria')
+        catLower.includes('aposentadoria') ||
+        accNameLower.includes('aposentadoria') ||
+        goalNameLower.includes('aposentadoria')
+
       const isEmergency =
         catLower.includes('emergência') ||
         catLower.includes('emergencia') ||
@@ -427,19 +421,20 @@ export default function FluxoCaixa() {
         return
       }
 
-      const currentMonthIncome = summaries.income
-      const highValueThreshold =
-        currentMonthIncome > 0
-          ? currentMonthIncome * 0.7
-          : averageIncome * 0.7 > 0
-            ? averageIncome * 0.7
-            : 2000
+      const txDate = fd.get('date') as string
+      const txMonthStr = txDate.substring(0, 7) // 'YYYY-MM'
+      const currentMonthIncome = transactions
+        .filter((t) => t.type === 'Revenue' && t.date.startsWith(txMonthStr))
+        .reduce((acc, t) => acc + Math.abs(t.amount), 0)
+
+      const incomeToCompare = currentMonthIncome > 0 ? currentMonthIncome : averageIncome
+      const highValueThreshold = incomeToCompare * 0.7
 
       if (Math.abs(amount) > highValueThreshold && highValueThreshold > 0) {
         setPendingAction({
           tx: newTx,
           title: 'Alerta de Gasto Elevado',
-          description: 'Esta transação representa uma grande parte da sua renda.',
+          description: 'Esta transação representa mais de 70% da sua renda mensal.',
           reflection: getRandomPhrase(HIGH_VALUE_PHRASES),
         })
         setOpenAdd(false)

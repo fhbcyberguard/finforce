@@ -32,6 +32,11 @@ export default function Metas() {
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null)
   const [deleteReflection, setDeleteReflection] = useState('')
+  const [successAction, setSuccessAction] = useState<{
+    title: string
+    description: string
+    reflection: string
+  } | null>(null)
   const { toast } = useToast()
 
   const [calcMode, setCalcMode] = useState<'date' | 'deposit'>('date')
@@ -124,7 +129,11 @@ export default function Metas() {
       const { data, error } = await supabase.from('goals').insert(payload).select().single()
       if (!error && data) {
         setGoals([{ ...newGoal, id: data.id }, ...goals])
-        toast({ title: 'Meta Criada', description: getRandomPhrase(ADD_GOAL_PHRASES) })
+        setSuccessAction({
+          title: 'Meta Criada com Sucesso!',
+          description: 'Parabéns pelo seu novo planejamento financeiro.',
+          reflection: getRandomPhrase(ADD_GOAL_PHRASES),
+        })
       } else {
         toast({ title: 'Erro', description: 'Não foi possível salvar.', variant: 'destructive' })
       }
@@ -427,6 +436,19 @@ export default function Metas() {
         description="Você está prestes a excluir este planejamento."
         reflectionText={deleteReflection}
         confirmText="Sim, Excluir"
+      />
+
+      <ImpulseControlDialog
+        open={!!successAction}
+        onOpenChange={(o) => {
+          if (!o && successAction) setSuccessAction(null)
+        }}
+        onConfirm={() => setSuccessAction(null)}
+        title={successAction?.title || ''}
+        description={successAction?.description || ''}
+        reflectionText={successAction?.reflection || ''}
+        confirmText="Continuar"
+        mode="success"
       />
     </div>
   )
