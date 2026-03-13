@@ -8,6 +8,7 @@ import Patrimonio from './pages/Patrimonio'
 import Contas from './pages/Contas'
 import Perfis from './pages/Perfis'
 import FluxoCaixa from './pages/FluxoCaixa'
+import Configuracoes from './pages/Configuracoes'
 import NotFound from './pages/NotFound'
 import { ThemeProvider } from './components/ThemeProvider'
 
@@ -24,6 +25,7 @@ const App = () => (
             <Route path="/fluxo" element={<FluxoCaixa />} />
             <Route path="/contas" element={<Contas />} />
             <Route path="/perfis" element={<Perfis />} />
+            <Route path="/configuracoes" element={<Configuracoes />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

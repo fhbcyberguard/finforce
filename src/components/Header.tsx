@@ -1,13 +1,33 @@
-import { Bell, Search, Plus } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bell, Search, Settings, LogOut, Users } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { SidebarTrigger } from '@/components/ui/sidebar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ThemeToggle } from './ThemeToggle'
 import { MOCK_ALERTS } from '@/lib/mockData'
+import { useToast } from '@/hooks/use-toast'
 
 export function Header() {
   const urgentAlerts = MOCK_ALERTS.filter((a) => a.type === 'urgent').length
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const handleLogout = () => {
+    toast({
+      title: 'Sessão encerrada',
+      description: 'Você saiu da sua conta com sucesso.',
+    })
+    navigate('/', { replace: true })
+  }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
@@ -35,13 +55,43 @@ export function Header() {
           )}
         </Button>
         <ThemeToggle />
-        <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary">
-          <AvatarImage
-            src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=4"
-            alt="User"
-          />
-          <AvatarFallback>C</AvatarFallback>
-        </Avatar>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary">
+              <AvatarImage
+                src="https://img.usecurling.com/ppl/thumbnail?gender=male&seed=4"
+                alt="User"
+              />
+              <AvatarFallback>C</AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 mt-1">
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium leading-none">Carlos Silva</p>
+                <p className="text-xs leading-none text-muted-foreground">carlos@familia.com</p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/configuracoes')} className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/perfis')} className="cursor-pointer">
+              <Users className="mr-2 h-4 w-4" />
+              <span>Perfis da Família</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sair da conta</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )

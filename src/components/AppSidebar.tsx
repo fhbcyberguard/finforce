@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   PieChart,
@@ -7,6 +7,7 @@ import {
   Users,
   Settings,
   Waves,
+  LogOut,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -19,6 +20,7 @@ import {
   SidebarMenuItem,
   SidebarHeader,
 } from '@/components/ui/sidebar'
+import { useToast } from '@/hooks/use-toast'
 
 const navigation = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
@@ -30,6 +32,16 @@ const navigation = [
 
 export function AppSidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const handleLogout = () => {
+    toast({
+      title: 'Sessão encerrada',
+      description: 'Você saiu da sua conta com sucesso.',
+    })
+    navigate('/', { replace: true })
+  }
 
   return (
     <Sidebar variant="inset">
@@ -62,11 +74,24 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/settings" className="flex items-center gap-3 text-muted-foreground">
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname === '/configuracoes'}
+                  className="text-muted-foreground"
+                >
+                  <Link to="/configuracoes" className="flex items-center gap-3">
                     <Settings className="w-4 h-4" />
                     <span>Configurações</span>
                   </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sair</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
