@@ -178,7 +178,7 @@ export function Header() {
             <DropdownMenuTrigger asChild>
               <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary ml-2">
                 <AvatarImage
-                  src={profile?.avatar_url || mainProfile?.avatar || undefined}
+                  src={mainProfile?.avatar || profile?.avatar_url || undefined}
                   alt={displayUser}
                 />
                 <AvatarFallback>{displayUser.charAt(0).toUpperCase()}</AvatarFallback>

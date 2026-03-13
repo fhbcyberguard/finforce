@@ -25,14 +25,15 @@ export default function KpiCards() {
 
   // Real-time calculated income
   const rendaMensal = filteredTransactions
-    .filter((t) => t.type === 'Revenue')
-    .reduce((sum, t) => sum + t.amount, 0)
+    .filter((t) => t.type === 'Revenue' || t.category.includes('Renda'))
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0)
 
   // Sum fixed expenses based on explicitly marked transactions or recurrences
   const fixedExpenses = Math.abs(
     filteredTransactions
       .filter(
         (t) =>
+          !(t.type === 'Revenue' || t.category.includes('Renda')) &&
           t.amount < 0 &&
           t.type !== 'Transfer' &&
           (t.expenseType === 'fixed' || t.recurrence === 'monthly' || t.recurrence === 'yearly'),
@@ -44,6 +45,7 @@ export default function KpiCards() {
     filteredTransactions
       .filter(
         (t) =>
+          !(t.type === 'Revenue' || t.category.includes('Renda')) &&
           t.amount < 0 &&
           t.type !== 'Transfer' &&
           t.expenseType === 'variable' &&

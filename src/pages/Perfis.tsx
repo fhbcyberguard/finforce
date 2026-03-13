@@ -55,6 +55,7 @@ export default function Perfis() {
             const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles
             return {
               id: m.id,
+              profile_id: m.profile_id,
               name: p?.full_name || m.name,
               email: p?.email || m.email || '',
               role: m.role,

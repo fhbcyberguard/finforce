@@ -69,6 +69,7 @@ export default function FluxoCaixa() {
   const [openImport, setOpenImport] = useState(false)
   const [importType, setImportType] = useState<'csv' | 'ofx' | null>(null)
   const [isPix, setIsPix] = useState(false)
+  const [formType, setFormType] = useState('Expense')
   const [fileName, setFileName] = useState('')
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
 
@@ -84,6 +85,7 @@ export default function FluxoCaixa() {
     setEditingTx(null)
     setFileName('')
     setIsPix(false)
+    setFormType('Expense')
     setSelectedAccount(accounts[0]?.id || '')
     setSelectedCard('none')
   }
@@ -91,12 +93,15 @@ export default function FluxoCaixa() {
   useEffect(() => {
     if (openAdd) {
       if (editingTx) {
+        setFormType(editingTx.type)
+        setIsPix(editingTx.type === 'Pix')
         const foundAcc = accounts.find(
           (a) => a.id === editingTx.account || a.bank === editingTx.account,
         )
         setSelectedAccount(foundAcc ? foundAcc.id : accounts[0]?.id || '')
         setSelectedCard(editingTx.cardId || 'none')
       } else {
+        setFormType('Expense')
         setSelectedAccount(accounts[0]?.id || '')
         setSelectedCard('none')
       }
@@ -175,23 +180,25 @@ export default function FluxoCaixa() {
     const type = fd.get('type') as string
     const date = fd.get('date') as string
     let amount = Number(fd.get('amount'))
+    const category = fd.get('category') as string
 
-    if (type === 'Expense' || type === 'Pix' || type === 'Transfer') amount = -Math.abs(amount)
+    const isGain = type === 'Revenue' || category.includes('Renda')
+
+    if (!isGain && type !== 'Transfer') amount = -Math.abs(amount)
     else amount = Math.abs(amount)
 
     const rawExpenseType = fd.get('expenseType') as 'fixed' | 'variable' | null
-    const expenseType =
-      type === 'Expense' || type === 'Pix' ? rawExpenseType || 'variable' : undefined
+    const expenseType = !isGain && type !== 'Transfer' ? rawExpenseType || 'variable' : undefined
 
     const accountField = selectedAccount === 'none' ? '' : selectedAccount
     const cardField = selectedCard === 'none' ? undefined : selectedCard
 
     const newTx: Transaction = {
-      id: editingTx ? editingTx.id : '', // Replaced after DB insert
+      id: editingTx ? editingTx.id : '',
       date,
       description: fd.get('description') as string,
       amount,
-      category: fd.get('category') as string,
+      category,
       type,
       account: accountField,
       cardId: cardField,
@@ -201,7 +208,7 @@ export default function FluxoCaixa() {
       expenseType,
     }
 
-    if (amount < -1000 && !editingTx) {
+    if (amount < -1000 && !editingTx && !isGain && type !== 'Transfer') {
       setPendingLargeExpense(newTx)
       setOpenAdd(false)
     } else {
@@ -223,21 +230,21 @@ export default function FluxoCaixa() {
   const openEdit = (tx: Transaction) => {
     setEditingTx(tx)
     setIsPix(tx.type === 'Pix')
+    setFormType(tx.type)
     setOpenAdd(true)
   }
 
-  const getIcon = (type: string) => {
+  const getIcon = (type: string, isGain: boolean) => {
+    if (isGain) return <ArrowUpRight className="w-4 h-4 text-emerald-500" />
     switch (type) {
-      case 'Revenue':
-        return <ArrowUpRight className="w-4 h-4 text-emerald-500" />
       case 'Expense':
         return <ArrowDownRight className="w-4 h-4 text-rose-500" />
       case 'Pix':
-        return <Receipt className="w-4 h-4 text-teal-400" />
+        return <Receipt className="w-4 h-4 text-rose-500" />
       case 'Transfer':
         return <ArrowRightLeft className="w-4 h-4 text-blue-500" />
       default:
-        return <ArrowDownRight className="w-4 h-4" />
+        return <ArrowDownRight className="w-4 h-4 text-rose-500" />
     }
   }
 
@@ -269,6 +276,8 @@ export default function FluxoCaixa() {
         t.account.toLowerCase().includes(lower),
     )
   }, [transactions, searchQuery, timeframe, selectedYear])
+
+  const isGainType = formType === 'Revenue'
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -386,7 +395,10 @@ export default function FluxoCaixa() {
                     <Select
                       name="type"
                       required
-                      onValueChange={(v) => setIsPix(v === 'Pix')}
+                      onValueChange={(v) => {
+                        setIsPix(v === 'Pix')
+                        setFormType(v)
+                      }}
                       defaultValue={editingTx?.type || 'Expense'}
                     >
                       <SelectTrigger>
@@ -423,13 +435,17 @@ export default function FluxoCaixa() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div
+                  className={`grid ${isGainType || formType === 'Transfer' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}
+                >
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <Select
                       name="category"
                       required
-                      defaultValue={editingTx?.category || 'Moradia > Luz'}
+                      defaultValue={
+                        editingTx?.category || (isGainType ? 'Renda > Principal' : 'Moradia > Luz')
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -448,18 +464,23 @@ export default function FluxoCaixa() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Classificação</Label>
-                    <Select name="expenseType" defaultValue={editingTx?.expenseType || 'variable'}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="variable">Gasto Variável</SelectItem>
-                        <SelectItem value="fixed">Gasto Fixo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {!isGainType && formType !== 'Transfer' && (
+                    <div className="space-y-2">
+                      <Label>Classificação</Label>
+                      <Select
+                        name="expenseType"
+                        defaultValue={editingTx?.expenseType || 'variable'}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="variable">Gasto Variável</SelectItem>
+                          <SelectItem value="fixed">Gasto Fixo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-2 items-end">
@@ -594,6 +615,14 @@ export default function FluxoCaixa() {
               const acc = accounts.find((a) => a.id === tx.account)
               const accName = acc ? acc.bank : tx.account
               const card = creditCards.find((c) => c.id === tx.cardId)
+              const isGain = tx.type === 'Revenue' || tx.category.includes('Renda')
+
+              const amountClass = isGain
+                ? 'text-emerald-500'
+                : tx.type === 'Transfer'
+                  ? 'text-blue-500'
+                  : 'text-rose-500'
+              const amountPrefix = isGain ? '+' : tx.type === 'Transfer' ? '' : '-'
 
               return (
                 <div
@@ -601,7 +630,11 @@ export default function FluxoCaixa() {
                   className="group flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="p-2 rounded-full bg-secondary/20">{getIcon(tx.type)}</div>
+                    <div
+                      className={`p-2 rounded-full ${isGain ? 'bg-emerald-500/10' : tx.type === 'Transfer' ? 'bg-blue-500/10' : 'bg-rose-500/10'}`}
+                    >
+                      {getIcon(tx.type, isGain)}
+                    </div>
                     <div>
                       <p className="font-medium text-sm sm:text-base flex items-center gap-2">
                         {tx.description}
@@ -613,14 +646,30 @@ export default function FluxoCaixa() {
                         <Badge variant="secondary" className="text-[10px] font-normal">
                           {tx.category}
                         </Badge>
-                        {(tx.type === 'Expense' || tx.type === 'Pix') && tx.expenseType && (
+
+                        {isGain ? (
                           <Badge
                             variant="outline"
-                            className={`text-[10px] font-normal ${tx.expenseType === 'fixed' ? 'border-blue-500/50 text-blue-500' : 'border-orange-500/50 text-orange-500'}`}
+                            className="text-[10px] font-normal border-emerald-500/30 text-emerald-500 bg-emerald-500/5"
                           >
-                            {tx.expenseType === 'fixed' ? 'Fixo' : 'Variável'}
+                            Receita
                           </Badge>
-                        )}
+                        ) : tx.type === 'Transfer' ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-normal border-blue-500/30 text-blue-500 bg-blue-500/5"
+                          >
+                            Transferência
+                          </Badge>
+                        ) : tx.expenseType ? (
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] font-normal ${tx.expenseType === 'fixed' ? 'border-rose-500/40 text-rose-500 bg-rose-500/5' : 'border-orange-500/40 text-orange-500 bg-orange-500/5'}`}
+                          >
+                            {tx.expenseType === 'fixed' ? 'Gasto Fixo' : 'Gasto Variável'}
+                          </Badge>
+                        ) : null}
+
                         <span className="text-xs text-muted-foreground font-medium">{accName}</span>
                         {card && (
                           <span className="text-[10px] text-muted-foreground bg-muted border border-border/50 px-1.5 py-0.5 rounded flex items-center gap-1">
@@ -640,10 +689,9 @@ export default function FluxoCaixa() {
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p
-                        className={`font-mono font-medium ${tx.amount > 0 ? 'text-emerald-500' : ''}`}
-                      >
-                        {tx.amount > 0 ? '+' : ''}R$ {Math.abs(tx.amount).toFixed(2)}
+                      <p className={`font-mono font-medium ${amountClass}`}>
+                        {amountPrefix} R${' '}
+                        {Math.abs(tx.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </p>
                       {(tx.type === 'Pix' || tx.hasAttachment) && (
                         <span className="text-[10px] text-muted-foreground flex items-center justify-end gap-1 mt-1">

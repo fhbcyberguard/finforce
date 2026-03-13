@@ -135,25 +135,35 @@ export function DataImportDialog({
   const updateField = (idx: number, field: string, val: any) => {
     const next = [...preview]
     next[idx] = { ...next[idx], [field]: val }
+    if (field === 'category' && val.includes('Renda')) {
+      next[idx].type = 'Revenue'
+      next[idx].expenseType = undefined
+    }
+    if (field === 'type' && val === 'Revenue') {
+      next[idx].expenseType = undefined
+    }
     setPreview(next)
   }
 
   const handleImport = async () => {
     if (!user) return
 
-    const dbPayloads = preview.map((tx) => ({
-      user_id: user.id,
-      description: tx.description,
-      amount: tx.amount,
-      type: tx.type,
-      category: tx.category,
-      date: new Date(`${tx.date}T12:00:00Z`).toISOString(),
-      expense_type: tx.expenseType,
-      account: tx.account,
-      recurrence: tx.recurrence,
-      has_attachment: tx.hasAttachment,
-      profile: tx.profile,
-    }))
+    const dbPayloads = preview.map((tx) => {
+      const isGain = tx.type === 'Revenue' || tx.category.includes('Renda')
+      return {
+        user_id: user.id,
+        description: tx.description,
+        amount: isGain ? Math.abs(tx.amount) : -Math.abs(tx.amount),
+        type: tx.type,
+        category: tx.category,
+        date: new Date(`${tx.date}T12:00:00Z`).toISOString(),
+        expense_type: tx.expenseType,
+        account: tx.account,
+        recurrence: tx.recurrence,
+        has_attachment: tx.hasAttachment,
+        profile: tx.profile,
+      }
+    })
 
     const { data, error } = await supabase.from('transactions').insert(dbPayloads).select()
 
@@ -224,51 +234,54 @@ export function DataImportDialog({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {preview.map((row, idx) => (
-                    <TableRow key={row.id}>
-                      <TableCell className="p-2">
-                        <Input
-                          value={row.date}
-                          onChange={(e) => updateField(idx, 'date', e.target.value)}
-                        />
-                      </TableCell>
-                      <TableCell className="p-2">
-                        <Input
-                          value={row.description}
-                          onChange={(e) => updateField(idx, 'description', e.target.value)}
-                        />
-                      </TableCell>
-                      <TableCell className="p-2">
-                        <Input
-                          value={row.category}
-                          onChange={(e) => updateField(idx, 'category', e.target.value)}
-                        />
-                      </TableCell>
-                      <TableCell className="p-2">
-                        {row.type === 'Expense' ? (
-                          <Select
-                            value={row.expenseType}
-                            onValueChange={(v) => updateField(idx, 'expenseType', v)}
-                          >
-                            <SelectTrigger className="h-10">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="variable">Variável</SelectItem>
-                              <SelectItem value="fixed">Fixo</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className="text-xs text-muted-foreground pl-2">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell
-                        className={`p-2 whitespace-nowrap font-medium ${row.amount > 0 ? 'text-emerald-500' : ''}`}
-                      >
-                        R$ {Math.abs(row.amount).toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {preview.map((row, idx) => {
+                    const isGain = row.type === 'Revenue' || row.category.includes('Renda')
+                    return (
+                      <TableRow key={row.id}>
+                        <TableCell className="p-2">
+                          <Input
+                            value={row.date}
+                            onChange={(e) => updateField(idx, 'date', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell className="p-2">
+                          <Input
+                            value={row.description}
+                            onChange={(e) => updateField(idx, 'description', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell className="p-2">
+                          <Input
+                            value={row.category}
+                            onChange={(e) => updateField(idx, 'category', e.target.value)}
+                          />
+                        </TableCell>
+                        <TableCell className="p-2">
+                          {!isGain && row.type !== 'Transfer' ? (
+                            <Select
+                              value={row.expenseType}
+                              onValueChange={(v) => updateField(idx, 'expenseType', v)}
+                            >
+                              <SelectTrigger className="h-10">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="variable">Variável</SelectItem>
+                                <SelectItem value="fixed">Fixo</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className="text-xs text-muted-foreground pl-2">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell
+                          className={`p-2 whitespace-nowrap font-medium ${isGain ? 'text-emerald-500' : 'text-rose-500'}`}
+                        >
+                          {isGain ? '+' : '-'} R$ {Math.abs(row.amount).toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             </div>

@@ -30,7 +30,10 @@ export function SpendingChart() {
     const yearToUse = selectedYear || now.getFullYear().toString()
     const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
 
-    const expenses = transactions.filter((t) => t.amount < 0 && t.type !== 'Transfer')
+    const expenses = transactions.filter((t) => {
+      const isGain = t.type === 'Revenue' || t.category.includes('Renda')
+      return t.amount < 0 && t.type !== 'Transfer' && !isGain
+    })
 
     const currentExpenses = expenses.filter((t) => {
       if (timeframe === 'annual') return t.date.startsWith(yearToUse)

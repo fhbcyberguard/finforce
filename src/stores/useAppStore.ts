@@ -19,6 +19,7 @@ export type Profile = {
   context?: ContextType
   currentAge?: number
   retirementPlanDuration?: number
+  profile_id?: string | null
 }
 export type Account = (typeof MOCK_ACCOUNTS)[0] & { context?: ContextType }
 export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & {

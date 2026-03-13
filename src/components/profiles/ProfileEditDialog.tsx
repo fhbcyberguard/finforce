@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Camera, Target } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -29,7 +30,8 @@ import {
 import { Button } from '@/components/ui/button'
 import useAppStore, { Profile } from '@/stores/useAppStore'
 import { useToast } from '@/hooks/use-toast'
-import { Target } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 const schema = z.object({
   name: z
@@ -41,6 +43,7 @@ const schema = z.object({
   limit: z.coerce.number().min(0, 'O limite não pode ser negativo'),
   currentAge: z.coerce.number().min(0, 'Idade inválida').optional(),
   retirementPlanDuration: z.coerce.number().min(0, 'Duração inválida').optional(),
+  avatar: z.string().optional().nullable(),
 })
 
 interface ProfileEditDialogProps {
@@ -52,6 +55,7 @@ interface ProfileEditDialogProps {
 export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDialogProps) {
   const { profiles, setProfiles, currentContext } = useAppStore()
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const form = useForm({
     resolver: zodResolver(schema),
@@ -62,6 +66,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       limit: profile.limit || 0,
       currentAge: profile.currentAge || 0,
       retirementPlanDuration: profile.retirementPlanDuration || 0,
+      avatar: profile.avatar || null,
     },
   })
 
@@ -74,23 +79,61 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
         limit: profile.limit || 0,
         currentAge: profile.currentAge || 0,
         retirementPlanDuration: profile.retirementPlanDuration || 0,
+        avatar: profile.avatar || null,
       })
     }
   }, [profile, open, form])
 
   const isNew = !profile.id
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     if (isNew) {
+      let newId = Math.random().toString(36).substring(2, 9)
+      if (user) {
+        const { data: family } = await supabase
+          .from('families')
+          .select('id')
+          .eq('owner_id', user.id)
+          .single()
+        if (family) {
+          const { data: dbMember } = await supabase
+            .from('members')
+            .insert({
+              family_id: family.id,
+              name: data.name,
+              email: data.email || null,
+              role: data.role,
+            })
+            .select()
+            .single()
+          if (dbMember) newId = dbMember.id
+        }
+      }
       const newProfile = {
-        id: Math.random().toString(36).substring(2, 9),
+        id: newId,
         context: currentContext,
-        avatar: null,
         ...data,
       }
       setProfiles([...profiles, newProfile])
       toast({ title: 'Perfil criado', description: 'Membro adicionado com sucesso.' })
     } else {
+      if (user) {
+        await supabase
+          .from('members')
+          .update({
+            name: data.name,
+            email: data.email || null,
+            role: data.role,
+          })
+          .eq('id', profile.id)
+
+        if (data.avatar !== profile.avatar && profile.profile_id) {
+          await supabase
+            .from('profiles')
+            .update({ avatar_url: data.avatar })
+            .eq('id', profile.profile_id)
+        }
+      }
       setProfiles(profiles.map((p) => (p.id === profile.id ? { ...p, ...data } : p)))
       toast({ title: 'Perfil atualizado', description: 'Dados salvos com sucesso.' })
     }
@@ -112,6 +155,34 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="flex flex-col items-center gap-3 mb-4">
+              <div className="relative h-20 w-20 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center group">
+                {form.watch('avatar') ? (
+                  <img
+                    src={form.watch('avatar') as string}
+                    alt="Avatar"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <Camera className="h-6 w-6 text-muted-foreground group-hover:text-foreground transition-colors" />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = (ev) => form.setValue('avatar', ev.target?.result as string)
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Clique para alterar a foto</p>
+            </div>
+
             <FormField
               control={form.control}
               name="name"
