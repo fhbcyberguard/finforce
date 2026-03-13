@@ -25,7 +25,7 @@ export function SpendingChart() {
   const [view, setView] = useState('bar')
   const { transactions, timeframe, categoryColors, selectedYear } = useAppStore()
 
-  const { barData, pieData, config } = useMemo(() => {
+  const { barData, pieData, config, chartCats, editorCategories } = useMemo(() => {
     const now = new Date()
     const yearToUse = selectedYear || now.getFullYear().toString()
     const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
@@ -76,14 +76,15 @@ export function SpendingChart() {
     })
     config.value = { label: 'Valor' }
 
-    return { barData, pieData, config }
-  }, [transactions, timeframe, categoryColors, selectedYear])
+    // Prepare derived categorizations securely inside useMemo
+    const chartCats = Object.keys(config).filter((k) => k !== 'value')
+    const editorCategories = chartCats.map((cat) => ({
+      name: cat,
+      color: config[cat].color,
+    }))
 
-  const chartCats = Object.keys(config).filter((k) => k !== 'value')
-  const editorCategories = chartCats.map((cat) => ({
-    name: cat,
-    color: config[cat].color,
-  }))
+    return { barData, pieData, config, chartCats, editorCategories }
+  }, [transactions, timeframe, categoryColors, selectedYear])
 
   return (
     <Card className="border-border/50">

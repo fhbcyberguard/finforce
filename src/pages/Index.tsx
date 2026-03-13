@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import useAppStore from '@/stores/useAppStore'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
@@ -21,12 +22,17 @@ export default function Index() {
 
   const isBusiness = currentContext === 'business'
 
-  const availableYears = Array.from(new Set(transactions.map((t) => t.date.substring(0, 4)))).sort(
-    (a, b) => b.localeCompare(a),
-  )
-  if (!availableYears.includes(new Date().getFullYear().toString())) {
-    availableYears.unshift(new Date().getFullYear().toString())
-  }
+  // Memoize to prevent Radix Select from recreating internal refs unnecessarily
+  const availableYears = useMemo(() => {
+    const years = Array.from(new Set(transactions.map((t) => t.date.substring(0, 4)))).sort(
+      (a, b) => b.localeCompare(a),
+    )
+    const currentYear = new Date().getFullYear().toString()
+    if (!years.includes(currentYear)) {
+      years.unshift(currentYear)
+    }
+    return years
+  }, [transactions])
 
   return (
     <div className="space-y-6 animate-slide-in-up">

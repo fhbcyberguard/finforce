@@ -15,7 +15,7 @@ const COLORS = ['#2EC4B6', '#59C3C3', '#F4D03F', '#E74C3C', '#8E44AD', '#3498DB'
 export function SpendingByPersonChart() {
   const { transactions, timeframe, categoryColors, currentContext, selectedYear } = useAppStore()
 
-  const { pieData, config } = useMemo(() => {
+  const { pieData, config, chartProfiles, editorCategories } = useMemo(() => {
     const now = new Date()
     const yearToUse = selectedYear || now.getFullYear().toString()
     const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
@@ -50,14 +50,15 @@ export function SpendingByPersonChart() {
     })
     config.value = { label: 'Valor' }
 
-    return { pieData, config }
-  }, [transactions, timeframe, categoryColors, selectedYear])
+    // Prepare derived categorizations securely inside useMemo
+    const chartProfiles = Object.keys(config).filter((k) => k !== 'value')
+    const editorCategories = chartProfiles.map((p) => ({
+      name: p,
+      color: config[p].color,
+    }))
 
-  const chartProfiles = Object.keys(config).filter((k) => k !== 'value')
-  const editorCategories = chartProfiles.map((p) => ({
-    name: p,
-    color: config[p].color,
-  }))
+    return { pieData, config, chartProfiles, editorCategories }
+  }, [transactions, timeframe, categoryColors, selectedYear])
 
   const title =
     currentContext === 'business' ? 'Gastos por Colaborador' : 'Gastos por Membro Familiar'

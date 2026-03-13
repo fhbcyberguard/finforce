@@ -9,6 +9,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      families: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
+      hotmart_events: {
+        Row: {
+          id: string
+          payload: Json
+          received_at: string | null
+        }
+        Insert: {
+          id?: string
+          payload: Json
+          received_at?: string | null
+        }
+        Update: {
+          id?: string
+          payload?: Json
+          received_at?: string | null
+        }
+        Relationships: []
+      }
+      members: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          family_id: string
+          id: string
+          name: string
+          profile_id: string | null
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          family_id: string
+          id?: string
+          name: string
+          profile_id?: string | null
+          role?: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          family_id?: string
+          id?: string
+          name?: string
+          profile_id?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'members_family_id_fkey'
+            columns: ['family_id']
+            isOneToOne: false
+            referencedRelation: 'families'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'members_profile_id_fkey'
+            columns: ['profile_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       profiles: {
         Row: {
           email: string | null
@@ -29,6 +113,62 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          account: string | null
+          amount: number
+          card_id: string | null
+          category: string
+          date: string
+          description: string
+          expense_type: string | null
+          has_attachment: boolean | null
+          id: string
+          profile: string | null
+          recurrence: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          account?: string | null
+          amount: number
+          card_id?: string | null
+          category: string
+          date: string
+          description: string
+          expense_type?: string | null
+          has_attachment?: boolean | null
+          id?: string
+          profile?: string | null
+          recurrence?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          account?: string | null
+          amount?: number
+          card_id?: string | null
+          category?: string
+          date?: string
+          description?: string
+          expense_type?: string | null
+          has_attachment?: boolean | null
+          id?: string
+          profile?: string | null
+          recurrence?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'transactions_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: {
@@ -177,18 +317,71 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: families
+//   id: uuid (not null, default: gen_random_uuid())
+//   created_at: timestamp with time zone (nullable, default: now())
+//   name: text (not null)
+//   owner_id: uuid (not null)
+// Table: hotmart_events
+//   id: uuid (not null, default: gen_random_uuid())
+//   payload: jsonb (not null)
+//   received_at: timestamp with time zone (nullable, default: now())
+// Table: members
+//   id: uuid (not null, default: gen_random_uuid())
+//   family_id: uuid (not null)
+//   profile_id: uuid (nullable)
+//   name: text (not null)
+//   email: text (nullable)
+//   role: text (not null, default: 'member'::text)
+//   created_at: timestamp with time zone (nullable, default: now())
 // Table: profiles
 //   id: uuid (not null)
 //   full_name: text (nullable)
 //   updated_at: timestamp with time zone (nullable, default: now())
 //   email: text (nullable)
+// Table: transactions
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   description: text (not null)
+//   amount: numeric (not null)
+//   type: text (not null)
+//   category: text (not null)
+//   date: timestamp with time zone (not null)
+//   expense_type: text (nullable)
+//   account: text (nullable)
+//   card_id: text (nullable)
+//   recurrence: text (nullable)
+//   has_attachment: boolean (nullable, default: false)
+//   profile: text (nullable)
 
 // --- CONSTRAINTS ---
+// Table: families
+//   FOREIGN KEY families_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY families_pkey: PRIMARY KEY (id)
+// Table: hotmart_events
+//   PRIMARY KEY hotmart_events_pkey: PRIMARY KEY (id)
+// Table: members
+//   FOREIGN KEY members_family_id_fkey: FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE
+//   PRIMARY KEY members_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY members_profile_id_fkey: FOREIGN KEY (profile_id) REFERENCES profiles(id) ON DELETE SET NULL
 // Table: profiles
 //   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
+// Table: transactions
+//   PRIMARY KEY transactions_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: families
+//   Policy "Users can insert own families" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = owner_id)
+//   Policy "Users can update own families" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = owner_id)
+//   Policy "Users can view own families" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = owner_id)
+// Table: members
+//   Policy "Users can manage members of their families" (ALL, PERMISSIVE) roles={public}
+//     USING: (EXISTS ( SELECT 1    FROM families f   WHERE ((f.id = members.family_id) AND (f.owner_id = auth.uid()))))
 // Table: profiles
 //   Policy "Users can insert own profile" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: (auth.uid() = id)
@@ -196,6 +389,15 @@ export const Constants = {
 //     USING: (auth.uid() = id)
 //   Policy "Users can view own profile" (SELECT, PERMISSIVE) roles={public}
 //     USING: (auth.uid() = id)
+// Table: transactions
+//   Policy "Users can delete own transactions" (DELETE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Users can insert own transactions" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Users can update own transactions" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Users can view own transactions" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION handle_new_user()
@@ -204,14 +406,22 @@ export const Constants = {
 //    LANGUAGE plpgsql
 //    SECURITY DEFINER
 //   AS $function$
+//   DECLARE
+//     new_family_id UUID;
+//     user_name TEXT;
 //   BEGIN
+//     user_name := COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1));
+//
 //     INSERT INTO public.profiles (id, full_name, email, updated_at)
-//     VALUES (
-//       NEW.id,
-//       COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
-//       NEW.email,
-//       NOW()
-//     );
+//     VALUES (NEW.id, user_name, NEW.email, NOW());
+//
+//     INSERT INTO public.families (name, owner_id)
+//     VALUES ('Família ' || user_name, NEW.id)
+//     RETURNING id INTO new_family_id;
+//
+//     INSERT INTO public.members (family_id, profile_id, name, email, role)
+//     VALUES (new_family_id, NEW.id, user_name, NEW.email, 'admin');
+//
 //     RETURN NEW;
 //   END;
 //   $function$

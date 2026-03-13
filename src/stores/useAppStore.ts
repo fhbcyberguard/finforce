@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useSyncExternalStore, useMemo, useCallback } from 'react'
 import {
   MOCK_ACCOUNTS,
   MOCK_CREDIT_CARDS,
@@ -133,6 +133,12 @@ function updateState(partial: Partial<AppState>) {
   emit()
 }
 
+const mergeCtx = <T extends { context?: string }>(all: T[], updated: T[], ctx: string) => {
+  const others = all.filter((a) => (a.context || 'personal') !== ctx)
+  const ctxUpdated = updated.map((a) => ({ ...a, context: a.context || ctx }))
+  return [...others, ...ctxUpdated] as T[]
+}
+
 export default function useAppStore() {
   const store = useSyncExternalStore(
     (listener) => {
@@ -144,56 +150,144 @@ export default function useAppStore() {
 
   const ctx = store.currentContext || 'personal'
 
-  const filterCtx = <T extends { context?: string }>(arr: T[]) =>
-    arr.filter((a) => (a.context || 'personal') === ctx)
+  // Memoize filtered arrays to ensure referential stability and prevent infinite render loops
+  const profiles = useMemo(
+    () => store.profiles.filter((a) => (a.context || 'personal') === ctx),
+    [store.profiles, ctx],
+  )
+  const accounts = useMemo(
+    () => store.accounts.filter((a) => (a.context || 'personal') === ctx),
+    [store.accounts, ctx],
+  )
+  const creditCards = useMemo(
+    () => store.creditCards.filter((a) => (a.context || 'personal') === ctx),
+    [store.creditCards, ctx],
+  )
+  const assets = useMemo(
+    () => store.assets.filter((a) => (a.context || 'personal') === ctx),
+    [store.assets, ctx],
+  )
+  const goals = useMemo(
+    () => store.goals.filter((a) => (a.context || 'personal') === ctx),
+    [store.goals, ctx],
+  )
+  const transactions = useMemo(
+    () => store.transactions.filter((a) => (a.context || 'personal') === ctx),
+    [store.transactions, ctx],
+  )
+  const alerts = useMemo(
+    () => store.alerts.filter((a) => (a.context || 'personal') === ctx),
+    [store.alerts, ctx],
+  )
 
-  const mergeCtx = <T extends { context?: string }>(all: T[], updated: T[]) => {
-    const others = all.filter((a) => (a.context || 'personal') !== ctx)
-    const ctxUpdated = updated.map((a) => ({ ...a, context: a.context || ctx }))
-    return [...others, ...ctxUpdated] as T[]
-  }
+  const setProfiles = useCallback(
+    (p: Profile[]) => updateState({ profiles: mergeCtx(state.profiles, p, ctx) }),
+    [ctx],
+  )
+  const setProfilesFromDB = useCallback((p: Profile[]) => updateState({ profiles: p }), [])
+  const setTransactionsFromDB = useCallback(
+    (t: Transaction[]) => updateState({ transactions: t }),
+    [],
+  )
+  const setAccounts = useCallback(
+    (a: Account[]) => updateState({ accounts: mergeCtx(state.accounts, a, ctx) }),
+    [ctx],
+  )
+  const setCreditCards = useCallback(
+    (c: CreditCard[]) => updateState({ creditCards: mergeCtx(state.creditCards, c, ctx) }),
+    [ctx],
+  )
+  const setAssets = useCallback(
+    (a: Asset[]) => updateState({ assets: mergeCtx(state.assets, a, ctx) }),
+    [ctx],
+  )
+  const setGoals = useCallback(
+    (g: Goal[]) => updateState({ goals: mergeCtx(state.goals, g, ctx) }),
+    [ctx],
+  )
+  const setTransactions = useCallback(
+    (t: Transaction[]) => updateState({ transactions: mergeCtx(state.transactions, t, ctx) }),
+    [ctx],
+  )
+  const setAlerts = useCallback(
+    (al: Alert[]) => updateState({ alerts: mergeCtx(state.alerts, al, ctx) }),
+    [ctx],
+  )
 
-  return {
-    ...store,
-    profiles: filterCtx(store.profiles),
-    accounts: filterCtx(store.accounts),
-    creditCards: filterCtx(store.creditCards),
-    assets: filterCtx(store.assets),
-    goals: filterCtx(store.goals),
-    transactions: filterCtx(store.transactions),
-    alerts: filterCtx(store.alerts),
+  const setSimulatorSettings = useCallback(
+    (s: SimulatorSettings) => updateState({ simulatorSettings: s }),
+    [],
+  )
+  const setLogoUrl = useCallback((l: string) => updateState({ logoUrl: l }), [])
+  const setSearchQuery = useCallback((q: string) => updateState({ searchQuery: q }), [])
+  const setTimeframe = useCallback((t: 'monthly' | 'annual') => updateState({ timeframe: t }), [])
+  const setSelectedYear = useCallback((y: string) => updateState({ selectedYear: y }), [])
+  const setCurrentContext = useCallback((c: ContextType) => updateState({ currentContext: c }), [])
+  const setSubscriptionPlan = useCallback(
+    (p: 'basic' | 'medium' | 'top') => updateState({ subscriptionPlan: p }),
+    [],
+  )
+  const setCategoryColor = useCallback(
+    (cat: string, color: string) =>
+      updateState({ categoryColors: { ...state.categoryColors, [cat]: color } }),
+    [],
+  )
 
-    setProfiles: (profiles: Profile[]) => {
-      updateState({ profiles: mergeCtx(state.profiles, profiles) })
-    },
-
-    setProfilesFromDB: (profiles: Profile[]) => updateState({ profiles }),
-
-    setTransactionsFromDB: (transactions: Transaction[]) => updateState({ transactions }),
-
-    setAccounts: (accounts: Account[]) =>
-      updateState({ accounts: mergeCtx(state.accounts, accounts) }),
-
-    setCreditCards: (creditCards: CreditCard[]) => {
-      updateState({ creditCards: mergeCtx(state.creditCards, creditCards) })
-    },
-
-    setAssets: (assets: Asset[]) => updateState({ assets: mergeCtx(state.assets, assets) }),
-    setGoals: (goals: Goal[]) => updateState({ goals: mergeCtx(state.goals, goals) }),
-    setTransactions: (transactions: Transaction[]) =>
-      updateState({ transactions: mergeCtx(state.transactions, transactions) }),
-    setAlerts: (alerts: Alert[]) => updateState({ alerts: mergeCtx(state.alerts, alerts) }),
-
-    setSimulatorSettings: (simulatorSettings: SimulatorSettings) =>
-      updateState({ simulatorSettings }),
-    setLogoUrl: (logoUrl: string) => updateState({ logoUrl }),
-    setSearchQuery: (searchQuery: string) => updateState({ searchQuery }),
-    setTimeframe: (timeframe: 'monthly' | 'annual') => updateState({ timeframe }),
-    setSelectedYear: (selectedYear: string) => updateState({ selectedYear }),
-    setCurrentContext: (currentContext: ContextType) => updateState({ currentContext }),
-    setSubscriptionPlan: (subscriptionPlan: 'basic' | 'medium' | 'top') =>
-      updateState({ subscriptionPlan }),
-    setCategoryColor: (category: string, color: string) =>
-      updateState({ categoryColors: { ...state.categoryColors, [category]: color } }),
-  }
+  // Return a memoized object so components don't re-render unless relevant state changes
+  return useMemo(
+    () => ({
+      ...store,
+      profiles,
+      accounts,
+      creditCards,
+      assets,
+      goals,
+      transactions,
+      alerts,
+      setProfiles,
+      setProfilesFromDB,
+      setTransactionsFromDB,
+      setAccounts,
+      setCreditCards,
+      setAssets,
+      setGoals,
+      setTransactions,
+      setAlerts,
+      setSimulatorSettings,
+      setLogoUrl,
+      setSearchQuery,
+      setTimeframe,
+      setSelectedYear,
+      setCurrentContext,
+      setSubscriptionPlan,
+      setCategoryColor,
+    }),
+    [
+      store,
+      profiles,
+      accounts,
+      creditCards,
+      assets,
+      goals,
+      transactions,
+      alerts,
+      setProfiles,
+      setProfilesFromDB,
+      setTransactionsFromDB,
+      setAccounts,
+      setCreditCards,
+      setAssets,
+      setGoals,
+      setTransactions,
+      setAlerts,
+      setSimulatorSettings,
+      setLogoUrl,
+      setSearchQuery,
+      setTimeframe,
+      setSelectedYear,
+      setCurrentContext,
+      setSubscriptionPlan,
+      setCategoryColor,
+    ],
+  )
 }
