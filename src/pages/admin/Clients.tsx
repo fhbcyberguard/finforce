@@ -49,6 +49,7 @@ import {
   MoreHorizontal,
   Edit,
   UserMinus,
+  Key,
 } from 'lucide-react'
 
 const planLabels: Record<string, string> = {
@@ -76,8 +77,10 @@ export default function Clients() {
   // Modals state
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
   const [userToEdit, setUserToEdit] = useState<any | null>(null)
+  const [userToChangePassword, setUserToChangePassword] = useState<any | null>(null)
 
   // Form states
   const [newFullName, setNewFullName] = useState('')
@@ -90,6 +93,10 @@ export default function Clients() {
   const [editPlan, setEditPlan] = useState('basic')
   const [isEditing, setIsEditing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const [resetPassword, setResetPassword] = useState('')
+  const [confirmResetPassword, setConfirmResetPassword] = useState('')
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   const fetchProfiles = useCallback(async () => {
     setIsLoading(true)
@@ -167,6 +174,13 @@ export default function Clients() {
     setIsEditDialogOpen(true)
   }
 
+  const openPasswordDialog = (profile: any) => {
+    setUserToChangePassword(profile)
+    setResetPassword('')
+    setConfirmResetPassword('')
+    setIsPasswordDialogOpen(true)
+  }
+
   const handleEditClient = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!userToEdit) return
@@ -190,6 +204,41 @@ export default function Clients() {
       toast({ title: 'Sucesso', description: 'Dados do cliente atualizados com sucesso.' })
       setIsEditDialogOpen(false)
       fetchProfiles()
+    }
+  }
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!userToChangePassword) return
+    if (resetPassword !== confirmResetPassword) {
+      toast({ title: 'Atenção', description: 'As senhas não coincidem.', variant: 'destructive' })
+      return
+    }
+    if (resetPassword.length < 6) {
+      toast({
+        title: 'Atenção',
+        description: 'A senha deve ter no mínimo 6 caracteres.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsChangingPassword(true)
+    const { error } = await supabase.rpc('admin_update_user_password', {
+      target_user_id: userToChangePassword.id,
+      new_password: resetPassword,
+    })
+    setIsChangingPassword(false)
+
+    if (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao alterar a senha. Tente novamente.',
+        variant: 'destructive',
+      })
+    } else {
+      toast({ title: 'Sucesso', description: 'Senha alterada com sucesso!' })
+      setIsPasswordDialogOpen(false)
     }
   }
 
@@ -327,6 +376,13 @@ export default function Clients() {
                           >
                             <Edit className="mr-2 h-4 w-4" />
                             Editar Cliente
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => openPasswordDialog(p)}
+                            className="cursor-pointer"
+                          >
+                            <Key className="mr-2 h-4 w-4" />
+                            Alterar Senha
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -480,6 +536,71 @@ export default function Clients() {
               >
                 {isEditing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Alterar Senha</DialogTitle>
+            <DialogDescription>
+              Defina uma nova senha para{' '}
+              <strong className="text-foreground">
+                {userToChangePassword?.full_name || userToChangePassword?.email}
+              </strong>
+              .
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdatePassword} className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nova Senha</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={resetPassword}
+                onChange={(e) => setResetPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirm-new-password">Confirmar Nova Senha</Label>
+              <Input
+                id="confirm-new-password"
+                type="password"
+                value={confirmResetPassword}
+                onChange={(e) => setConfirmResetPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                minLength={6}
+              />
+            </div>
+            <DialogFooter className="pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsPasswordDialogOpen(false)}
+                disabled={isChangingPassword}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="bg-[#126eda] hover:bg-[#126eda]/90 text-white"
+                disabled={
+                  isChangingPassword ||
+                  !resetPassword ||
+                  resetPassword !== confirmResetPassword ||
+                  resetPassword.length < 6
+                }
+              >
+                {isChangingPassword ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Atualizar Senha
               </Button>
             </DialogFooter>
           </form>
