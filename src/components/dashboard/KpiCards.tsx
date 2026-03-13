@@ -1,68 +1,23 @@
-import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Wallet, TrendingUp, DollarSign, Target } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
-import { supabase } from '@/lib/supabase/client'
-import { useAuth } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 
 export default function KpiCards() {
-  const { timeframe, selectedYear } = useAppStore()
-  const { user } = useAuth()
-
-  const [realAccounts, setRealAccounts] = useState<any[]>([])
-  const [realTransactions, setRealTransactions] = useState<any[]>([])
-
-  useEffect(() => {
-    if (!user) return
-
-    const fetchData = async () => {
-      const [{ data: accData }, { data: txData }] = await Promise.all([
-        supabase.from('accounts').select('balance').eq('user_id', user.id),
-        supabase.from('transactions').select('amount, type, date').eq('user_id', user.id),
-      ])
-      if (accData) setRealAccounts(accData)
-      if (txData) setRealTransactions(txData)
-    }
-
-    fetchData()
-
-    const accSub = supabase
-      .channel('accounts_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'accounts', filter: `user_id=eq.${user.id}` },
-        fetchData,
-      )
-      .subscribe()
-
-    const txSub = supabase
-      .channel('transactions_changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'transactions', filter: `user_id=eq.${user.id}` },
-        fetchData,
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(accSub)
-      supabase.removeChannel(txSub)
-    }
-  }, [user])
+  const { timeframe, selectedYear, transactions, accounts } = useAppStore()
 
   const now = new Date()
   const yearToUse = selectedYear || now.getFullYear().toString()
   const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
   const isAnnual = timeframe === 'annual'
 
-  const filteredTransactions = realTransactions.filter((t) => {
+  const filteredTransactions = transactions.filter((t) => {
     if (isAnnual) return t.date.startsWith(yearToUse)
     return t.date.startsWith(currentMonth)
   })
 
-  // Dynamic values calculated directly from Supabase responses
-  const patrimony = realAccounts.reduce((sum, acc) => sum + (Number(acc.balance) || 0), 0)
+  // Dynamic values calculated directly from store (which is synced from DB)
+  const patrimony = accounts.reduce((sum, acc) => sum + (Number(acc.balance) || 0), 0)
 
   const rendaMensal = filteredTransactions
     .filter(

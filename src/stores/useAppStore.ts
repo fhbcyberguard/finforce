@@ -267,6 +267,9 @@ export default function useAppStore() {
   )
   const setGoalsFromDB = useCallback((g: Goal[]) => updateState({ goals: g }), [])
   const setCategoriesFromDB = useCallback((c: Category[]) => updateState({ categories: c }), [])
+  const setAccountsFromDB = useCallback((a: Account[]) => updateState({ accounts: a }), [])
+  const setCreditCardsFromDB = useCallback((c: CreditCard[]) => updateState({ creditCards: c }), [])
+
   const setAccounts = useCallback(
     (a: Account[]) => updateState({ accounts: mergeCtx(state.accounts, a, ctx) }),
     [ctx],
@@ -332,6 +335,8 @@ export default function useAppStore() {
       setTransactionsFromDB,
       setGoalsFromDB,
       setCategoriesFromDB,
+      setAccountsFromDB,
+      setCreditCardsFromDB,
       setAccounts,
       setCreditCards,
       setAssets,
@@ -365,6 +370,8 @@ export default function useAppStore() {
       setTransactionsFromDB,
       setGoalsFromDB,
       setCategoriesFromDB,
+      setAccountsFromDB,
+      setCreditCardsFromDB,
       setAccounts,
       setCreditCards,
       setAssets,

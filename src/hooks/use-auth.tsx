@@ -119,6 +119,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
+
+    // Clear the finforce specific keys to prevent phantom data across accounts
+    const keys = Object.keys(localStorage)
+    keys.forEach((key) => {
+      if (key.startsWith('finforce_')) {
+        localStorage.removeItem(key)
+      }
+    })
+
+    window.location.href = '/login'
     return { error }
   }
 

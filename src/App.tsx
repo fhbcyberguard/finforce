@@ -21,6 +21,8 @@ import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
 import Landing from './pages/Landing'
+import VisaoMacro from './pages/VisaoMacro'
+import Aposentadoria from './pages/Aposentadoria'
 import { ThemeProvider } from './components/ThemeProvider'
 import { SyncData } from './components/SyncData'
 import { ActivePlanGuard } from './components/ActivePlanGuard'
@@ -61,7 +63,9 @@ const App = () => (
                 <Route path="/dashboard" element={<Index />} />
                 <Route element={<ActivePlanGuard />}>
                   <Route path="/transacoes" element={<FluxoCaixa />} />
+                  <Route path="/visao-macro" element={<VisaoMacro />} />
                   <Route path="/orcamento" element={<Orcamento />} />
+                  <Route path="/aposentadoria" element={<Aposentadoria />} />
                   <Route path="/metas" element={<Metas />} />
                   <Route path="/patrimonio" element={<Patrimonio />} />
                   <Route path="/contas" element={<Contas />} />

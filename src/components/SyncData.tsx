@@ -5,8 +5,14 @@ import useAppStore, { Category } from '@/stores/useAppStore'
 
 export function SyncData() {
   const { user } = useAuth()
-  const { setProfilesFromDB, setTransactionsFromDB, setGoalsFromDB, setCategoriesFromDB } =
-    useAppStore()
+  const {
+    setProfilesFromDB,
+    setTransactionsFromDB,
+    setGoalsFromDB,
+    setCategoriesFromDB,
+    setAccountsFromDB,
+    setCreditCardsFromDB,
+  } = useAppStore()
 
   useEffect(() => {
     if (!user) return
@@ -93,6 +99,44 @@ export function SyncData() {
         }))
         setCategoriesFromDB(mappedCats)
       }
+
+      // 5. Fetch accounts
+      const { data: dbAccounts } = await supabase
+        .from('accounts')
+        .select('*')
+        .order('created_at', { ascending: true })
+      if (dbAccounts) {
+        const mappedAccounts = dbAccounts.map((a: any) => ({
+          id: a.id,
+          name: a.name,
+          balance: Number(a.balance),
+          type: a.type || 'Conta Corrente',
+          agency: a.agency || '',
+          account_number: a.account_number || '',
+          color: a.color || '',
+          connected: a.connected || false,
+        }))
+        setAccountsFromDB(mappedAccounts)
+      }
+
+      // 6. Fetch cards
+      const { data: dbCards } = await supabase
+        .from('cards')
+        .select('*')
+        .order('created_at', { ascending: true })
+      if (dbCards) {
+        const mappedCards = dbCards.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          bank: c.name,
+          totalLimit: Number(c.limit),
+          availableLimit: Number(c.limit),
+          dueDate: c.due_day || 1,
+          closingDate: c.closing_day || 1,
+          accountId: c.account_id || 'none',
+        }))
+        setCreditCardsFromDB(mappedCards)
+      }
     }
 
     fetchData()
@@ -113,12 +157,32 @@ export function SyncData() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, fetchData)
       .subscribe()
 
+    const accSub = supabase
+      .channel('public:accounts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'accounts' }, fetchData)
+      .subscribe()
+
+    const cardsSub = supabase
+      .channel('public:cards')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, fetchData)
+      .subscribe()
+
     return () => {
       supabase.removeChannel(txSub)
       supabase.removeChannel(goalsSub)
       supabase.removeChannel(catSub)
+      supabase.removeChannel(accSub)
+      supabase.removeChannel(cardsSub)
     }
-  }, [user, setProfilesFromDB, setTransactionsFromDB, setGoalsFromDB, setCategoriesFromDB])
+  }, [
+    user,
+    setProfilesFromDB,
+    setTransactionsFromDB,
+    setGoalsFromDB,
+    setCategoriesFromDB,
+    setAccountsFromDB,
+    setCreditCardsFromDB,
+  ])
 
   return null
 }

@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  BarChart2,
+  TrendingUp,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -33,11 +35,13 @@ import useAppStore from '@/stores/useAppStore'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+  { icon: BarChart2, label: 'Visão Macro', href: '/visao-macro' },
   { icon: Wallet, label: 'Contas', href: '/contas' },
   { icon: ArrowLeftRight, label: 'Fluxo de Caixa', href: '/transacoes' },
   { icon: PieChart, label: 'Orçamento', href: '/orcamento' },
-  { icon: Landmark, label: 'Patrimônio', href: '/patrimonio' },
   { icon: Target, label: 'Metas', href: '/metas' },
+  { icon: TrendingUp, label: 'Plano de Aposentadoria', href: '/aposentadoria' },
+  { icon: Landmark, label: 'Patrimônio', href: '/patrimonio' },
   { icon: Users, label: 'Perfis', href: '/perfis' },
   { icon: Settings, label: 'Configurações', href: '/configuracoes' },
 ]
