@@ -21,6 +21,8 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
     toast({ title: 'Perfil restaurado', description: 'O perfil voltou a ficar ativo no sistema.' })
   }
 
+  const contextLabel = profile.context === 'business' ? '(perfil empresarial)' : '(perfil pessoal)'
+
   return (
     <Card
       className={`flex flex-col border-border/50 hover:border-primary/30 transition-colors ${profile.isArchived ? 'grayscale-[0.5]' : ''}`}
@@ -30,8 +32,11 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
           <AvatarImage src={profile.avatar} />
           <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
         </Avatar>
-        <h3 className="font-semibold text-lg">{profile.name}</h3>
-        <Badge variant="secondary" className="mt-1 mb-4">
+        <h3 className="font-semibold text-lg flex flex-col items-center gap-0.5">
+          {profile.name}
+          <span className="text-xs font-normal text-muted-foreground">{contextLabel}</span>
+        </h3>
+        <Badge variant="secondary" className="mt-2 mb-4">
           {profile.role}
         </Badge>
         <div className="w-full bg-muted/50 rounded-lg p-3 mt-auto">

@@ -8,10 +8,16 @@ import { ProfileDeleteFlow } from '@/components/profiles/ProfileDeleteFlow'
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible'
 
 export default function Perfis() {
-  const { profiles, searchQuery } = useAppStore()
+  const { profiles, searchQuery, currentContext } = useAppStore()
   const [editingProfile, setEditingProfile] = useState<Partial<Profile> | null>(null)
   const [deletingProfile, setDeletingProfile] = useState<Profile | null>(null)
   const [archivedOpen, setArchivedOpen] = useState(false)
+
+  const isBusiness = currentContext === 'business'
+  const title = isBusiness ? 'Perfis de Colaborador' : 'Perfis da Família'
+  const description = isBusiness
+    ? 'Gerencie o acesso e orçamentos de cada colaborador.'
+    : 'Gerencie o acesso e orçamentos de cada membro.'
 
   const filteredProfiles = useMemo(() => {
     if (!searchQuery) return profiles
@@ -26,10 +32,10 @@ export default function Perfis() {
 
   return (
     <div className="space-y-6 animate-slide-in-up pb-12">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Perfis da Família</h1>
-          <p className="text-muted-foreground">Gerencie o acesso e orçamentos de cada membro.</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
+          <p className="text-muted-foreground">{description}</p>
         </div>
         <Button className="gap-2" onClick={() => setEditingProfile({})}>
           <Plus className="w-4 h-4" /> Novo Perfil

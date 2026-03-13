@@ -10,7 +10,12 @@ import {
 } from '@/lib/mockData'
 
 export type ContextType = 'personal' | 'business'
-export type Profile = (typeof MOCK_PROFILES)[0] & { isArchived?: boolean; context?: ContextType }
+export type Profile = Omit<(typeof MOCK_PROFILES)[0], 'context'> & {
+  isArchived?: boolean
+  context?: ContextType
+  currentAge?: number
+  retirementPlanDuration?: number
+}
 export type Account = (typeof MOCK_ACCOUNTS)[0] & { context?: ContextType }
 export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & {
   isArchived?: boolean
@@ -66,7 +71,7 @@ const defaultSimulator: SimulatorSettings = {
 }
 
 const getInitialState = (): AppState => ({
-  profiles: loadData('finflow_profiles', MOCK_PROFILES),
+  profiles: loadData('finflow_profiles', MOCK_PROFILES as Profile[]),
   accounts: loadData('finflow_accounts', MOCK_ACCOUNTS),
   creditCards: loadData('finflow_credit_cards', MOCK_CREDIT_CARDS),
   assets: loadData('finflow_assets', MOCK_ASSETS),
@@ -119,11 +124,9 @@ export default function useAppStore() {
 
   const ctx = store.currentContext || 'personal'
 
-  // Helper to get only items for the current context
   const filterCtx = <T extends { context?: string }>(arr: T[]) =>
     arr.filter((a) => (a.context || 'personal') === ctx)
 
-  // Helper to merge updated contextual items with items from other contexts
   const mergeCtx = <T extends { context?: string }>(all: T[], updated: T[]) => {
     const others = all.filter((a) => (a.context || 'personal') !== ctx)
     const ctxUpdated = updated.map((a) => ({ ...a, context: a.context || ctx }))
@@ -132,7 +135,6 @@ export default function useAppStore() {
 
   return {
     ...store,
-    // Return filtered state
     profiles: filterCtx(store.profiles),
     accounts: filterCtx(store.accounts),
     creditCards: filterCtx(store.creditCards),
@@ -141,7 +143,6 @@ export default function useAppStore() {
     transactions: filterCtx(store.transactions),
     alerts: filterCtx(store.alerts),
 
-    // Override setters to merge data contextually
     setProfiles: (profiles: Profile[]) => {
       const filteredProfiles = filterCtx(state.profiles)
       const deletedProfiles = filteredProfiles.filter((p) => !profiles.some((np) => np.id === p.id))
@@ -206,7 +207,6 @@ export default function useAppStore() {
       updateState({ transactions: mergeCtx(state.transactions, transactions) }),
     setAlerts: (alerts: Alert[]) => updateState({ alerts: mergeCtx(state.alerts, alerts) }),
 
-    // Global setters
     setSimulatorSettings: (simulatorSettings: SimulatorSettings) =>
       updateState({ simulatorSettings }),
     setLogoUrl: (logoUrl: string) => updateState({ logoUrl }),

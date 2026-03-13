@@ -22,6 +22,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ThemeToggle } from './ThemeToggle'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore from '@/stores/useAppStore'
@@ -47,25 +48,21 @@ export function Header() {
   const mainProfile = profiles[0]
 
   const handleLogout = () => {
-    toast({
-      title: 'Sessão encerrada',
-      description: 'Você saiu da sua conta com sucesso.',
-    })
+    toast({ title: 'Sessão encerrada', description: 'Você saiu da sua conta com sucesso.' })
     navigate('/login', { replace: true })
   }
 
   const handleContextSwitch = () => {
-    if (currentContext === 'personal') {
-      if (subscriptionPlan === 'basic') {
-        setShowUpgrade(true)
-      } else {
-        setCurrentContext('business')
-        toast({ title: 'Contexto alterado', description: 'Você está agora na Visão Empresarial.' })
-      }
-    } else {
-      setCurrentContext('personal')
-      toast({ title: 'Contexto alterado', description: 'Você está agora na Visão Pessoal.' })
+    if (currentContext === 'personal' && subscriptionPlan === 'basic') {
+      setShowUpgrade(true)
+      return
     }
+    const newContext = currentContext === 'personal' ? 'business' : 'personal'
+    setCurrentContext(newContext)
+    toast({
+      title: 'Contexto alterado',
+      description: `Você está agora na Visão ${newContext === 'business' ? 'Empresarial' : 'Pessoal'}.`,
+    })
   }
 
   const handleUpgrade = () => {
@@ -74,7 +71,7 @@ export function Header() {
     setCurrentContext('business')
     toast({
       title: 'Plano Atualizado!',
-      description: 'Bem-vindo ao Plano Master. O contexto empresarial foi ativado com sucesso.',
+      description: 'O contexto empresarial foi ativado com sucesso.',
     })
   }
 
@@ -121,16 +118,53 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative text-muted-foreground hover:text-foreground"
-          >
-            <Bell className="h-5 w-5" />
-            {urgentAlerts > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-2 w-2 rounded-full bg-destructive animate-pulse-alert" />
-            )}
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-muted-foreground hover:text-foreground"
+              >
+                <Bell className="h-5 w-5" />
+                {urgentAlerts > 0 && (
+                  <span className="absolute right-1.5 top-1.5 flex h-2 w-2 rounded-full bg-destructive animate-pulse-alert" />
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-0">
+              <div className="p-3 border-b font-semibold text-sm">Central de Notificações</div>
+              <div className="max-h-80 overflow-y-auto">
+                {alerts.length === 0 ? (
+                  <div className="p-6 text-center text-sm text-muted-foreground">
+                    Nenhum alerta pendente.
+                  </div>
+                ) : (
+                  alerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      className="p-3 border-b last:border-0 hover:bg-muted/50 text-sm transition-colors cursor-default"
+                    >
+                      <div className="flex justify-between items-start mb-1 gap-2">
+                        <span className="font-medium truncate">{alert.title}</span>
+                        {alert.type === 'urgent' && (
+                          <Badge variant="destructive" className="text-[10px] h-4 px-1.5 shrink-0">
+                            Urgente
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground flex justify-between items-center mt-1.5">
+                        <span>Venc: {new Date(alert.dueDate).toLocaleDateString('pt-BR')}</span>
+                        <span className="font-medium text-foreground">
+                          R$ {alert.amount.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
           <ThemeToggle />
 
           <DropdownMenu>
@@ -155,9 +189,7 @@ export function Header() {
                   <p className="text-xs leading-none text-muted-foreground">conta@familia.com</p>
                 </div>
               </DropdownMenuLabel>
-
               <DropdownMenuSeparator />
-
               <DropdownMenuItem
                 onClick={handleContextSwitch}
                 className="cursor-pointer font-medium text-primary focus:text-primary"
@@ -167,9 +199,7 @@ export function Header() {
                   {currentContext === 'personal' ? 'Mudar p/ Empresarial' : 'Mudar p/ Pessoal'}
                 </span>
               </DropdownMenuItem>
-
               <DropdownMenuSeparator />
-
               <DropdownMenuItem
                 onClick={() => navigate('/configuracoes')}
                 className="cursor-pointer"
@@ -181,9 +211,7 @@ export function Header() {
                 <Users className="mr-2 h-4 w-4" />
                 <span>Perfis de Acesso</span>
               </DropdownMenuItem>
-
               <DropdownMenuSeparator />
-
               <DropdownMenuItem
                 onClick={handleLogout}
                 className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
@@ -205,16 +233,14 @@ export function Header() {
             </DialogTitle>
             <DialogDescription className="text-base pt-2">
               O gerenciamento de <strong>Fluxo de Caixa Empresarial</strong> e a separação de
-              contextos estão disponíveis apenas para assinantes do <strong>Plano Médio</strong> ou{' '}
-              <strong>Plano Master</strong>.
+              contextos estão disponíveis apenas para assinantes Premium.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-6 flex flex-col items-center justify-center text-center bg-muted/30 rounded-lg my-2 border border-border/50">
+          <div className="py-6 flex flex-col items-center text-center bg-muted/30 rounded-lg my-2 border border-border/50">
             <Briefcase className="w-12 h-12 text-primary mb-3" />
             <h4 className="font-semibold">Profissionalize suas finanças</h4>
             <p className="text-sm text-muted-foreground mt-1 max-w-[280px]">
-              Separe completamente os gastos da sua empresa dos seus gastos pessoais em um único
-              app.
+              Separe completamente os gastos da sua empresa dos gastos pessoais.
             </p>
           </div>
           <DialogFooter className="sm:justify-between flex-row gap-2 mt-2">
@@ -223,7 +249,7 @@ export function Header() {
             </Button>
             <Button
               onClick={handleUpgrade}
-              className="flex-1 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-white border-0"
+              className="flex-1 bg-gradient-to-r from-primary to-emerald-500 text-white border-0"
             >
               Fazer Upgrade
             </Button>

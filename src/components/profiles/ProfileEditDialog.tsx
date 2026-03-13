@@ -27,9 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { Typewriter } from '@/components/Typewriter'
 import useAppStore, { Profile } from '@/stores/useAppStore'
 import { useToast } from '@/hooks/use-toast'
+import { Target } from 'lucide-react'
 
 const schema = z.object({
   name: z
@@ -39,6 +39,8 @@ const schema = z.object({
   role: z.string().min(1, 'O papel é obrigatório'),
   limit: z.coerce.number().min(0, 'O limite não pode ser negativo'),
   avatar: z.string().url('Deve ser uma URL válida').optional().or(z.literal('')),
+  currentAge: z.coerce.number().min(0, 'Idade inválida').optional(),
+  retirementPlanDuration: z.coerce.number().min(0, 'Duração inválida').optional(),
 })
 
 interface ProfileEditDialogProps {
@@ -48,7 +50,7 @@ interface ProfileEditDialogProps {
 }
 
 export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDialogProps) {
-  const { profiles, setProfiles } = useAppStore()
+  const { profiles, setProfiles, currentContext } = useAppStore()
   const { toast } = useToast()
 
   const form = useForm({
@@ -58,6 +60,8 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
       role: profile.role || '',
       limit: profile.limit || 0,
       avatar: profile.avatar || '',
+      currentAge: profile.currentAge || 0,
+      retirementPlanDuration: profile.retirementPlanDuration || 0,
     },
   })
 
@@ -68,6 +72,8 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
         role: profile.role || '',
         limit: profile.limit || 0,
         avatar: profile.avatar || '',
+        currentAge: profile.currentAge || 0,
+        retirementPlanDuration: profile.retirementPlanDuration || 0,
       })
     }
   }, [profile, open, form])
@@ -78,15 +84,14 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
     if (isNew) {
       const newProfile = {
         id: Math.random().toString(36).substring(2, 9),
+        context: currentContext,
         avatar:
           data.avatar ||
-          `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${Math.floor(
-            Math.random() * 100,
-          )}`,
+          `https://img.usecurling.com/ppl/thumbnail?gender=male&seed=${Math.floor(Math.random() * 100)}`,
         ...data,
       }
       setProfiles([...profiles, newProfile])
-      toast({ title: 'Perfil criado', description: 'Novo membro adicionado com sucesso.' })
+      toast({ title: 'Perfil criado', description: 'Membro adicionado com sucesso.' })
     } else {
       setProfiles(
         profiles.map((p) =>
@@ -98,15 +103,18 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
     onOpenChange(false)
   }
 
-  const currentRole = form.watch('role')
-  const showReflection = profile.role === 'Admin' && currentRole && currentRole !== 'Admin'
+  const age = form.watch('currentAge') || 0
+  const duration = form.watch('retirementPlanDuration') || 0
+  const projectedAge = age + duration
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{isNew ? 'Novo Perfil' : 'Editar Perfil'}</DialogTitle>
-          <DialogDescription>Atualize as informações do membro da família.</DialogDescription>
+          <DialogDescription>
+            Atualize as informações de acesso e metas do perfil.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -115,7 +123,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nome Customizado</FormLabel>
+                  <FormLabel>Nome</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -123,19 +131,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="avatar"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>URL da Foto (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -165,7 +161,7 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                 name="limit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Limite (R$)</FormLabel>
+                    <FormLabel>Limite Mês (R$)</FormLabel>
                     <FormControl>
                       <Input type="number" min="0" step="10" {...field} />
                     </FormControl>
@@ -174,14 +170,42 @@ export function ProfileEditDialog({ profile, open, onOpenChange }: ProfileEditDi
                 )}
               />
             </div>
-            {showReflection && (
-              <div className="pt-2 pb-2 mt-2 text-sm text-amber-500 italic border-l-2 border-amber-500 pl-4 bg-amber-500/10 rounded-r-md">
-                <Typewriter
-                  text="Atenção: Remover o acesso de Controle Total revogará privilégios críticos. Essa decisão foi conversada?"
-                  speed={25}
-                />
+
+            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
+              <FormField
+                control={form.control}
+                name="currentAge"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Idade Atual</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="retirementPlanDuration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duração do Plano (anos)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {projectedAge > 0 && (
+              <div className="mt-2 p-3 bg-primary/10 text-primary border border-primary/20 rounded-lg text-sm font-medium flex items-center justify-center gap-2">
+                <Target className="w-4 h-4" /> Idade ao alcançar: {projectedAge} anos
               </div>
             )}
+
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar

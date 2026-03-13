@@ -14,16 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  Users,
-  ShoppingCart,
-  RefreshCw,
-  BarChart,
-  Settings,
-  LifeBuoy,
-  Mail,
-  Send,
-} from 'lucide-react'
+import { Users, ShoppingCart, RefreshCw, BarChart, LifeBuoy, Mail, Send } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { MOCK_TICKETS } from '@/lib/mockData'
 
@@ -31,31 +22,23 @@ export default function ProducerAdmin() {
   const { toast } = useToast()
   const [smtpTLS, setSmtpTLS] = useState(true)
 
-  const handleSync = () =>
-    toast({
-      title: 'Sincronizando com Hotmart...',
-      description: 'Atualizando status de assinaturas.',
-    })
+  // Implementation of zero-state logic for active subscriptions
+  const [activeSubscriptions] = useState<any[]>([])
+  const activeSubscriptionsCount = activeSubscriptions.length
 
+  const handleSync = () =>
+    toast({ title: 'Sincronizando com Hotmart...', description: 'Atualizando status.' })
   const handleSaveSMTP = (e: React.FormEvent) => {
     e.preventDefault()
-    toast({
-      title: 'Configuração SMTP Salva',
-      description: 'Notificações D-2 usarão este provedor agora.',
-    })
+    toast({ title: 'Configuração Salva', description: 'Notificações usarão este provedor.' })
   }
-
-  const handleTestConnection = () => {
-    toast({
-      title: 'Testando Conexão SMTP',
-      description: 'E-mail de teste enviado com sucesso para o administrador.',
-    })
-  }
+  const handleTestConnection = () =>
+    toast({ title: 'Testando Conexão', description: 'E-mail de teste enviado.' })
 
   return (
     <div className="space-y-6 animate-slide-in-up">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-amber-500 flex items-center gap-2">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-amber-500">
           Painel do Produtor
         </h1>
         <p className="text-muted-foreground">Gestão SaaS: Assinantes, Planos, SMTP e Suporte.</p>
@@ -70,7 +53,7 @@ export default function ProducerAdmin() {
             <ShoppingCart className="w-4 h-4" /> Planos & Cupons
           </TabsTrigger>
           <TabsTrigger value="smtp" className="flex gap-2">
-            <Mail className="w-4 h-4" /> SMTP & Notificações
+            <Mail className="w-4 h-4" /> SMTP & Alertas
           </TabsTrigger>
           <TabsTrigger value="support" className="flex gap-2">
             <LifeBuoy className="w-4 h-4" /> Suporte
@@ -86,8 +69,8 @@ export default function ProducerAdmin() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">1,248</div>
-                <p className="text-xs text-emerald-500 mt-1">+12% este mês</p>
+                <div className="text-3xl font-bold text-foreground">{activeSubscriptionsCount}</div>
+                <p className="text-xs text-muted-foreground mt-1">Nenhum dado ativo sincronizado</p>
               </CardContent>
             </Card>
             <Card className="border-border/50">
@@ -97,8 +80,8 @@ export default function ProducerAdmin() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">R$ 74.5k</div>
-                <p className="text-xs text-emerald-500 mt-1">+8% este mês</p>
+                <div className="text-3xl font-bold">R$ 0.00</div>
+                <p className="text-xs text-muted-foreground mt-1">Aguardando dados</p>
               </CardContent>
             </Card>
             <Card className="border-border/50 bg-primary/5">
@@ -130,18 +113,12 @@ export default function ProducerAdmin() {
         <TabsContent value="plans" className="space-y-6">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Planos e Permissões (Feature Gating)</CardTitle>
-              <CardDescription>
-                Gere cupons e restrinja acesso ao Simulador e Perfis Familiares.
-              </CardDescription>
+              <CardTitle>Planos e Permissões</CardTitle>
+              <CardDescription>Gere cupons e restrinja acesso a funcionalidades.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  'Básico (R$ 29) - Somente Fluxo',
-                  'Pro (R$ 59) - Inclui Simulador',
-                  'Família (R$ 99) - Multiperfil',
-                ].map((plan, i) => (
+                {['Básico (R$ 29)', 'Pro (R$ 59)', 'Família (R$ 99)'].map((plan, i) => (
                   <div
                     key={plan}
                     className="flex items-center justify-between p-4 rounded-lg border bg-muted/20"
@@ -151,7 +128,7 @@ export default function ProducerAdmin() {
                       <p className="text-xs text-muted-foreground mt-1">Nível: N{i + 1}</p>
                     </div>
                     <div className="flex items-center gap-4">
-                      <p className="font-mono font-medium">{Math.floor(800 / (i + 1))} usuários</p>
+                      <p className="font-mono font-medium">0 usuários</p>
                       <Button variant="outline" size="sm">
                         Gerar Cupom
                       </Button>
@@ -166,10 +143,9 @@ export default function ProducerAdmin() {
         <TabsContent value="smtp" className="space-y-6">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Configuração SMTP Global</CardTitle>
+              <CardTitle>Configuração SMTP</CardTitle>
               <CardDescription>
-                Configure o servidor para envio de Alertas D-2 e recup. de senha. Fallback interno
-                ativado.
+                Servidor para envio de Alertas D-2 e recup. de senha.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -177,16 +153,16 @@ export default function ProducerAdmin() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Servidor (Host)</Label>
-                    <Input placeholder="smtp.sendgrid.net" required />
+                    <Input required />
                   </div>
                   <div className="space-y-2">
                     <Label>Porta</Label>
-                    <Input placeholder="587" type="number" required />
+                    <Input type="number" required />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Usuário (API Key / Email)</Label>
+                    <Label>Usuário</Label>
                     <Input required />
                   </div>
                   <div className="space-y-2">
@@ -194,28 +170,13 @@ export default function ProducerAdmin() {
                     <Input type="password" required />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Nome do Remetente</Label>
-                    <Input defaultValue="FinFlow App" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>E-mail Remetente</Label>
-                    <Input defaultValue="no-reply@finflow.app" type="email" required />
-                  </div>
-                </div>
                 <div className="flex items-center justify-between p-3 border rounded-md">
-                  <span className="text-sm font-medium">Usar Autenticação TLS/SSL</span>
+                  <span className="text-sm font-medium">Usar Autenticação TLS</span>
                   <Switch checked={smtpTLS} onCheckedChange={setSmtpTLS} />
                 </div>
                 <div className="flex gap-4 pt-4 border-t border-border/50">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={handleTestConnection}
-                  >
-                    <Send className="w-4 h-4" /> Testar Conexão
+                  <Button type="button" variant="outline" onClick={handleTestConnection}>
+                    <Send className="w-4 h-4 mr-2" /> Testar Conexão
                   </Button>
                   <Button type="submit">Salvar Configurações</Button>
                 </div>

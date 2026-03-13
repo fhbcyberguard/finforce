@@ -155,6 +155,8 @@ export const MOCK_PROFILES = [
     limit: 5000,
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=4',
     context: 'personal',
+    currentAge: 35,
+    retirementPlanDuration: 25,
   },
   {
     id: '2',
@@ -163,6 +165,8 @@ export const MOCK_PROFILES = [
     limit: 5000,
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=female&seed=2',
     context: 'personal',
+    currentAge: 33,
+    retirementPlanDuration: 27,
   },
   {
     id: '3',
@@ -171,6 +175,16 @@ export const MOCK_PROFILES = [
     limit: 800,
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=7',
     context: 'personal',
+  },
+  {
+    id: '4',
+    name: 'João Silva',
+    role: 'Edição',
+    limit: 2000,
+    avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=10',
+    context: 'business',
+    currentAge: 30,
+    retirementPlanDuration: 35,
   },
 ]
 
