@@ -1,4 +1,4 @@
-import { Home, Users, Settings, PieChart, CreditCard, Wallet, Building2 } from 'lucide-react'
+import { Home, Users, Settings, PieChart, CreditCard, Wallet, Building2, User } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -18,6 +18,7 @@ import {
 import { Logo } from '@/components/Logo'
 import { useAuth } from '@/hooks/use-auth'
 import { BusinessUpgradeModal } from './BusinessUpgradeModal'
+import useAppStore from '@/stores/useAppStore'
 
 const mainNavItems = [
   { title: 'Dashboard', icon: Home, url: '/dashboard' },
@@ -32,7 +33,17 @@ const bottomNavItems = [{ title: 'Configurações', icon: Settings, url: '/confi
 export function AppSidebar() {
   const location = useLocation()
   const { profile, user } = useAuth()
+  const { currentContext, setCurrentContext } = useAppStore()
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false)
+
+  const handleBusinessClick = (e: React.MouseEvent) => {
+    if (profile?.plan === 'basic' || !profile?.plan) {
+      e.preventDefault()
+      setIsUpgradeOpen(true)
+    } else {
+      setCurrentContext('business')
+    }
+  }
 
   return (
     <Sidebar>
@@ -64,31 +75,31 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[#03f2ff]/70">Opções Premium</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[#03f2ff]/70">Contexto de Gestão</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  asChild
-                  tooltip="Perfil Empresarial"
-                  onClick={(e) => {
-                    if (profile?.plan === 'basic' || !profile?.plan) {
-                      e.preventDefault()
-                      setIsUpgradeOpen(true)
-                    }
-                  }}
+                  isActive={currentContext === 'personal'}
+                  onClick={() => setCurrentContext('personal')}
+                  tooltip="Perfil Pessoal"
                 >
-                  <Link
-                    to={
-                      profile?.plan === 'basic' || !profile?.plan
-                        ? '#'
-                        : '/dashboard?context=business'
-                    }
-                  >
-                    <Building2 className="h-4 w-4 text-[#03f2ff]" />
-                    <span className="text-[#03f2ff] font-medium">Perfil Empresarial</span>
-                  </Link>
+                  <User className="h-4 w-4" />
+                  <span>Perfil Pessoal</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={currentContext === 'business'}
+                  onClick={handleBusinessClick}
+                  tooltip="Perfil Empresarial"
+                >
+                  <Building2
+                    className={`h-4 w-4 ${currentContext === 'business' ? '' : 'text-amber-500'}`}
+                  />
+                  <span>Perfil Empresarial</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

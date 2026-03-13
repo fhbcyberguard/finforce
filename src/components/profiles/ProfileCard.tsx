@@ -44,12 +44,6 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
         <Badge variant="secondary" className="mt-3 mb-4">
           {profile.role}
         </Badge>
-        <div className="w-full bg-muted/50 rounded-lg p-3 mt-auto">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-            Limite Orçamentário
-          </p>
-          <p className="font-mono font-medium">R$ {profile.limit.toLocaleString('pt-BR')}/mês</p>
-        </div>
       </CardContent>
       <CardFooter className="border-t bg-muted/20 p-3 flex items-center justify-between">
         <Button

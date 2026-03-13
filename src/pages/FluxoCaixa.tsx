@@ -45,11 +45,24 @@ import {
   Edit2,
   Trash2,
   CreditCard,
+  Target,
 } from 'lucide-react'
-import { MOCK_CATEGORIES } from '@/lib/mockData'
 import { useToast } from '@/hooks/use-toast'
 import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
+
+const REVENUE_CATEGORIES = {
+  Renda: ['Principal', 'Extra', 'Dividendos', 'Rendimentos', 'Serviços'],
+}
+
+const EXPENSE_CATEGORIES = {
+  Alimentação: ['Supermercado', 'Delivery', 'Restaurante'],
+  Moradia: ['Aluguel', 'Luz', 'Água', 'Internet'],
+  Transporte: ['Combustível', 'Aplicativo', 'Manutenção'],
+  Saúde: ['Farmácia', 'Plano de Saúde', 'Consultas'],
+  Lazer: ['Eventos', 'Assinaturas', 'Viagens'],
+  Outros: ['Cartão de Crédito', 'Importado', 'Diversos'],
+}
 
 export default function FluxoCaixa() {
   const { user } = useAuth()
@@ -59,12 +72,15 @@ export default function FluxoCaixa() {
     profiles,
     accounts,
     creditCards,
+    goals,
+    setGoals,
     searchQuery,
     timeframe,
     setTimeframe,
     selectedYear,
     setSelectedYear,
   } = useAppStore()
+
   const [openAdd, setOpenAdd] = useState(false)
   const [openImport, setOpenImport] = useState(false)
   const [importType, setImportType] = useState<'csv' | 'ofx' | null>(null)
@@ -75,6 +91,7 @@ export default function FluxoCaixa() {
 
   const [selectedAccount, setSelectedAccount] = useState<string>('')
   const [selectedCard, setSelectedCard] = useState<string>('none')
+  const [selectedGoalId, setSelectedGoalId] = useState<string>('')
 
   // TCC Trigger State
   const [pendingLargeExpense, setPendingLargeExpense] = useState<Transaction | null>(null)
@@ -88,6 +105,7 @@ export default function FluxoCaixa() {
     setFormType('Expense')
     setSelectedAccount(accounts[0]?.id || '')
     setSelectedCard('none')
+    setSelectedGoalId('')
   }
 
   useEffect(() => {
@@ -100,13 +118,18 @@ export default function FluxoCaixa() {
         )
         setSelectedAccount(foundAcc ? foundAcc.id : accounts[0]?.id || '')
         setSelectedCard(editingTx.cardId || 'none')
+        if (editingTx.type === 'Aporte') {
+          const match = goals.find((g) => editingTx.category.includes(g.name))
+          if (match) setSelectedGoalId(match.id)
+        }
       } else {
         setFormType('Expense')
         setSelectedAccount(accounts[0]?.id || '')
         setSelectedCard('none')
+        setSelectedGoalId('')
       }
     }
-  }, [openAdd, editingTx, accounts])
+  }, [openAdd, editingTx, accounts, goals])
 
   const handleCardChange = (cardId: string) => {
     setSelectedCard(cardId)
@@ -163,11 +186,7 @@ export default function FluxoCaixa() {
         setTransactions([finalTx, ...transactions])
         toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
       } else {
-        toast({
-          title: 'Erro',
-          description: 'Falha ao salvar transação.',
-          variant: 'destructive',
-        })
+        toast({ title: 'Erro', description: 'Falha ao salvar transação.', variant: 'destructive' })
       }
     }
     setOpenAdd(false)
@@ -180,12 +199,29 @@ export default function FluxoCaixa() {
     const type = fd.get('type') as string
     const date = fd.get('date') as string
     let amount = Number(fd.get('amount'))
-    const category = fd.get('category') as string
 
-    const isGain = type === 'Revenue' || category.includes('Renda')
+    let category = ''
+
+    const isGain = type === 'Revenue' || type === 'Aporte'
 
     if (!isGain && type !== 'Transfer') amount = -Math.abs(amount)
     else amount = Math.abs(amount)
+
+    if (type === 'Aporte') {
+      const goal = goals.find((g) => g.id === selectedGoalId)
+      category = `Metas > ${goal?.name || 'Geral'}`
+
+      // Update Goal logic (optimistic update for local store)
+      if (goal && !editingTx) {
+        setGoals(
+          goals.map((g) =>
+            g.id === selectedGoalId ? { ...g, currentValue: g.currentValue + amount } : g,
+          ),
+        )
+      }
+    } else {
+      category = fd.get('category') as string
+    }
 
     const rawExpenseType = fd.get('expenseType') as 'fixed' | 'variable' | null
     const expenseType = !isGain && type !== 'Transfer' ? rawExpenseType || 'variable' : undefined
@@ -235,6 +271,7 @@ export default function FluxoCaixa() {
   }
 
   const getIcon = (type: string, isGain: boolean) => {
+    if (type === 'Aporte') return <Target className="w-4 h-4 text-[#03f2ff]" />
     if (isGain) return <ArrowUpRight className="w-4 h-4 text-emerald-500" />
     switch (type) {
       case 'Expense':
@@ -277,7 +314,7 @@ export default function FluxoCaixa() {
     )
   }, [transactions, searchQuery, timeframe, selectedYear])
 
-  const isGainType = formType === 'Revenue'
+  const isGainType = formType === 'Revenue' || formType === 'Aporte'
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -343,22 +380,6 @@ export default function FluxoCaixa() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
-                  <Download className="w-4 h-4" /> Exportar
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => toast({ title: 'Exportando PDF...' })}>
-                  Relatório em PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => toast({ title: 'Exportando CSV...' })}>
-                  Dados em CSV
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
             <Button
               className="gap-2 w-full sm:w-auto bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
               onClick={() => {
@@ -409,6 +430,7 @@ export default function FluxoCaixa() {
                       <SelectContent>
                         <SelectItem value="Expense">Despesa</SelectItem>
                         <SelectItem value="Revenue">Receita</SelectItem>
+                        <SelectItem value="Aporte">Aporte (Metas)</SelectItem>
                         <SelectItem value="Pix">Pix</SelectItem>
                         <SelectItem value="Transfer">Transferência</SelectItem>
                       </SelectContent>
@@ -431,7 +453,9 @@ export default function FluxoCaixa() {
                   <Label>Descrição</Label>
                   <Input
                     name="description"
-                    placeholder="Ex: Conta de Luz"
+                    placeholder={
+                      formType === 'Aporte' ? 'Ex: Aporte Mensal Viagem' : 'Ex: Conta de Luz'
+                    }
                     required
                     defaultValue={editingTx?.description || ''}
                   />
@@ -440,35 +464,56 @@ export default function FluxoCaixa() {
                 <div
                   className={`grid ${isGainType || formType === 'Transfer' ? 'grid-cols-1' : 'grid-cols-2'} gap-4`}
                 >
-                  <div className="space-y-2">
-                    <Label>Categoria</Label>
-                    <Select
-                      name="category"
-                      required
-                      defaultValue={
-                        editingTx?.category || (isGainType ? 'Renda > Principal' : 'Moradia > Luz')
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[200px]">
-                        {Object.entries(MOCK_CATEGORIES).map(([parent, subs]) => (
-                          <SelectGroup key={parent}>
-                            <SelectLabel className="text-[#03f2ff]">{parent}</SelectLabel>
-                            {subs.map((sub) => (
-                              <SelectItem key={sub} value={`${parent} > ${sub}`}>
-                                {parent} &gt; {sub}
+                  {formType === 'Aporte' ? (
+                    <div className="space-y-2">
+                      <Label>Destino do Aporte (Meta)</Label>
+                      <Select value={selectedGoalId} onValueChange={setSelectedGoalId} required>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a meta" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {goals.length === 0 ? (
+                            <SelectItem value="none" disabled>
+                              Nenhuma meta cadastrada
+                            </SelectItem>
+                          ) : (
+                            goals.map((g) => (
+                              <SelectItem key={g.id} value={g.id}>
+                                {g.name}
                               </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label>Categoria</Label>
+                      <Select name="category" required defaultValue={editingTx?.category || ''}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                          {Object.entries(
+                            formType === 'Revenue' ? REVENUE_CATEGORIES : EXPENSE_CATEGORIES,
+                          ).map(([parent, subs]) => (
+                            <SelectGroup key={parent}>
+                              <SelectLabel className="text-[#03f2ff]">{parent}</SelectLabel>
+                              {subs.map((sub) => (
+                                <SelectItem key={sub} value={`${parent} > ${sub}`}>
+                                  {parent} &gt; {sub}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
                   {!isGainType && formType !== 'Transfer' && (
                     <div className="space-y-2">
-                      <Label>Classificação</Label>
+                      <Label>Classificação de Custo</Label>
                       <Select
                         name="expenseType"
                         defaultValue={editingTx?.expenseType || 'variable'}
@@ -478,7 +523,7 @@ export default function FluxoCaixa() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="variable">Gasto Variável</SelectItem>
-                          <SelectItem value="fixed">Gasto Fixo</SelectItem>
+                          <SelectItem value="fixed">Gasto Fixo (Recorrente)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -487,7 +532,7 @@ export default function FluxoCaixa() {
 
                 <div className="grid grid-cols-2 gap-4 pt-2 items-end">
                   <div className="space-y-2 col-span-1">
-                    <Label>Perfil</Label>
+                    <Label>Perfil Responsável</Label>
                     <Select
                       name="profile"
                       required
@@ -620,10 +665,13 @@ export default function FluxoCaixa() {
               const acc = accounts.find((a) => a.id === tx.account)
               const accName = acc ? acc.bank : tx.account
               const card = creditCards.find((c) => c.id === tx.cardId)
-              const isGain = tx.type === 'Revenue' || tx.category.includes('Renda')
+              const isGain =
+                tx.type === 'Revenue' || tx.type === 'Aporte' || tx.category.includes('Renda')
 
               const amountClass = isGain
-                ? 'text-emerald-500'
+                ? tx.type === 'Aporte'
+                  ? 'text-[#03f2ff]'
+                  : 'text-emerald-500'
                 : tx.type === 'Transfer'
                   ? 'text-[#03f2ff]'
                   : 'text-rose-500'
@@ -636,7 +684,7 @@ export default function FluxoCaixa() {
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`p-2 rounded-full ${isGain ? 'bg-emerald-500/10' : tx.type === 'Transfer' ? 'bg-[#03f2ff]/10' : 'bg-rose-500/10'}`}
+                      className={`p-2 rounded-full ${isGain ? (tx.type === 'Aporte' ? 'bg-[#03f2ff]/10' : 'bg-emerald-500/10') : tx.type === 'Transfer' ? 'bg-[#03f2ff]/10' : 'bg-rose-500/10'}`}
                     >
                       {getIcon(tx.type, isGain)}
                     </div>
@@ -652,7 +700,14 @@ export default function FluxoCaixa() {
                           {tx.category}
                         </Badge>
 
-                        {isGain ? (
+                        {tx.type === 'Aporte' ? (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-normal border-[#03f2ff]/30 text-[#03f2ff] bg-[#03f2ff]/5"
+                          >
+                            Aporte
+                          </Badge>
+                        ) : isGain ? (
                           <Badge
                             variant="outline"
                             className="text-[10px] font-normal border-emerald-500/30 text-emerald-500 bg-emerald-500/5"
@@ -671,7 +726,7 @@ export default function FluxoCaixa() {
                             variant="outline"
                             className={`text-[10px] font-normal ${tx.expenseType === 'fixed' ? 'border-rose-500/40 text-rose-500 bg-rose-500/5' : 'border-orange-500/40 text-orange-500 bg-orange-500/5'}`}
                           >
-                            {tx.expenseType === 'fixed' ? 'Gasto Fixo' : 'Gasto Variável'}
+                            {tx.expenseType === 'fixed' ? 'Custo Fixo' : 'Custo Variável'}
                           </Badge>
                         ) : null}
 
@@ -757,7 +812,7 @@ export default function FluxoCaixa() {
         }}
         title="Alerta de Gasto Elevado"
         description="Você está registrando uma saída de valor substancial."
-        reflectionText="Este gasto de alto valor foge do seu padrão. Ele realmente reflete suas prioridades e metas financeiras de longo prazo?"
+        reflectionText="Este gasto foge do seu padrão. Ele realmente reflete suas prioridades ou prejudica o Resultado do seu mês?"
         confirmText="Confirmar Gasto"
         destructive={false}
       />

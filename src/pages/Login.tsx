@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { useAuth } from '@/hooks/use-auth'
 import { Logo } from '@/components/Logo'
@@ -19,6 +19,7 @@ import { Logo } from '@/components/Logo'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -77,23 +78,42 @@ export default function Login() {
                   Esqueci minha senha
                 </a>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-10 w-10 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+              </div>
             </div>
-            <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full mt-4 bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
+              disabled={isLoading}
+            >
               {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Entrar na Conta
             </Button>
           </form>
           <p className="text-sm text-center text-muted-foreground mt-6">
             Não tem uma conta?{' '}
-            <Link to="/registro" className="text-primary hover:underline font-medium">
+            <Link
+              to="/registro"
+              className="text-primary hover:underline font-medium text-[#03f2ff]"
+            >
               Cadastre-se
             </Link>
           </p>

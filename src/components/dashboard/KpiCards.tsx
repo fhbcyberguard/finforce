@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Wallet, TrendingUp, DollarSign, Clock, Coins, Activity } from 'lucide-react'
+import { Wallet, TrendingUp, DollarSign, Clock, Activity, Target } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 
 export default function KpiCards() {
@@ -17,11 +17,6 @@ export default function KpiCards() {
 
   // Derived calculations for KPIs
   const patrimony = assets.reduce((sum, asset) => sum + asset.value, 0)
-
-  // Estimate passive income (roughly 0.8% of yield-bearing assets)
-  const passiveIncome = assets
-    .filter((a) => a.category === 'FIIs' || a.category === 'Ações' || a.category === 'Renda Fixa')
-    .reduce((sum, a) => sum + a.value * 0.008, 0)
 
   // Real-time calculated income
   const rendaMensal = filteredTransactions
@@ -48,18 +43,20 @@ export default function KpiCards() {
           !(t.type === 'Revenue' || t.category.includes('Renda')) &&
           t.amount < 0 &&
           t.type !== 'Transfer' &&
-          t.expenseType === 'variable' &&
+          t.expenseType !== 'fixed' &&
           t.recurrence !== 'monthly' &&
           t.recurrence !== 'yearly',
       )
       .reduce((sum, t) => sum + t.amount, 0),
   )
 
-  // Time to freedom calculation based directly on Retirement Plan configurations (Simulator)
+  // Monthly Result = Revenue - Fixed - Variable
+  const resultadoMes = rendaMensal - fixedExpenses - variableExpenses
+
+  // Time to freedom calculation
   const totalMonthlyExpenses = isAnnual
     ? (fixedExpenses + variableExpenses) / 12
     : fixedExpenses + variableExpenses
-
   const targetPatrimony = (totalMonthlyExpenses > 0 ? totalMonthlyExpenses : 1000) * 300
   const shortfall = targetPatrimony - patrimony
   const averageMonthlyAporte = simulatorSettings?.aporte || 0
@@ -83,18 +80,11 @@ export default function KpiCards() {
       desc: 'vs anterior',
     },
     {
-      title: isAnnual ? 'Renda Anual' : 'Renda Mensal',
+      title: isAnnual ? 'Renda Anual' : 'Receita Mensal',
       value: `R$ ${rendaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      icon: Coins,
+      icon: TrendingUp,
       trend: '+5.1%',
       desc: isAnnual ? 'entradas no ano' : 'entradas no mês',
-    },
-    {
-      title: 'Renda Passiva Mensal',
-      value: `R$ ${passiveIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-      icon: TrendingUp,
-      trend: '+1.5%',
-      desc: 'estimativa média',
     },
     {
       title: isAnnual ? 'Gastos Fixos (Ano)' : 'Gastos Fixos',
@@ -111,6 +101,13 @@ export default function KpiCards() {
       trend: '+3.5%',
       desc: 'estilo de vida',
       trendUpIsBad: true,
+    },
+    {
+      title: isAnnual ? 'Resultado Anual' : 'Resultado do Mês',
+      value: `${resultadoMes < 0 ? '-' : ''}R$ ${Math.abs(resultadoMes).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: Target,
+      color: resultadoMes >= 0 ? 'text-[#03f2ff]' : 'text-rose-500',
+      desc: 'sobra livre no caixa',
     },
     {
       title: 'Tempo p/ Liberdade',
@@ -138,7 +135,7 @@ export default function KpiCards() {
           </CardHeader>
           <CardContent>
             <div
-              className={`text-xl lg:text-2xl font-bold truncate ${kpi.value === 'Aporte Zero' ? 'text-muted-foreground/50 text-lg' : ''}`}
+              className={`text-xl lg:text-2xl font-bold truncate ${kpi.value === 'Aporte Zero' ? 'text-muted-foreground/50 text-lg' : ''} ${kpi.color || ''}`}
             >
               {kpi.value}
             </div>
@@ -147,9 +144,9 @@ export default function KpiCards() {
                 <span
                   className={
                     kpi.trend.startsWith('+') && !kpi.trendUpIsBad
-                      ? 'text-primary'
+                      ? 'text-[#03f2ff]'
                       : kpi.trend.startsWith('-') && kpi.trendUpIsBad
-                        ? 'text-primary'
+                        ? 'text-[#03f2ff]'
                         : 'text-rose-500'
                   }
                 >
