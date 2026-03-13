@@ -2,14 +2,13 @@ import { useMemo } from 'react'
 import {
   Area,
   AreaChart,
-  Line,
   CartesianGrid,
   XAxis,
   YAxis,
   ResponsiveContainer,
-  ComposedChart,
+  Tooltip,
 } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart'
 
 interface SimulatorChartProps {
   aporte: number
@@ -18,77 +17,80 @@ interface SimulatorChartProps {
 }
 
 export default function SimulatorChart({ aporte, retorno, idade }: SimulatorChartProps) {
-  const currentAge = 35
-  const currentWealth = 342500
-  const targetPassiveIncome = 15000 // R$ 15k/month desired
+  const chartData = useMemo(() => {
+    const data = []
+    let patrimonio = 0
+    const currentAge = 30
+    const anos = Math.max(1, idade - currentAge)
+    const taxaMensal = Math.pow(1 + retorno / 100, 1 / 12) - 1
 
-  const data = useMemo(() => {
-    const arr = []
-    let wealth = currentWealth
-    const monthlyRate = Math.pow(1 + retorno / 100, 1 / 12) - 1
-
-    // Simplistic projection
-    for (let age = currentAge; age <= currentAge + 30; age++) {
-      arr.push({
-        age,
-        patrimonio: Math.round(wealth),
-        meta: Math.round((targetPassiveIncome * 12) / (retorno / 100)), // Target to generate passive income
+    for (let i = 0; i <= anos; i++) {
+      data.push({
+        ano: i + currentAge,
+        patrimonio: Math.round(patrimonio),
       })
-      // compound for 12 months
+
       for (let m = 0; m < 12; m++) {
-        wealth = wealth * (1 + monthlyRate) + aporte
+        patrimonio = patrimonio * (1 + taxaMensal) + aporte
       }
     }
-    return arr
+    return data
   }, [aporte, retorno, idade])
 
-  const chartConfig = {
-    patrimonio: { label: 'Patrimônio', color: 'hsl(var(--primary))' },
-    meta: { label: 'Ponto de Liberdade', color: 'hsl(var(--destructive))' },
-  }
+  if (!chartData || chartData.length === 0) return null
 
   return (
-    <ChartContainer config={chartConfig} className="h-[300px] w-full">
-      <ComposedChart data={data} margin={{ top: 20, left: 0, right: 0, bottom: 0 }}>
-        <defs>
-          <linearGradient id="fillPatrimonio" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="var(--color-patrimonio)" stopOpacity={0.3} />
-            <stop offset="95%" stopColor="var(--color-patrimonio)" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-        <XAxis
-          dataKey="age"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={10}
-          tickFormatter={(v) => `${v} anos`}
-          className="text-xs"
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(v) => `R$ ${(v / 1000000).toFixed(1)}M`}
-          width={80}
-          className="text-xs"
-        />
-        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-        <Area
-          type="monotone"
-          dataKey="patrimonio"
-          stroke="var(--color-patrimonio)"
-          strokeWidth={3}
-          fill="url(#fillPatrimonio)"
-        />
-        <Line
-          type="step"
-          dataKey="meta"
-          stroke="var(--color-meta)"
-          strokeWidth={2}
-          strokeDasharray="5 5"
-          dot={false}
-        />
-      </ComposedChart>
-    </ChartContainer>
+    <div className="h-[300px] w-full">
+      <ChartContainer
+        config={{
+          patrimonio: {
+            label: 'Patrimônio',
+            color: 'hsl(var(--primary))',
+          },
+        }}
+        className="h-full w-full"
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="fillPatrimonio" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-patrimonio)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="var(--color-patrimonio)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="hsl(var(--muted-foreground)/0.2)"
+            />
+            <XAxis
+              dataKey="ano"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              tickFormatter={(value) => `${value} anos`}
+              className="text-xs text-muted-foreground"
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={10}
+              tickFormatter={(value) => `R$ ${(value / 1000).toFixed(0)}k`}
+              className="text-xs text-muted-foreground"
+              width={65}
+            />
+            <Tooltip content={<ChartTooltipContent />} />
+            <Area
+              type="monotone"
+              dataKey="patrimonio"
+              stroke="var(--color-patrimonio)"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#fillPatrimonio)"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </div>
   )
 }

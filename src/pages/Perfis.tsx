@@ -45,7 +45,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>
 type Profile = (typeof MOCK_PROFILES)[0]
 
 export default function Perfis() {
-  const [profiles, setProfiles] = useState<Profile[]>(MOCK_PROFILES)
+  const [profiles, setProfiles] = useState<Profile[]>(MOCK_PROFILES || [])
   const [archiveId, setArchiveId] = useState<string | null>(null)
   const [editingProfile, setEditingProfile] = useState<Profile | null>(null)
   const { toast } = useToast()
@@ -96,51 +96,57 @@ export default function Perfis() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {profiles.map((profile) => (
-          <Card
-            key={profile.id}
-            className="flex flex-col border-border/50 hover:border-primary/30 transition-colors"
-          >
-            <CardContent className="pt-6 flex flex-col items-center text-center flex-1">
-              <Avatar className="w-20 h-20 mb-4 ring-4 ring-background shadow-lg">
-                <AvatarImage src={profile.avatar} />
-                <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <h3 className="font-semibold text-lg">{profile.name}</h3>
-              <Badge variant="secondary" className="mt-1 mb-4">
-                {profile.role}
-              </Badge>
-              <div className="w-full bg-muted/50 rounded-lg p-3 mt-auto">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
-                  Limite Orçamentário
-                </p>
-                <p className="font-mono font-medium">
-                  R$ {profile.limit.toLocaleString('pt-BR')}/mês
-                </p>
-              </div>
-            </CardContent>
-            <CardFooter className="border-t bg-muted/20 p-3 grid grid-cols-2 gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground"
-                onClick={() => setEditingProfile(profile)}
-              >
-                <Edit2 className="w-4 h-4 mr-2" /> Editar
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-destructive"
-                onClick={() => setArchiveId(profile.id)}
-              >
-                <Archive className="w-4 h-4 mr-2" /> Arquivar
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      {profiles.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-border/50">
+          Nenhum perfil encontrado. Crie um novo perfil para começar.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {profiles.map((profile) => (
+            <Card
+              key={profile.id}
+              className="flex flex-col border-border/50 hover:border-primary/30 transition-colors"
+            >
+              <CardContent className="pt-6 flex flex-col items-center text-center flex-1">
+                <Avatar className="w-20 h-20 mb-4 ring-4 ring-background shadow-lg">
+                  <AvatarImage src={profile.avatar} />
+                  <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <h3 className="font-semibold text-lg">{profile.name}</h3>
+                <Badge variant="secondary" className="mt-1 mb-4">
+                  {profile.role}
+                </Badge>
+                <div className="w-full bg-muted/50 rounded-lg p-3 mt-auto">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">
+                    Limite Orçamentário
+                  </p>
+                  <p className="font-mono font-medium">
+                    R$ {profile.limit.toLocaleString('pt-BR')}/mês
+                  </p>
+                </div>
+              </CardContent>
+              <CardFooter className="border-t bg-muted/20 p-3 grid grid-cols-2 gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => setEditingProfile(profile)}
+                >
+                  <Edit2 className="w-4 h-4 mr-2" /> Editar
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={() => setArchiveId(profile.id)}
+                >
+                  <Archive className="w-4 h-4 mr-2" /> Arquivar
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <Dialog open={!!archiveId} onOpenChange={(o) => !o && setArchiveId(null)}>
         <DialogContent>

@@ -63,7 +63,15 @@ export default function Configuracoes() {
     })
   }
 
-  const mainProfile = MOCK_PROFILES[0]
+  const mainProfile = (MOCK_PROFILES && MOCK_PROFILES[0]) || {
+    id: '0',
+    name: 'Administrador',
+    role: 'Admin',
+    limit: 0,
+    avatar: '',
+  }
+
+  const connectedAccounts = MOCK_ACCOUNTS ? MOCK_ACCOUNTS.filter((a) => a.connected) : []
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -160,7 +168,7 @@ export default function Configuracoes() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
-                <Label htmlFor="dark-mode" className="flex flex-col space-y-1">
+                <Label htmlFor="dark-mode" className="flex flex-col space-y-1 cursor-pointer">
                   <span className="text-base">Modo Escuro</span>
                   <span className="font-normal text-sm text-muted-foreground">
                     Ativa um tema de cores escuras, ideal para ambientes com pouca luz.
@@ -192,7 +200,7 @@ export default function Configuracoes() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <Label htmlFor="notif-d2" className="flex flex-col space-y-1">
+                <Label htmlFor="notif-d2" className="flex flex-col space-y-1 cursor-pointer">
                   <span className="text-base">Alertas Antecipados (D-2)</span>
                   <span className="font-normal text-sm text-muted-foreground max-w-lg">
                     Receba avisos 2 dias antes do vencimento de contas e faturas de cartão.
@@ -214,7 +222,7 @@ export default function Configuracoes() {
               <div className="h-px bg-border" />
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <Label htmlFor="notif-email" className="flex flex-col space-y-1">
+                <Label htmlFor="notif-email" className="flex flex-col space-y-1 cursor-pointer">
                   <span className="text-base">Resumo Semanal por E-mail</span>
                   <span className="font-normal text-sm text-muted-foreground max-w-lg">
                     Receba um boletim todo domingo com o balanço da semana e contas dos próximos 7
@@ -239,7 +247,7 @@ export default function Configuracoes() {
               <div className="h-px bg-border" />
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <Label htmlFor="notif-sms" className="flex flex-col space-y-1">
+                <Label htmlFor="notif-sms" className="flex flex-col space-y-1 cursor-pointer">
                   <span className="text-base">Alertas SMS Urgentes</span>
                   <span className="font-normal text-sm text-muted-foreground max-w-lg">
                     Para contas que vencem no dia e ainda não constam como pagas.
@@ -277,24 +285,24 @@ export default function Configuracoes() {
               <form onSubmit={handleSavePersonalization} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label>Nome da Sessão Principal</Label>
-                    <Input defaultValue="Visão Geral" />
+                    <Label htmlFor="sessao-principal">Nome da Sessão Principal</Label>
+                    <Input id="sessao-principal" defaultValue="Visão Geral" />
                     <p className="text-xs text-muted-foreground">Ex: Dashboard, Resumo, Painel</p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Nome da Sessão de Ativos</Label>
-                    <Input defaultValue="Patrimônio" />
+                    <Label htmlFor="sessao-ativos">Nome da Sessão de Ativos</Label>
+                    <Input id="sessao-ativos" defaultValue="Patrimônio" />
                     <p className="text-xs text-muted-foreground">
                       Ex: Investimentos, Minha Riqueza
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label>Categoria Padrão (Entradas)</Label>
-                    <Input defaultValue="Salário" />
+                    <Label htmlFor="cat-entradas">Categoria Padrão (Entradas)</Label>
+                    <Input id="cat-entradas" defaultValue="Salário" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Categoria Padrão (Saídas)</Label>
-                    <Input defaultValue="Moradia" />
+                    <Label htmlFor="cat-saidas">Categoria Padrão (Saídas)</Label>
+                    <Input id="cat-saidas" defaultValue="Moradia" />
                   </div>
                 </div>
                 <Button type="submit" className="gap-2 w-full md:w-auto">
@@ -317,22 +325,28 @@ export default function Configuracoes() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {MOCK_ACCOUNTS.filter((a) => a.connected).map((acc) => (
-                  <div
-                    key={acc.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                  >
-                    <div>
-                      <p className="font-medium">{acc.bank}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Acesso: Leitura de transações e saldo
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 text-emerald-500 text-sm font-medium">
-                      <Shield className="w-4 h-4" /> Ativo
-                    </div>
+                {connectedAccounts.length === 0 ? (
+                  <div className="text-center text-sm text-muted-foreground p-4 bg-muted/30 rounded-lg">
+                    Nenhuma conta conectada.
                   </div>
-                ))}
+                ) : (
+                  connectedAccounts.map((acc) => (
+                    <div
+                      key={acc.id}
+                      className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                    >
+                      <div>
+                        <p className="font-medium">{acc.bank}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Acesso: Leitura de transações e saldo
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-emerald-500 text-sm font-medium">
+                        <Shield className="w-4 h-4" /> Ativo
+                      </div>
+                    </div>
+                  ))
+                )}
               </CardContent>
               <CardFooter className="pt-0">
                 <Button variant="outline" className="w-full" asChild>
