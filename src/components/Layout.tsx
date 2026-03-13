@@ -1,13 +1,34 @@
-/* Layout Component - A component that wraps the main content of the app
-   - Use this file to add a header, footer, or other elements that should be present on every page
-   - This component is used in the App.tsx file to wrap the main content of the app */
-
 import { Outlet } from 'react-router-dom'
+import { AppSidebar } from './AppSidebar'
+import { Header } from './Header'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
 
 export default function Layout() {
+  const isMobile = useIsMobile()
+
   return (
-    <main className="flex flex-col min-h-screen">
-      <Outlet />
-    </main>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background text-foreground selection:bg-primary/30">
+        <AppSidebar />
+        <SidebarInset className="flex w-full flex-col">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+            <Outlet />
+          </main>
+
+          {isMobile && (
+            <Button
+              size="icon"
+              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+            >
+              <Plus className="h-6 w-6" />
+            </Button>
+          )}
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   )
 }
