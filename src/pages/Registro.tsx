@@ -30,14 +30,14 @@ export default function Registro() {
     setIsLoading(true)
 
     try {
-      const { error } = await signUp(email, password)
+      const { error } = await signUp(email, password, name)
       if (error) throw error
 
       toast({
         title: 'Conta criada com sucesso!',
         description: 'Bem-vindo ao FinForce. Verifique seu e-mail para confirmar a conta.',
       })
-      navigate('/')
+      navigate('/dashboard')
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -58,7 +58,7 @@ export default function Registro() {
       <div className="w-full max-w-md animate-fade-in-up">
         <Card className="w-full shadow-lg border-muted">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl font-bold">Crie sua conta</CardTitle>
+            <CardTitle className="text-2xl font-bold text-[#016ad9]">Crie sua conta</CardTitle>
             <CardDescription className="text-base">
               Comece a gerenciar suas finanças com o FinForce
             </CardDescription>
@@ -73,7 +73,7 @@ export default function Registro() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-11 focus-visible:ring-[#01f2ff]"
                 />
               </div>
               <div className="space-y-2">
@@ -85,7 +85,7 @@ export default function Registro() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-11 focus-visible:ring-[#01f2ff]"
                 />
               </div>
               <div className="space-y-2">
@@ -98,18 +98,25 @@ export default function Registro() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="h-11"
+                  className="h-11 focus-visible:ring-[#01f2ff]"
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4 pt-4">
-              <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full h-11 text-base bg-gradient-to-r from-[#016ad9] to-[#01f2ff] hover:opacity-90 text-white border-0"
+                disabled={isLoading}
+              >
                 {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                 Criar conta
               </Button>
               <div className="text-sm text-center text-muted-foreground">
                 Já tem uma conta?{' '}
-                <Link to="/login" className="font-semibold text-primary hover:underline">
+                <Link
+                  to="/login"
+                  className="font-semibold text-[#016ad9] hover:text-[#016ad9]/80 hover:underline"
+                >
                   Faça login
                 </Link>
               </div>

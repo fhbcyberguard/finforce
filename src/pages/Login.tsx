@@ -31,7 +31,7 @@ export default function Login() {
     try {
       const { error } = await signIn(email, password)
       if (error) throw error
-      navigate('/')
+      navigate('/dashboard')
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -52,7 +52,7 @@ export default function Login() {
       <div className="w-full max-w-md animate-fade-in-up">
         <Card className="w-full shadow-lg border-muted">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl font-bold">Bem-vindo de volta</CardTitle>
+            <CardTitle className="text-2xl font-bold text-[#016ad9]">Bem-vindo de volta</CardTitle>
             <CardDescription className="text-base">
               Entre com suas credenciais para acessar o FinForce
             </CardDescription>
@@ -68,13 +68,16 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-11 focus-visible:ring-[#01f2ff]"
                 />
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Senha</Label>
-                  <Link to="#" className="text-sm font-medium text-primary hover:underline">
+                  <Link
+                    to="#"
+                    className="text-sm font-medium text-[#016ad9] hover:text-[#016ad9]/80 hover:underline"
+                  >
                     Esqueceu a senha?
                   </Link>
                 </div>
@@ -84,18 +87,25 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="h-11"
+                  className="h-11 focus-visible:ring-[#01f2ff]"
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4 pt-2">
-              <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full h-11 text-base bg-gradient-to-r from-[#016ad9] to-[#01f2ff] hover:opacity-90 text-white border-0"
+                disabled={isLoading}
+              >
                 {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                 Entrar
               </Button>
               <div className="text-sm text-center text-muted-foreground">
                 Não tem uma conta?{' '}
-                <Link to="/registro" className="font-semibold text-primary hover:underline">
+                <Link
+                  to="/registro"
+                  className="font-semibold text-[#016ad9] hover:text-[#016ad9]/80 hover:underline"
+                >
                   Cadastre-se
                 </Link>
               </div>

@@ -26,7 +26,7 @@ export default function Landing() {
           <Button variant="ghost" asChild className="hidden sm:inline-flex">
             <Link to="/login">Entrar</Link>
           </Button>
-          <Button asChild>
+          <Button asChild className="bg-[#016ad9] text-white hover:bg-[#016ad9]/90 border-0">
             <Link to="/registro">Começar Agora</Link>
           </Button>
         </div>
@@ -34,7 +34,6 @@ export default function Landing() {
 
       <main className="flex-1">
         <section className="container mx-auto px-4 py-20 md:py-32 text-center max-w-5xl flex flex-col items-center animate-fade-in-up">
-          <Logo className="mb-8 scale-125 md:scale-150 transform hidden sm:block" />
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-[#01f2ff] to-[#016ad9] text-transparent bg-clip-text">
             Gestão Financeira Familiar Inteligente
           </h1>
@@ -43,12 +42,21 @@ export default function Landing() {
             com foco em segurança e mudança de comportamento.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
-            <Button size="lg" className="gap-2 w-full sm:w-auto" asChild>
+            <Button
+              size="lg"
+              className="gap-2 w-full sm:w-auto bg-[#016ad9] text-white hover:bg-[#016ad9]/90 border-0"
+              asChild
+            >
               <Link to="/registro">
                 Criar Conta Gratuita <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto hover:text-[#016ad9] hover:border-[#016ad9]/50"
+              asChild
+            >
               <Link to="/login">Acessar minha conta</Link>
             </Button>
           </div>
@@ -59,7 +67,7 @@ export default function Landing() {
             <h2 className="text-3xl font-bold text-center mb-16">Por que escolher o FinForce?</h2>
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               <div className="bg-background p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow">
-                <div className="bg-primary/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                <div className="bg-[#016ad9]/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
                   <Shield className="h-8 w-8 text-[#016ad9]" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Segurança em 1º Lugar</h3>
@@ -69,7 +77,7 @@ export default function Landing() {
                 </p>
               </div>
               <div className="bg-background p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow">
-                <div className="bg-primary/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                <div className="bg-[#01f2ff]/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
                   <TrendingUp className="h-8 w-8 text-[#01f2ff]" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Projeção de Metas</h3>
@@ -79,7 +87,7 @@ export default function Landing() {
                 </p>
               </div>
               <div className="bg-background p-8 rounded-2xl shadow-sm border hover:shadow-md transition-shadow">
-                <div className="bg-primary/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                <div className="bg-[#016ad9]/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
                   <Users className="h-8 w-8 text-[#016ad9]" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">Gestão Familiar</h3>
