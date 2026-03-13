@@ -29,8 +29,10 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
     >
       <CardContent className="pt-6 flex flex-col items-center text-center flex-1">
         <Avatar className="w-20 h-20 mb-4 ring-4 ring-background shadow-lg">
-          <AvatarImage src={profile.avatar} />
-          <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+          {profile.avatar && <AvatarImage src={profile.avatar} />}
+          <AvatarFallback className="text-2xl font-semibold bg-primary/10 text-primary">
+            {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
+          </AvatarFallback>
         </Avatar>
         <h3 className="font-semibold text-lg flex flex-col items-center gap-0.5">
           {profile.name}

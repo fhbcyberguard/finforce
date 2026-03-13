@@ -9,7 +9,27 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -154,7 +174,48 @@ export const Constants = {
 // Use the COLUMN TYPES section below to know the real PostgreSQL type for each column.
 // Always use the correct PostgreSQL type when writing SQL migrations.
 
+// --- COLUMN TYPES (actual PostgreSQL types) ---
+// Use this to know the real database type when writing migrations.
+// "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: profiles
+//   id: uuid (not null)
+//   full_name: text (nullable)
+//   updated_at: timestamp with time zone (nullable, default: now())
+//   email: text (nullable)
+
+// --- CONSTRAINTS ---
+// Table: profiles
+//   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
+//   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
+
+// --- ROW LEVEL SECURITY POLICIES ---
+// Table: profiles
+//   Policy "Users can insert own profile" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = id)
+//   Policy "Users can update own profile" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = id)
+//   Policy "Users can view own profile" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = id)
+
 // --- DATABASE FUNCTIONS ---
+// FUNCTION handle_new_user()
+//   CREATE OR REPLACE FUNCTION public.handle_new_user()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//    SECURITY DEFINER
+//   AS $function$
+//   BEGIN
+//     INSERT INTO public.profiles (id, full_name, email, updated_at)
+//     VALUES (
+//       NEW.id,
+//       COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
+//       NEW.email,
+//       NOW()
+//     );
+//     RETURN NEW;
+//   END;
+//   $function$
+//
 // FUNCTION rls_auto_enable()
 //   CREATE OR REPLACE FUNCTION public.rls_auto_enable()
 //    RETURNS event_trigger

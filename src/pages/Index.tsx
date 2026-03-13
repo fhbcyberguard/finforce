@@ -1,5 +1,12 @@
 import useAppStore from '@/stores/useAppStore'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import KpiCards from '../components/dashboard/KpiCards'
 import Simulator from '../components/dashboard/Simulator'
 import AlertsPanel from '../components/dashboard/AlertsPanel'
@@ -9,9 +16,17 @@ import { GoalWidget } from '../components/dashboard/GoalWidget'
 import { SpendingByPersonChart } from '../components/dashboard/SpendingByPersonChart'
 
 export default function Index() {
-  const { timeframe, setTimeframe, currentContext } = useAppStore()
+  const { timeframe, setTimeframe, currentContext, selectedYear, setSelectedYear, transactions } =
+    useAppStore()
 
   const isBusiness = currentContext === 'business'
+
+  const availableYears = Array.from(new Set(transactions.map((t) => t.date.substring(0, 4)))).sort(
+    (a, b) => b.localeCompare(a),
+  )
+  if (!availableYears.includes(new Date().getFullYear().toString())) {
+    availableYears.unshift(new Date().getFullYear().toString())
+  }
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -26,19 +41,33 @@ export default function Index() {
               : 'Bem-vindo de volta. Acompanhe seu progresso rumo à independência.'}
           </p>
         </div>
-        <ToggleGroup
-          type="single"
-          value={timeframe}
-          onValueChange={(v) => v && setTimeframe(v as 'monthly' | 'annual')}
-          className="bg-muted/50 p-1 rounded-lg self-start sm:self-auto"
-        >
-          <ToggleGroupItem value="monthly" className="px-4 text-xs h-8">
-            Mensal
-          </ToggleGroupItem>
-          <ToggleGroupItem value="annual" className="px-4 text-xs h-8">
-            Anual
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start sm:self-auto">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-9 w-[100px] text-xs bg-muted/50 border-0 focus:ring-1">
+              <SelectValue placeholder="Ano" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableYears.map((y) => (
+                <SelectItem key={y} value={y}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <ToggleGroup
+            type="single"
+            value={timeframe}
+            onValueChange={(v) => v && setTimeframe(v as 'monthly' | 'annual')}
+            className="bg-muted/50 p-1 rounded-lg"
+          >
+            <ToggleGroupItem value="monthly" className="px-4 text-xs h-8">
+              Mensal
+            </ToggleGroupItem>
+            <ToggleGroupItem value="annual" className="px-4 text-xs h-8">
+              Anual
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
       </div>
 
       <KpiCards />

@@ -1,16 +1,19 @@
 import { useSyncExternalStore } from 'react'
 import {
-  MOCK_PROFILES,
   MOCK_ACCOUNTS,
   MOCK_CREDIT_CARDS,
   MOCK_ASSETS,
   MOCK_GOALS,
-  MOCK_TRANSACTIONS,
   MOCK_ALERTS,
 } from '@/lib/mockData'
 
 export type ContextType = 'personal' | 'business'
-export type Profile = Omit<(typeof MOCK_PROFILES)[0], 'context'> & {
+export type Profile = {
+  id: string
+  name: string
+  role: string
+  limit: number
+  avatar?: string
   isArchived?: boolean
   context?: ContextType
   currentAge?: number
@@ -26,7 +29,16 @@ export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & {
 export type Asset = (typeof MOCK_ASSETS)[0] & { context?: ContextType }
 export type Goal = (typeof MOCK_GOALS)[0] & { context?: ContextType }
 export type Alert = (typeof MOCK_ALERTS)[0] & { context?: ContextType }
-export type Transaction = (typeof MOCK_TRANSACTIONS)[0] & {
+export type Transaction = {
+  id: string
+  date: string
+  description: string
+  amount: number
+  category: string
+  type: string
+  account: string
+  recurrence: string
+  hasAttachment?: boolean
   profile?: string
   expenseType?: 'fixed' | 'variable'
   cardId?: string
@@ -51,6 +63,7 @@ interface AppState {
   logoUrl: string
   searchQuery: string
   timeframe: 'monthly' | 'annual'
+  selectedYear: string
   simulatorSettings: SimulatorSettings
   currentContext: ContextType
   subscriptionPlan: 'basic' | 'medium' | 'top'
@@ -74,17 +87,18 @@ const defaultSimulator: SimulatorSettings = {
 }
 
 const getInitialState = (): AppState => ({
-  profiles: loadData('finflow_profiles', MOCK_PROFILES as Profile[]),
+  profiles: loadData('finflow_profiles', [] as Profile[]),
   accounts: loadData('finflow_accounts', MOCK_ACCOUNTS),
   creditCards: loadData('finflow_credit_cards', MOCK_CREDIT_CARDS as CreditCard[]),
   assets: loadData('finflow_assets', MOCK_ASSETS),
   goals: loadData('finflow_goals', MOCK_GOALS),
-  transactions: loadData('finflow_transactions', MOCK_TRANSACTIONS as Transaction[]),
+  transactions: loadData('finflow_transactions', [] as Transaction[]),
   alerts: loadData('finflow_alerts', MOCK_ALERTS),
   simulatorSettings: loadData('finflow_simulator', defaultSimulator),
   logoUrl: localStorage.getItem('finflow_logo') || '',
   searchQuery: '',
   timeframe: 'monthly',
+  selectedYear: new Date().getFullYear().toString(),
   currentContext: (localStorage.getItem('finflow_context') as ContextType) || 'personal',
   subscriptionPlan: (localStorage.getItem('finflow_plan') as any) || 'basic',
   categoryColors: loadData('finflow_category_colors', {}),
@@ -150,61 +164,18 @@ export default function useAppStore() {
     alerts: filterCtx(store.alerts),
 
     setProfiles: (profiles: Profile[]) => {
-      const filteredProfiles = filterCtx(state.profiles)
-      const deletedProfiles = filteredProfiles.filter((p) => !profiles.some((np) => np.id === p.id))
-      let newTx = filterCtx(state.transactions)
-
-      if (deletedProfiles.length > 0) {
-        const deletedNames = deletedProfiles.map((p) => p.name)
-        newTx = newTx.filter((t) => !t.profile || !deletedNames.includes(t.profile))
-      }
-
-      const renamedProfiles = profiles.filter((p) => {
-        const old = filteredProfiles.find((op) => op.id === p.id)
-        return old && old.name !== p.name
-      })
-
-      if (renamedProfiles.length > 0) {
-        newTx = newTx.map((t) => {
-          const matchedRenamed = renamedProfiles.find((rp) => {
-            const old = filteredProfiles.find((op) => op.id === rp.id)
-            return old?.name === t.profile
-          })
-          if (matchedRenamed) return { ...t, profile: matchedRenamed.name }
-          return t
-        })
-      }
-
-      updateState({
-        profiles: mergeCtx(state.profiles, profiles),
-        transactions: mergeCtx(state.transactions, newTx),
-      })
+      updateState({ profiles: mergeCtx(state.profiles, profiles) })
     },
+
+    setProfilesFromDB: (profiles: Profile[]) => updateState({ profiles }),
+
+    setTransactionsFromDB: (transactions: Transaction[]) => updateState({ transactions }),
 
     setAccounts: (accounts: Account[]) =>
       updateState({ accounts: mergeCtx(state.accounts, accounts) }),
 
     setCreditCards: (creditCards: CreditCard[]) => {
-      const filteredCards = filterCtx(state.creditCards)
-      const deletedCardIds = filteredCards
-        .filter((c) => !creditCards.some((nc) => nc.id === c.id))
-        .map((c) => c.id)
-
-      if (deletedCardIds.length > 0) {
-        const remainingTx = filterCtx(state.transactions).filter(
-          (t) => !t.cardId || !deletedCardIds.includes(t.cardId),
-        )
-        const remainingAlerts = filterCtx(state.alerts).filter(
-          (a) => !a.cardId || !deletedCardIds.includes(a.cardId),
-        )
-        updateState({
-          creditCards: mergeCtx(state.creditCards, creditCards),
-          transactions: mergeCtx(state.transactions, remainingTx),
-          alerts: mergeCtx(state.alerts, remainingAlerts),
-        })
-      } else {
-        updateState({ creditCards: mergeCtx(state.creditCards, creditCards) })
-      }
+      updateState({ creditCards: mergeCtx(state.creditCards, creditCards) })
     },
 
     setAssets: (assets: Asset[]) => updateState({ assets: mergeCtx(state.assets, assets) }),
@@ -218,6 +189,7 @@ export default function useAppStore() {
     setLogoUrl: (logoUrl: string) => updateState({ logoUrl }),
     setSearchQuery: (searchQuery: string) => updateState({ searchQuery }),
     setTimeframe: (timeframe: 'monthly' | 'annual') => updateState({ timeframe }),
+    setSelectedYear: (selectedYear: string) => updateState({ selectedYear }),
     setCurrentContext: (currentContext: ContextType) => updateState({ currentContext }),
     setSubscriptionPlan: (subscriptionPlan: 'basic' | 'medium' | 'top') =>
       updateState({ subscriptionPlan }),

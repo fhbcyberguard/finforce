@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import useAppStore, { Transaction } from '@/stores/useAppStore'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -50,6 +52,7 @@ import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 
 export default function FluxoCaixa() {
+  const { user } = useAuth()
   const {
     transactions,
     setTransactions,
@@ -59,6 +62,8 @@ export default function FluxoCaixa() {
     searchQuery,
     timeframe,
     setTimeframe,
+    selectedYear,
+    setSelectedYear,
   } = useAppStore()
   const [openAdd, setOpenAdd] = useState(false)
   const [openImport, setOpenImport] = useState(false)
@@ -108,16 +113,57 @@ export default function FluxoCaixa() {
     }
   }
 
-  const handleSave = (txToSave: Transaction) => {
+  const handleSave = async (txToSave: Transaction) => {
+    if (!user) return
+
+    const dbPayload = {
+      user_id: user.id,
+      description: txToSave.description,
+      amount: txToSave.amount,
+      type: txToSave.type,
+      category: txToSave.category,
+      date: new Date(`${txToSave.date}T12:00:00Z`).toISOString(),
+      expense_type: txToSave.expenseType,
+      account: txToSave.account,
+      card_id: txToSave.cardId,
+      recurrence: txToSave.recurrence,
+      has_attachment: txToSave.hasAttachment,
+      profile: txToSave.profile,
+    }
+
     if (editingTx) {
-      setTransactions(transactions.map((t) => (t.id === editingTx.id ? txToSave : t)))
-      toast({
-        title: 'Transação atualizada',
-        description: 'O registro foi modificado com sucesso.',
-      })
+      const { error } = await supabase.from('transactions').update(dbPayload).eq('id', editingTx.id)
+      if (!error) {
+        const updatedTx = { ...txToSave, id: editingTx.id }
+        setTransactions(transactions.map((t) => (t.id === editingTx.id ? updatedTx : t)))
+        toast({
+          title: 'Transação atualizada',
+          description: 'O registro foi modificado com sucesso.',
+        })
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Falha ao atualizar transação.',
+          variant: 'destructive',
+        })
+      }
     } else {
-      setTransactions([txToSave, ...transactions])
-      toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert(dbPayload)
+        .select()
+        .single()
+      if (!error && data) {
+        const finalTx = { ...txToSave, id: data.id }
+        setTransactions([finalTx, ...transactions])
+        toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
+      } else {
+        toast({
+          title: 'Erro',
+          description: 'Falha ao salvar transação.',
+          variant: 'destructive',
+        })
+      }
     }
     setOpenAdd(false)
     resetForm()
@@ -127,6 +173,7 @@ export default function FluxoCaixa() {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     const type = fd.get('type') as string
+    const date = fd.get('date') as string
     let amount = Number(fd.get('amount'))
 
     if (type === 'Expense' || type === 'Pix' || type === 'Transfer') amount = -Math.abs(amount)
@@ -140,8 +187,8 @@ export default function FluxoCaixa() {
     const cardField = selectedCard === 'none' ? undefined : selectedCard
 
     const newTx: Transaction = {
-      id: editingTx ? editingTx.id : Math.random().toString(),
-      date: editingTx ? editingTx.date : new Date().toISOString().split('T')[0],
+      id: editingTx ? editingTx.id : '', // Replaced after DB insert
+      date,
       description: fd.get('description') as string,
       amount,
       category: fd.get('category') as string,
@@ -162,9 +209,15 @@ export default function FluxoCaixa() {
     }
   }
 
-  const handleDelete = (id: string) => {
-    setTransactions(transactions.filter((t) => t.id !== id))
-    toast({ title: 'Transação removida', description: 'O registro foi apagado.' })
+  const handleDelete = async (id: string) => {
+    if (!user) return
+    const { error } = await supabase.from('transactions').delete().eq('id', id)
+    if (!error) {
+      setTransactions(transactions.filter((t) => t.id !== id))
+      toast({ title: 'Transação removida', description: 'O registro foi apagado.' })
+    } else {
+      toast({ title: 'Erro', description: 'Falha ao apagar transação.', variant: 'destructive' })
+    }
   }
 
   const openEdit = (tx: Transaction) => {
@@ -188,14 +241,21 @@ export default function FluxoCaixa() {
     }
   }
 
+  const availableYears = Array.from(new Set(transactions.map((t) => t.date.substring(0, 4)))).sort(
+    (a, b) => b.localeCompare(a),
+  )
+  if (!availableYears.includes(new Date().getFullYear().toString())) {
+    availableYears.unshift(new Date().getFullYear().toString())
+  }
+
   const filteredTransactions = useMemo(() => {
     const now = new Date()
-    const currentMonth = now.toISOString().slice(0, 7)
-    const currentYear = now.toISOString().slice(0, 4)
+    const yearToUse = selectedYear || now.getFullYear().toString()
+    const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
 
     let list = transactions.filter((t) => {
       if (timeframe === 'monthly') return t.date.startsWith(currentMonth)
-      if (timeframe === 'annual') return t.date.startsWith(currentYear)
+      if (timeframe === 'annual') return t.date.startsWith(yearToUse)
       return true
     })
 
@@ -208,7 +268,7 @@ export default function FluxoCaixa() {
         (t.profile && t.profile.toLowerCase().includes(lower)) ||
         t.account.toLowerCase().includes(lower),
     )
-  }, [transactions, searchQuery, timeframe])
+  }, [transactions, searchQuery, timeframe, selectedYear])
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -218,6 +278,19 @@ export default function FluxoCaixa() {
           <p className="text-muted-foreground">Visão detalhada de entradas e saídas.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-wrap items-start sm:items-center">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-9 w-[100px] text-xs">
+              <SelectValue placeholder="Ano" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableYears.map((y) => (
+                <SelectItem key={y} value={y}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <ToggleGroup
             type="single"
             value={timeframe}
@@ -298,7 +371,16 @@ export default function FluxoCaixa() {
                 <DialogTitle>{editingTx ? 'Editar Transação' : 'Registrar Transação'}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleFormSubmit} className="space-y-4 mt-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Data</Label>
+                    <Input
+                      name="date"
+                      type="date"
+                      required
+                      defaultValue={editingTx?.date || new Date().toISOString().split('T')[0]}
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label>Tipo</Label>
                     <Select
@@ -313,7 +395,7 @@ export default function FluxoCaixa() {
                       <SelectContent>
                         <SelectItem value="Expense">Despesa</SelectItem>
                         <SelectItem value="Revenue">Receita</SelectItem>
-                        <SelectItem value="Pix">Pix (Comprovante)</SelectItem>
+                        <SelectItem value="Pix">Pix</SelectItem>
                         <SelectItem value="Transfer">Transferência</SelectItem>
                       </SelectContent>
                     </Select>

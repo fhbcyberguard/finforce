@@ -24,6 +24,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import useAppStore from '@/stores/useAppStore'
+import { useAuth } from '@/hooks/use-auth'
+import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
 
 export function DataImportDialog({
@@ -35,6 +37,7 @@ export function DataImportDialog({
   onOpenChange: (o: boolean) => void
   importType: 'csv' | 'ofx' | null
 }) {
+  const { user } = useAuth()
   const { transactions, setTransactions, profiles, accounts } = useAppStore()
   const { toast } = useToast()
   const [file, setFile] = useState<File | null>(null)
@@ -135,12 +138,51 @@ export function DataImportDialog({
     setPreview(next)
   }
 
-  const handleImport = () => {
-    setTransactions([...preview, ...transactions])
-    toast({
-      title: 'Importação Concluída',
-      description: `${preview.length} transações foram adicionadas ao fluxo de caixa.`,
-    })
+  const handleImport = async () => {
+    if (!user) return
+
+    const dbPayloads = preview.map((tx) => ({
+      user_id: user.id,
+      description: tx.description,
+      amount: tx.amount,
+      type: tx.type,
+      category: tx.category,
+      date: new Date(`${tx.date}T12:00:00Z`).toISOString(),
+      expense_type: tx.expenseType,
+      account: tx.account,
+      recurrence: tx.recurrence,
+      has_attachment: tx.hasAttachment,
+      profile: tx.profile,
+    }))
+
+    const { data, error } = await supabase.from('transactions').insert(dbPayloads).select()
+
+    if (!error && data) {
+      const finalTxs = data.map((t) => ({
+        id: t.id,
+        date: new Date(t.date).toISOString().split('T')[0],
+        description: t.description,
+        amount: Number(t.amount),
+        category: t.category,
+        type: t.type,
+        account: t.account || '',
+        recurrence: t.recurrence || 'none',
+        hasAttachment: t.has_attachment,
+        profile: t.profile || '',
+        expenseType: t.expense_type as any,
+      }))
+      setTransactions([...finalTxs, ...transactions])
+      toast({
+        title: 'Importação Concluída',
+        description: `${preview.length} transações foram adicionadas ao fluxo de caixa.`,
+      })
+    } else {
+      toast({
+        title: 'Erro na Importação',
+        description: error?.message || 'Falha ao salvar no banco de dados.',
+        variant: 'destructive',
+      })
+    }
     onOpenChange(false)
   }
 

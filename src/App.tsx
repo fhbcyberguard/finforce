@@ -20,6 +20,7 @@ import Login from './pages/Login'
 import Registro from './pages/Registro'
 import Landing from './pages/Landing'
 import { ThemeProvider } from './components/ThemeProvider'
+import { SyncData } from './components/SyncData'
 
 function SyncSystemState() {
   const { logoUrl } = useAppStore()
@@ -44,6 +45,7 @@ const App = () => (
     <BrowserRouter>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
         <SyncSystemState />
+        <SyncData />
         <TooltipProvider>
           <Toaster />
           <Sonner />

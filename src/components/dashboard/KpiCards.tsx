@@ -3,15 +3,15 @@ import { Wallet, TrendingUp, DollarSign, Clock, Coins, Activity } from 'lucide-r
 import useAppStore from '@/stores/useAppStore'
 
 export default function KpiCards() {
-  const { assets, transactions, timeframe, simulatorSettings } = useAppStore()
+  const { assets, transactions, timeframe, simulatorSettings, selectedYear } = useAppStore()
 
   const now = new Date()
-  const currentMonth = now.toISOString().slice(0, 7)
-  const currentYear = now.toISOString().slice(0, 4)
+  const yearToUse = selectedYear || now.getFullYear().toString()
+  const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
   const isAnnual = timeframe === 'annual'
 
   const filteredTransactions = transactions.filter((t) => {
-    if (isAnnual) return t.date.startsWith(currentYear)
+    if (isAnnual) return t.date.startsWith(yearToUse)
     return t.date.startsWith(currentMonth)
   })
 

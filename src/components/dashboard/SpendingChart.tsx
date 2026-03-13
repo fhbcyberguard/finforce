@@ -23,17 +23,17 @@ const COLORS = [
 
 export function SpendingChart() {
   const [view, setView] = useState('bar')
-  const { transactions, timeframe, categoryColors } = useAppStore()
+  const { transactions, timeframe, categoryColors, selectedYear } = useAppStore()
 
   const { barData, pieData, config } = useMemo(() => {
     const now = new Date()
-    const currentMonth = now.toISOString().slice(0, 7)
-    const currentYear = now.toISOString().slice(0, 4)
+    const yearToUse = selectedYear || now.getFullYear().toString()
+    const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
 
     const expenses = transactions.filter((t) => t.amount < 0 && t.type !== 'Transfer')
 
     const currentExpenses = expenses.filter((t) => {
-      if (timeframe === 'annual') return t.date.startsWith(currentYear)
+      if (timeframe === 'annual') return t.date.startsWith(yearToUse)
       return t.date.startsWith(currentMonth)
     })
 
@@ -50,7 +50,7 @@ export function SpendingChart() {
     // Bar data uses historical periods based on timeframe
     const monthMap: Record<string, Record<string, number>> = {}
     const barSource =
-      timeframe === 'annual' ? expenses.filter((t) => t.date.startsWith(currentYear)) : expenses
+      timeframe === 'annual' ? expenses.filter((t) => t.date.startsWith(yearToUse)) : expenses
 
     barSource.forEach((t) => {
       const topCat = t.category.split(' > ')[0] || 'Outros'
@@ -77,7 +77,7 @@ export function SpendingChart() {
     config.value = { label: 'Valor' }
 
     return { barData, pieData, config }
-  }, [transactions, timeframe, categoryColors])
+  }, [transactions, timeframe, categoryColors, selectedYear])
 
   const chartCats = Object.keys(config).filter((k) => k !== 'value')
   const editorCategories = chartCats.map((cat) => ({

@@ -13,17 +13,17 @@ import { ChartColorEditor } from './ChartColorEditor'
 const COLORS = ['#2EC4B6', '#59C3C3', '#F4D03F', '#E74C3C', '#8E44AD', '#3498DB']
 
 export function SpendingByPersonChart() {
-  const { transactions, timeframe, categoryColors, currentContext } = useAppStore()
+  const { transactions, timeframe, categoryColors, currentContext, selectedYear } = useAppStore()
 
   const { pieData, config } = useMemo(() => {
     const now = new Date()
-    const currentMonth = now.toISOString().slice(0, 7)
-    const currentYear = now.toISOString().slice(0, 4)
+    const yearToUse = selectedYear || now.getFullYear().toString()
+    const currentMonth = `${yearToUse}-${now.toISOString().slice(5, 7)}`
 
     const expenses = transactions.filter((t) => t.amount < 0 && t.type !== 'Transfer')
 
     const currentExpenses = expenses.filter((t) => {
-      if (timeframe === 'annual') return t.date.startsWith(currentYear)
+      if (timeframe === 'annual') return t.date.startsWith(yearToUse)
       return t.date.startsWith(currentMonth)
     })
 
@@ -51,7 +51,7 @@ export function SpendingByPersonChart() {
     config.value = { label: 'Valor' }
 
     return { pieData, config }
-  }, [transactions, timeframe, categoryColors])
+  }, [transactions, timeframe, categoryColors, selectedYear])
 
   const chartProfiles = Object.keys(config).filter((k) => k !== 'value')
   const editorCategories = chartProfiles.map((p) => ({
