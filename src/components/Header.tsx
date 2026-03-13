@@ -1,11 +1,11 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Bell, Search, Settings, LogOut, Users, Briefcase, Star } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Link, useLocation } from 'react-router-dom'
+import { Logo } from '@/components/Logo'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/hooks/use-auth'
+import { Button } from '@/components/ui/button'
+import { LogOut, User } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,248 +14,78 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { ThemeToggle } from './ThemeToggle'
-import { Logo } from './Logo'
-import { useToast } from '@/hooks/use-toast'
-import useAppStore from '@/stores/useAppStore'
-import { useAuth } from '@/hooks/use-auth'
 
 export function Header() {
-  const [showUpgrade, setShowUpgrade] = useState(false)
-  const navigate = useNavigate()
-  const { toast } = useToast()
-  const { user, profile, signOut } = useAuth()
+  const { user, signOut } = useAuth()
+  const location = useLocation()
 
-  const {
-    searchQuery,
-    setSearchQuery,
-    profiles,
-    alerts,
-    currentContext,
-    setCurrentContext,
-    subscriptionPlan,
-    setSubscriptionPlan,
-  } = useAppStore()
-
-  const urgentAlerts = alerts.filter((a) => a.type === 'urgent').length
-  const mainProfile = profiles[0]
-
-  const handleLogout = async () => {
-    await signOut()
-    toast({ title: 'Sessão encerrada', description: 'Você saiu da sua conta com sucesso.' })
-    navigate('/', { replace: true })
-  }
-
-  const handleContextSwitch = () => {
-    if (currentContext === 'personal' && subscriptionPlan === 'basic') {
-      setShowUpgrade(true)
-      return
-    }
-    const newContext = currentContext === 'personal' ? 'business' : 'personal'
-    setCurrentContext(newContext)
-    toast({
-      title: 'Contexto alterado',
-      description: `Você está agora na Visão ${newContext === 'business' ? 'Empresarial' : 'Pessoal'}.`,
-    })
-  }
-
-  const handleUpgrade = () => {
-    setSubscriptionPlan('master')
-    setShowUpgrade(false)
-    setCurrentContext('business')
-    toast({
-      title: 'Plano Atualizado!',
-      description: 'O contexto empresarial foi ativado com sucesso.',
-    })
-  }
-
-  const displayUser =
-    profile?.full_name || user?.email?.split('@')[0] || mainProfile?.name || 'Usuário'
-  const displayEmail = user?.email || 'conta@familia.com'
+  const navItems = [
+    { title: 'Dashboard', url: '/' },
+    { title: 'Perfis', url: '/perfis' },
+  ]
 
   return (
-    <>
-      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md md:px-6">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <SidebarTrigger />
-          <div className="flex items-center mr-1">
-            <Logo
-              showText={true}
-              iconClassName="h-6 w-6 sm:h-7 sm:w-auto"
-              textClassName="hidden sm:block text-lg"
-            />
-          </div>
+    <header className="sticky top-0 z-50 flex h-16 w-full items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6 shadow-sm">
+      <div className="flex items-center gap-4 lg:gap-8">
+        <SidebarTrigger className="md:hidden" />
 
-          {currentContext === 'business' && (
-            <div className="hidden md:flex items-center ml-2">
-              <Badge
-                variant="outline"
-                className="bg-primary/10 text-primary border-primary/30 gap-1.5 py-1"
-              >
-                <Briefcase className="w-3 h-3" /> Fluxo da Empresa
-              </Badge>
-            </div>
-          )}
+        {/* Logo Integration */}
+        <Logo />
 
-          <div className="hidden lg:flex relative w-64 xl:w-96 ml-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Pesquisar transações ou ativos..."
-              className="w-full bg-muted/50 pl-9 rounded-full border-none focus-visible:ring-1"
-            />
-          </div>
-        </div>
+        {/* Navigation Menu aligned horizontally with the Logo */}
+        <nav className="hidden md:flex items-center gap-6">
+          {navItems.map((item) => (
+            <Link
+              key={item.url}
+              to={item.url}
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-foreground',
+                location.pathname === item.url ? 'text-foreground' : 'text-muted-foreground',
+              )}
+            >
+              {item.title}
+            </Link>
+          ))}
+        </nav>
+      </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Popover>
-            <PopoverTrigger asChild>
+      <div className="flex items-center gap-3 md:gap-4">
+        <ThemeToggle />
+
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="relative text-muted-foreground hover:text-foreground"
+                className="rounded-full bg-secondary/50 hover:bg-secondary"
               >
-                <Bell className="h-5 w-5" />
-                {urgentAlerts > 0 && (
-                  <span className="absolute right-1.5 top-1.5 flex h-2 w-2 rounded-full bg-destructive animate-pulse-alert" />
-                )}
+                <User className="h-5 w-5 text-foreground/80" />
+                <span className="sr-only">Menu do usuário</span>
               </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0">
-              <div className="p-3 border-b font-semibold text-sm">Central de Notificações</div>
-              <div className="max-h-80 overflow-y-auto">
-                {alerts.length === 0 ? (
-                  <div className="p-6 text-center text-sm text-muted-foreground">
-                    Nenhum alerta pendente.
-                  </div>
-                ) : (
-                  alerts.map((alert) => (
-                    <div
-                      key={alert.id}
-                      className="p-3 border-b last:border-0 hover:bg-muted/50 text-sm transition-colors cursor-default"
-                    >
-                      <div className="flex justify-between items-start mb-1 gap-2">
-                        <span className="font-medium truncate">{alert.title}</span>
-                        {alert.type === 'urgent' && (
-                          <Badge variant="destructive" className="text-[10px] h-4 px-1.5 shrink-0">
-                            Urgente
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground flex justify-between items-center mt-1.5">
-                        <span>Venc: {new Date(alert.dueDate).toLocaleDateString('pt-BR')}</span>
-                        <span className="font-medium text-foreground">
-                          R$ {alert.amount.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <ThemeToggle />
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="h-8 w-8 cursor-pointer ring-2 ring-transparent transition-all hover:ring-primary ml-2">
-                <AvatarImage
-                  src={mainProfile?.avatar || profile?.avatar_url || undefined}
-                  alt={displayUser}
-                />
-                <AvatarFallback>{displayUser.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 mt-1">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none truncate">{displayUser}</p>
-                  <p className="text-xs leading-none text-muted-foreground truncate">
-                    {displayEmail}
-                  </p>
-                </div>
-              </DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleContextSwitch}
-                className="cursor-pointer font-medium text-primary focus:text-primary"
-              >
-                <Briefcase className="mr-2 h-4 w-4" />
-                <span>
-                  {currentContext === 'personal' ? 'perfil empresarial' : 'perfil pessoal'}
-                </span>
+              <DropdownMenuItem className="text-muted-foreground truncate cursor-default">
+                {user.email}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => navigate('/configuracoes')}
-                className="cursor-pointer"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Configurações</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/perfis')} className="cursor-pointer">
-                <Users className="mr-2 h-4 w-4" />
-                <span>
-                  {currentContext === 'business' ? 'Perfis de Colaborador' : 'Membros Familiares'}
-                </span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={handleLogout}
-                className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
+                onClick={() => signOut()}
+                className="text-destructive focus:text-destructive cursor-pointer"
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Sair da conta</span>
+                Sair
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </header>
-
-      <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
-              Funcionalidade Premium
-            </DialogTitle>
-            <DialogDescription className="text-base pt-2">
-              O gerenciamento de <strong>Fluxo de Caixa Empresarial</strong> e a separação de
-              contextos estão disponíveis apenas para assinantes Premium.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-6 flex flex-col items-center text-center bg-muted/30 rounded-lg my-2 border border-border/50">
-            <Briefcase className="w-12 h-12 text-primary mb-3" />
-            <h4 className="font-semibold">Profissionalize suas finanças</h4>
-            <p className="text-sm text-muted-foreground mt-1 max-w-[280px]">
-              Separe completamente os gastos da sua empresa dos gastos pessoais.
-            </p>
-          </div>
-          <DialogFooter className="sm:justify-between flex-row gap-2 mt-2">
-            <Button variant="outline" onClick={() => setShowUpgrade(false)} className="flex-1">
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleUpgrade}
-              className="flex-1 bg-gradient-to-r from-primary to-emerald-500 text-white border-0"
-            >
-              Fazer Upgrade
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+        ) : (
+          <Button asChild variant="default" size="sm" className="hidden sm:flex">
+            <Link to="/login">Entrar</Link>
+          </Button>
+        )}
+      </div>
+    </header>
   )
 }
