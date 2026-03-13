@@ -48,6 +48,7 @@ import {
   Edit,
   UserMinus,
   Key,
+  Mail,
 } from 'lucide-react'
 
 const planLabels: Record<string, string> = {
@@ -280,6 +281,19 @@ export function AdminClientsTab() {
     }
   }
 
+  const handleResendConfirmation = async (email: string) => {
+    if (!email) return
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+    })
+    if (error) {
+      toast({ title: 'Erro', description: error.message, variant: 'destructive' })
+    } else {
+      toast({ title: 'Sucesso', description: `Confirmation email sent successfully to ${email}` })
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -394,6 +408,13 @@ export function AdminClientsTab() {
                           >
                             <Key className="mr-2 h-4 w-4" />
                             Alterar Senha
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleResendConfirmation(p.email)}
+                            className="cursor-pointer"
+                          >
+                            <Mail className="mr-2 h-4 w-4" />
+                            Reenviar Confirmação
                           </DropdownMenuItem>
                           {p.email !== 'fhbcyberguard@gmail.com' && (
                             <>
