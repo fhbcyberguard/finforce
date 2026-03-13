@@ -20,7 +20,7 @@ export function Header() {
   const location = useLocation()
 
   const navItems = [
-    { title: 'Dashboard', url: '/' },
+    { title: 'Dashboard', url: '/dashboard' },
     { title: 'Perfis', url: '/perfis' },
   ]
 
@@ -29,8 +29,8 @@ export function Header() {
       <div className="flex items-center gap-4 lg:gap-8">
         <SidebarTrigger className="md:hidden" />
 
-        {/* Logo Integration */}
-        <Logo />
+        {/* Logo Integration - Redirects to dashboard if logged in */}
+        <Logo to={user ? '/dashboard' : '/'} />
 
         {/* Navigation Menu aligned horizontally with the Logo */}
         <nav className="hidden md:flex items-center gap-6">
@@ -40,7 +40,7 @@ export function Header() {
               to={item.url}
               className={cn(
                 'text-sm font-medium transition-colors hover:text-foreground',
-                location.pathname === item.url ? 'text-foreground' : 'text-muted-foreground',
+                location.pathname === item.url ? 'text-[#03f2ff]' : 'text-muted-foreground',
               )}
             >
               {item.title}
@@ -81,7 +81,12 @@ export function Header() {
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
-          <Button asChild variant="default" size="sm" className="hidden sm:flex">
+          <Button
+            asChild
+            variant="default"
+            size="sm"
+            className="hidden sm:flex bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
+          >
             <Link to="/login">Entrar</Link>
           </Button>
         )}

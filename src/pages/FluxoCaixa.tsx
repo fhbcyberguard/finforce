@@ -283,7 +283,9 @@ export default function FluxoCaixa() {
     <div className="space-y-6 animate-slide-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Fluxo de Caixa</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-[#03f2ff]">
+            Transações
+          </h1>
           <p className="text-muted-foreground">Visão detalhada de entradas e saídas.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-wrap items-start sm:items-center">
@@ -358,7 +360,7 @@ export default function FluxoCaixa() {
             </DropdownMenu>
 
             <Button
-              className="gap-2 w-full sm:w-auto"
+              className="gap-2 w-full sm:w-auto bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
               onClick={() => {
                 resetForm()
                 setOpenAdd(true)
@@ -453,7 +455,7 @@ export default function FluxoCaixa() {
                       <SelectContent className="max-h-[200px]">
                         {Object.entries(MOCK_CATEGORIES).map(([parent, subs]) => (
                           <SelectGroup key={parent}>
-                            <SelectLabel className="text-primary">{parent}</SelectLabel>
+                            <SelectLabel className="text-[#03f2ff]">{parent}</SelectLabel>
                             {subs.map((sub) => (
                               <SelectItem key={sub} value={`${parent} > ${sub}`}>
                                 {parent} &gt; {sub}
@@ -598,7 +600,10 @@ export default function FluxoCaixa() {
                 )}
 
                 <DialogFooter className="mt-6 pt-4 border-t">
-                  <Button type="submit" className="w-full">
+                  <Button
+                    type="submit"
+                    className="w-full bg-[#03f2ff] text-black hover:bg-[#03f2ff]/90"
+                  >
                     {editingTx ? 'Salvar Alterações' : 'Salvar Transação'}
                   </Button>
                 </DialogFooter>
@@ -620,7 +625,7 @@ export default function FluxoCaixa() {
               const amountClass = isGain
                 ? 'text-emerald-500'
                 : tx.type === 'Transfer'
-                  ? 'text-blue-500'
+                  ? 'text-[#03f2ff]'
                   : 'text-rose-500'
               const amountPrefix = isGain ? '+' : tx.type === 'Transfer' ? '' : '-'
 
@@ -631,7 +636,7 @@ export default function FluxoCaixa() {
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`p-2 rounded-full ${isGain ? 'bg-emerald-500/10' : tx.type === 'Transfer' ? 'bg-blue-500/10' : 'bg-rose-500/10'}`}
+                      className={`p-2 rounded-full ${isGain ? 'bg-emerald-500/10' : tx.type === 'Transfer' ? 'bg-[#03f2ff]/10' : 'bg-rose-500/10'}`}
                     >
                       {getIcon(tx.type, isGain)}
                     </div>
@@ -657,7 +662,7 @@ export default function FluxoCaixa() {
                         ) : tx.type === 'Transfer' ? (
                           <Badge
                             variant="outline"
-                            className="text-[10px] font-normal border-blue-500/30 text-blue-500 bg-blue-500/5"
+                            className="text-[10px] font-normal border-[#03f2ff]/30 text-[#03f2ff] bg-[#03f2ff]/5"
                           >
                             Transferência
                           </Badge>
@@ -680,7 +685,7 @@ export default function FluxoCaixa() {
                           • {new Date(tx.date).toLocaleDateString('pt-BR')}
                         </span>
                         {tx.profile && (
-                          <span className="text-xs text-primary/70 font-medium ml-1">
+                          <span className="text-xs text-[#03f2ff]/80 font-medium ml-1">
                             [{tx.profile}]
                           </span>
                         )}

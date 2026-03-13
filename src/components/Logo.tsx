@@ -5,12 +5,13 @@ import logoImg from '../assets/copia-de-logo-drowp-horizontal-3e587.png'
 interface LogoProps {
   className?: string
   imageClassName?: string
+  to?: string
 }
 
-export function Logo({ className, imageClassName }: LogoProps) {
+export function Logo({ className, imageClassName, to = '/' }: LogoProps) {
   return (
     <Link
-      to="/"
+      to={to}
       className={cn('flex items-center gap-2 transition-opacity hover:opacity-90', className)}
     >
       <img

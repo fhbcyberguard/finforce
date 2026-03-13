@@ -13,6 +13,7 @@ import Patrimonio from './pages/Patrimonio'
 import Contas from './pages/Contas'
 import Perfis from './pages/Perfis'
 import FluxoCaixa from './pages/FluxoCaixa'
+import Orcamento from './pages/Orcamento'
 import Configuracoes from './pages/Configuracoes'
 import ProducerAdmin from './pages/ProducerAdmin'
 import NotFound from './pages/NotFound'
@@ -56,9 +57,10 @@ const App = () => (
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<Index />} />
+                <Route path="/transacoes" element={<FluxoCaixa />} />
+                <Route path="/orcamento" element={<Orcamento />} />
                 <Route path="/metas" element={<Metas />} />
                 <Route path="/patrimonio" element={<Patrimonio />} />
-                <Route path="/fluxo" element={<FluxoCaixa />} />
                 <Route path="/contas" element={<Contas />} />
                 <Route path="/perfis" element={<Perfis />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
