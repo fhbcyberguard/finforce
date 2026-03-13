@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import useAppStore, { Transaction } from '@/stores/useAppStore'
 import { useAuth } from '@/hooks/use-auth'
 import { supabase } from '@/lib/supabase/client'
@@ -25,9 +25,6 @@ import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { TransactionTable } from '@/components/fluxo/TransactionTable'
 import { TransactionSummaries } from '@/components/fluxo/TransactionSummaries'
-// Placeholder for TransactionFormDialog to avoid blowing up the file size.
-// It relies on internal logic, but since we didn't extract the Form to a file due to dependencies,
-// I will keep the Form logic in FluxoCaixa but use the extracted table and summaries to save space.
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -38,12 +35,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { DynamicIcon } from '@/components/ui/dynamic-icon'
-import {
-  RETIREMENT_WITHDRAWAL_PHRASES,
-  EMERGENCY_WITHDRAWAL_PHRASES,
-  HIGH_VALUE_PHRASES,
-  getRandomPhrase,
-} from '@/lib/reflections'
 
 export default function FluxoCaixa() {
   const { user } = useAuth()
@@ -70,8 +61,7 @@ export default function FluxoCaixa() {
   const [openImport, setOpenImport] = useState(false)
   const [importType, setImportType] = useState<'csv' | 'ofx' | null>(null)
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
-  const [postSaveAction, setPostSaveAction] = useState<any>(null)
-  const [savedTxForUI, setSavedTxForUI] = useState<Transaction | null>(null)
+  const [familyMembers, setFamilyMembers] = useState<any[]>([])
   const { toast } = useToast()
 
   // Form State
@@ -82,6 +72,15 @@ export default function FluxoCaixa() {
   const [selectedGoalId, setSelectedGoalId] = useState('')
   const [recurrenceType, setRecurrenceType] = useState('none')
 
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!user) return
+      const { data } = await supabase.from('members').select('*').eq('is_archived', false)
+      if (data) setFamilyMembers(data)
+    }
+    fetchMembers()
+  }, [user])
+
   const resetForm = () => {
     setEditingTx(null)
     setIsPix(false)
@@ -91,6 +90,7 @@ export default function FluxoCaixa() {
     setSelectedGoalId('')
     setRecurrenceType('none')
   }
+
   const openEdit = (tx: Transaction) => {
     setEditingTx(tx)
     setIsPix(tx.type === 'Pix')
@@ -154,6 +154,9 @@ export default function FluxoCaixa() {
         ? `Metas > ${goals.find((g) => g.id === selectedGoalId)?.name || 'Geral'}`
         : (fd.get('category') as string)
 
+    const memberVal = fd.get('member_id') as string
+    const member_id = memberVal === 'none' ? null : memberVal
+
     const newTx: any = {
       user_id: user.id,
       description: fd.get('description') as string,
@@ -171,15 +174,28 @@ export default function FluxoCaixa() {
       bank_broker: fd.get('bankBroker') || null,
       asset_name: fd.get('assetName') || null,
       context: currentContext,
+      member_id,
     }
 
     if (editingTx) {
-      const { error } = await supabase.from('transactions').update(newTx).eq('id', editingTx.id)
+      const { data, error } = await supabase
+        .from('transactions')
+        .update(newTx)
+        .eq('id', editingTx.id)
+        .select('*, members(name, color)')
+        .single()
+
       if (!error) {
         setTransactions(
           transactions.map((t) =>
             t.id === editingTx.id
-              ? { ...t, ...newTx, id: editingTx.id, date: fd.get('date') as string }
+              ? {
+                  ...t,
+                  ...newTx,
+                  id: editingTx.id,
+                  date: fd.get('date') as string,
+                  members: data?.members,
+                }
               : t,
           ),
         )
@@ -188,9 +204,14 @@ export default function FluxoCaixa() {
         resetForm()
       }
     } else {
-      const { data, error } = await supabase.from('transactions').insert(newTx).select().single()
+      const { data, error } = await supabase
+        .from('transactions')
+        .insert(newTx)
+        .select('*, members(name, color)')
+        .single()
+
       if (!error && data) {
-        const t = { ...newTx, id: data.id, date: fd.get('date') as string }
+        const t = { ...newTx, id: data.id, date: fd.get('date') as string, members: data.members }
         commitToUI(t)
         toast({ title: 'Transação adicionada' })
         setOpenAdd(false)
@@ -267,6 +288,7 @@ export default function FluxoCaixa() {
               accounts={accounts}
               creditCards={creditCards}
               categories={categories}
+              members={familyMembers}
               onEdit={openEdit}
               onDelete={handleDelete}
               onAdd={() => {
@@ -384,6 +406,22 @@ export default function FluxoCaixa() {
                   </Select>
                 </div>
               )}
+              <div className="space-y-2">
+                <Label>Membro</Label>
+                <Select name="member_id" defaultValue={editingTx?.member_id || 'none'}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um membro..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {familyMembers.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter className="mt-6">
               <Button type="submit" className="w-full bg-[#126eda] text-white">

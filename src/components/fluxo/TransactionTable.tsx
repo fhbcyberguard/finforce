@@ -23,6 +23,7 @@ interface TransactionTableProps {
   accounts: any[]
   creditCards: any[]
   categories: any[]
+  members?: any[]
   onEdit: (tx: Transaction) => void
   onDelete: (id: string) => void
   onAdd: () => void
@@ -33,6 +34,7 @@ export function TransactionTable({
   accounts,
   creditCards,
   categories,
+  members,
   onEdit,
   onDelete,
   onAdd,
@@ -99,7 +101,26 @@ export function TransactionTable({
                       💳 {accounts.find((a) => a.id === tx.account)?.name || tx.account}
                     </span>
                   )}
-                  {tx.profile && tx.profile !== 'none' && (
+                  {tx.member_id &&
+                    members &&
+                    members.length > 0 &&
+                    (() => {
+                      const m = members.find((x) => x.id === tx.member_id)
+                      if (!m) return null
+                      return (
+                        <span
+                          className="text-[10px] font-medium px-1.5 py-0.5 rounded-md border flex items-center gap-1"
+                          style={{
+                            color: m.color || '#64748b',
+                            borderColor: `${m.color || '#64748b'}50`,
+                            backgroundColor: `${m.color || '#64748b'}10`,
+                          }}
+                        >
+                          👤 {m.name}
+                        </span>
+                      )
+                    })()}
+                  {tx.profile && tx.profile !== 'none' && !tx.member_id && (
                     <span className="text-[10px] text-primary/80 font-medium">👤 {tx.profile}</span>
                   )}
                 </div>

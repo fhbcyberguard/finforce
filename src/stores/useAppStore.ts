@@ -121,6 +121,8 @@ export type Transaction = {
   bankBroker?: string
   assetName?: string
   context?: ContextType
+  member_id?: string | null
+  members?: { name: string; color: string | null } | null
 }
 
 interface SimulatorSettings {
