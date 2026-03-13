@@ -76,9 +76,10 @@ export default function FluxoCaixa() {
   const [fileName, setFileName] = useState('')
   const [editingTx, setEditingTx] = useState<Transaction | null>(null)
 
-  const [selectedAccount, setSelectedAccount] = useState<string>('')
+  const [selectedAccount, setSelectedAccount] = useState<string>('none')
   const [selectedCard, setSelectedCard] = useState<string>('none')
   const [selectedGoalId, setSelectedGoalId] = useState<string>('')
+  const [recurrenceType, setRecurrenceType] = useState('none')
 
   // TCC Trigger State
   const [pendingLargeExpense, setPendingLargeExpense] = useState<Transaction | null>(null)
@@ -93,9 +94,10 @@ export default function FluxoCaixa() {
     setFileName('')
     setIsPix(false)
     setFormType('Expense')
-    setSelectedAccount(accounts[0]?.id || '')
+    setSelectedAccount('none')
     setSelectedCard('none')
     setSelectedGoalId('')
+    setRecurrenceType('none')
   }
 
   useEffect(() => {
@@ -103,11 +105,16 @@ export default function FluxoCaixa() {
       if (editingTx) {
         setFormType(editingTx.type)
         setIsPix(editingTx.type === 'Pix')
-        const foundAcc = accounts.find(
-          (a) => a.id === editingTx.account || a.bank === editingTx.account,
-        )
-        setSelectedAccount(foundAcc ? foundAcc.id : accounts[0]?.id || '')
+
+        const hasAcc = editingTx.account && editingTx.account !== 'none'
+        const foundAcc = hasAcc
+          ? accounts.find((a) => a.id === editingTx.account || a.bank === editingTx.account)
+          : null
+        setSelectedAccount(foundAcc ? foundAcc.id : hasAcc ? editingTx.account : 'none')
+
         setSelectedCard(editingTx.cardId || 'none')
+        setRecurrenceType(editingTx.recurrence || 'none')
+
         if (editingTx.type === 'Aporte') {
           if (editingTx.goalId) {
             setSelectedGoalId(editingTx.goalId)
@@ -118,9 +125,10 @@ export default function FluxoCaixa() {
         }
       } else {
         setFormType('Expense')
-        setSelectedAccount(accounts[0]?.id || '')
+        setSelectedAccount('none')
         setSelectedCard('none')
         setSelectedGoalId('')
+        setRecurrenceType('none')
       }
     }
   }, [openAdd, editingTx, accounts, goals])
@@ -149,9 +157,9 @@ export default function FluxoCaixa() {
     ]
 
     const rows = transactions.map((tx) => {
-      const acc = accounts.find((a) => a.id === tx.account)?.bank || tx.account || ''
-      const card = creditCards.find((c) => c.id === tx.cardId)?.name || ''
-      const accOrCard = card ? `${acc} (${card})` : acc
+      const accStr = accounts.find((a) => a.id === tx.account)?.bank || tx.account || ''
+      const cardStr = creditCards.find((c) => c.id === tx.cardId)?.name || ''
+      const accOrCard = cardStr ? (accStr ? `${accStr} (${cardStr})` : cardStr) : accStr
 
       return [
         tx.date,
@@ -189,9 +197,10 @@ export default function FluxoCaixa() {
       category: txToSave.category,
       date: new Date(`${txToSave.date}T12:00:00Z`).toISOString(),
       expense_type: txToSave.expenseType,
-      account: txToSave.account,
-      card_id: txToSave.cardId,
+      account: txToSave.account || null,
+      card_id: txToSave.cardId || null,
       recurrence: txToSave.recurrence,
+      installments: txToSave.installments || null,
       has_attachment: txToSave.hasAttachment,
       profile: txToSave.profile,
       goal_id: txToSave.goalId || null,
@@ -282,6 +291,8 @@ export default function FluxoCaixa() {
 
     const accountField = selectedAccount === 'none' ? '' : selectedAccount
     const cardField = selectedCard === 'none' ? undefined : selectedCard
+    const installments =
+      recurrenceType === 'installment' ? Number(fd.get('installments')) : undefined
 
     const newTx: Transaction = {
       id: editingTx ? editingTx.id : '',
@@ -293,7 +304,8 @@ export default function FluxoCaixa() {
       account: accountField,
       cardId: cardField,
       goalId: type === 'Aporte' ? selectedGoalId : undefined,
-      recurrence: fd.get('recurrence') as string,
+      recurrence: recurrenceType,
+      installments,
       hasAttachment: !!fileName || (editingTx?.hasAttachment ?? false),
       profile: fd.get('profile') as string,
       expenseType,
@@ -376,7 +388,7 @@ export default function FluxoCaixa() {
         t.description.toLowerCase().includes(lower) ||
         t.category.toLowerCase().includes(lower) ||
         (t.profile && t.profile.toLowerCase().includes(lower)) ||
-        t.account.toLowerCase().includes(lower),
+        (t.account && t.account.toLowerCase().includes(lower)),
     )
   }, [transactions, searchQuery, timeframe, selectedYear])
 
@@ -618,7 +630,7 @@ export default function FluxoCaixa() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 items-end">
                   <div className="space-y-2 col-span-1">
                     <Label>Perfil Responsável</Label>
                     <Select
@@ -640,7 +652,11 @@ export default function FluxoCaixa() {
                   </div>
                   <div className="space-y-2 col-span-1">
                     <Label>Recorrência</Label>
-                    <Select name="recurrence" defaultValue={editingTx?.recurrence || 'none'}>
+                    <Select
+                      name="recurrence"
+                      value={recurrenceType}
+                      onValueChange={setRecurrenceType}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -649,35 +665,40 @@ export default function FluxoCaixa() {
                         <SelectItem value="weekly">Semanal</SelectItem>
                         <SelectItem value="monthly">Mensal</SelectItem>
                         <SelectItem value="yearly">Anual</SelectItem>
+                        <SelectItem value="installment">Parcelado</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
+                  {recurrenceType === 'installment' && (
+                    <div className="space-y-2 col-span-1 sm:col-span-2">
+                      <Label>Quantidade de Parcelas</Label>
+                      <Input
+                        name="installments"
+                        type="number"
+                        min="2"
+                        step="1"
+                        required
+                        placeholder="Ex: 12"
+                        defaultValue={editingTx?.installments || ''}
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2 items-end">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 items-end">
                   <div className="space-y-2 col-span-1">
-                    <Label>Conta Registrada</Label>
-                    <Select
-                      name="account"
-                      required
-                      value={selectedAccount}
-                      onValueChange={setSelectedAccount}
-                    >
+                    <Label>Conta Registrada (Opcional)</Label>
+                    <Select value={selectedAccount} onValueChange={setSelectedAccount}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione..." />
+                        <SelectValue placeholder="Nenhuma" />
                       </SelectTrigger>
                       <SelectContent>
-                        {accounts.length === 0 ? (
-                          <SelectItem value="none" disabled>
-                            Nenhuma conta cadastrada
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {accounts.map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.bank}
                           </SelectItem>
-                        ) : (
-                          accounts.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
-                              {a.bank}
-                            </SelectItem>
-                          ))
-                        )}
+                        ))}
                         {selectedAccount &&
                           selectedAccount !== 'none' &&
                           !accounts.find((a) => a.id === selectedAccount) && (
@@ -791,7 +812,7 @@ export default function FluxoCaixa() {
                     <div>
                       <p className="font-medium text-sm sm:text-base flex items-center gap-2">
                         {tx.description}
-                        {tx.recurrence !== 'none' && (
+                        {tx.recurrence !== 'none' && tx.recurrence !== 'installment' && (
                           <Repeat className="w-3 h-3 text-muted-foreground" />
                         )}
                       </p>
@@ -833,6 +854,15 @@ export default function FluxoCaixa() {
                           </Badge>
                         ) : null}
 
+                        {tx.recurrence === 'installment' && tx.installments && (
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] font-normal border-primary/30 text-primary bg-primary/5"
+                          >
+                            {tx.installments}x Parcelas
+                          </Badge>
+                        )}
+
                         {tx.type === 'Aporte' && tx.bankBroker && (
                           <span className="text-[10px] text-muted-foreground bg-muted border border-border/50 px-1.5 py-0.5 rounded">
                             🏦 {tx.bankBroker}
@@ -844,7 +874,11 @@ export default function FluxoCaixa() {
                           </span>
                         )}
 
-                        <span className="text-xs text-muted-foreground font-medium">{accName}</span>
+                        {accName && (
+                          <span className="text-xs text-muted-foreground font-medium">
+                            {accName}
+                          </span>
+                        )}
                         {card && (
                           <span className="text-[10px] text-muted-foreground bg-muted border border-border/50 px-1.5 py-0.5 rounded flex items-center gap-1">
                             <CreditCard className="w-3 h-3" /> {card.name || card.bank}

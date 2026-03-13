@@ -70,6 +70,7 @@ export type Transaction = {
   type: string
   account: string
   recurrence: string
+  installments?: number
   hasAttachment?: boolean
   profile?: string
   expenseType?: 'fixed' | 'variable'

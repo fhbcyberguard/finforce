@@ -158,8 +158,9 @@ export function DataImportDialog({
         category: tx.category,
         date: new Date(`${tx.date}T12:00:00Z`).toISOString(),
         expense_type: tx.expenseType,
-        account: tx.account,
+        account: tx.account === 'none' ? null : tx.account,
         recurrence: tx.recurrence,
+        installments: tx.installments || null,
         has_attachment: tx.hasAttachment,
         profile: tx.profile,
       }
@@ -177,6 +178,7 @@ export function DataImportDialog({
         type: t.type,
         account: t.account || '',
         recurrence: t.recurrence || 'none',
+        installments: t.installments || undefined,
         hasAttachment: t.has_attachment,
         profile: t.profile || '',
         expenseType: t.expense_type as any,
