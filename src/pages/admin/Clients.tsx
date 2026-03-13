@@ -36,16 +36,6 @@ export default function Clients() {
     fetchProfiles()
   }, [isMasterAdmin])
 
-  if (loading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#126eda]" />
-      </div>
-    )
-  }
-
-  if (!isMasterAdmin) return <Navigate to="/dashboard" replace />
-
   const sortedProfiles = useMemo(() => {
     return [...profiles]
       .filter((p) => {
@@ -77,6 +67,16 @@ export default function Clients() {
       setSortOrder('asc')
     }
   }
+
+  if (loading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#126eda]" />
+      </div>
+    )
+  }
+
+  if (!isMasterAdmin) return <Navigate to="/dashboard" replace />
 
   return (
     <div className="space-y-6 animate-slide-in-up">
