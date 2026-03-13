@@ -49,21 +49,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true
 
+    // Fetch initial session safely to avoid race conditions with onAuthStateChange
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (mounted) {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false) // Only stop loading after accurate initial check
+      }
+    })
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (mounted) {
         setSession(session)
         setUser(session?.user ?? null)
-        setLoading(false)
-      }
-    })
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mounted) {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
+        // Do not set loading to false here to prevent unwanted redirects on slow INITIAL_SESSION
       }
     })
 

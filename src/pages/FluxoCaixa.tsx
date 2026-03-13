@@ -63,8 +63,7 @@ import {
   getRandomPhrase,
 } from '@/lib/reflections'
 
-type PendingAction = {
-  tx: Transaction
+type PostSaveAction = {
   title: string
   description: string
   reflection: string
@@ -102,7 +101,9 @@ export default function FluxoCaixa() {
   const [selectedCard, setSelectedCard] = useState<string>('none')
   const [selectedGoalId, setSelectedGoalId] = useState<string>('')
   const [recurrenceType, setRecurrenceType] = useState('none')
-  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
+
+  const [postSaveAction, setPostSaveAction] = useState<PostSaveAction>(null)
+  const [savedTxForUI, setSavedTxForUI] = useState<Transaction | null>(null)
 
   const { toast } = useToast()
 
@@ -274,7 +275,18 @@ export default function FluxoCaixa() {
     toast({ title: 'Exportação Concluída', description: 'O arquivo CSV foi baixado com sucesso.' })
   }
 
-  const handleSave = async (txToSave: Transaction) => {
+  const commitToUI = (tx: Transaction) => {
+    if (tx.type === 'Aporte' && tx.goalId) {
+      const goal = goals.find((g) => g.id === tx.goalId)
+      if (goal) {
+        const newBalance = goal.currentValue + tx.amount
+        setGoals(goals.map((g) => (g.id === goal.id ? { ...g, currentValue: newBalance } : g)))
+      }
+    }
+    setTransactions([tx, ...transactions])
+  }
+
+  const handleSave = async (txToSave: Transaction, reflectionInfo?: any) => {
     if (!user) return
     const dbPayload: any = {
       user_id: user.id,
@@ -283,12 +295,12 @@ export default function FluxoCaixa() {
       type: txToSave.type,
       category: txToSave.category,
       date: new Date(`${txToSave.date}T12:00:00Z`).toISOString(),
-      expense_type: txToSave.expenseType,
+      expense_type: txToSave.expenseType || null,
       account: txToSave.account || null,
       card_id: txToSave.cardId || null,
-      recurrence: txToSave.recurrence,
+      recurrence: txToSave.recurrence || null,
       installments: txToSave.installments || null,
-      has_attachment: txToSave.hasAttachment,
+      has_attachment: txToSave.hasAttachment || false,
       profile: txToSave.profile || null,
       goal_id: txToSave.goalId || null,
       bank_broker: txToSave.bankBroker || null,
@@ -318,28 +330,51 @@ export default function FluxoCaixa() {
           title: 'Transação atualizada',
           description: 'O registro foi modificado com sucesso.',
         })
+      } else {
+        toast({ variant: 'destructive', title: 'Erro ao atualizar', description: error.message })
       }
+      setOpenAdd(false)
+      resetForm()
     } else {
       const { data, error } = await supabase
         .from('transactions')
         .insert(dbPayload)
         .select()
         .single()
+
       if (!error && data) {
-        if (txToSave.type === 'Aporte' && txToSave.goalId) {
-          const goal = goals.find((g) => g.id === txToSave.goalId)
+        const finalTx = { ...txToSave, id: data.id }
+
+        if (finalTx.type === 'Aporte' && finalTx.goalId) {
+          const goal = goals.find((g) => g.id === finalTx.goalId)
           if (goal) {
-            const newBalance = goal.currentValue + txToSave.amount
+            const newBalance = goal.currentValue + finalTx.amount
             await supabase.from('goals').update({ current_value: newBalance }).eq('id', goal.id)
-            setGoals(goals.map((g) => (g.id === goal.id ? { ...g, currentValue: newBalance } : g)))
           }
         }
-        setTransactions([{ ...txToSave, id: data.id }, ...transactions])
-        toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
+
+        if (reflectionInfo) {
+          setSavedTxForUI(finalTx)
+          setPostSaveAction({
+            title: reflectionInfo.title,
+            description: reflectionInfo.description,
+            reflection: reflectionInfo.reflection,
+          })
+          setOpenAdd(false)
+        } else {
+          commitToUI(finalTx)
+          toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
+          setOpenAdd(false)
+          resetForm()
+        }
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao salvar',
+          description: error?.message || 'Verifique sua conexão.',
+        })
       }
     }
-    setOpenAdd(false)
-    resetForm()
   }
 
   const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -379,6 +414,8 @@ export default function FluxoCaixa() {
       assetName: type === 'Aporte' ? (fd.get('assetName') as string) : undefined,
     }
 
+    let reflectionInfo: any = null
+
     if (!editingTx && !isGain && type !== 'Transfer') {
       const catLower = category.toLowerCase()
       const acc = accounts.find((a) => a.id === selectedAccount)
@@ -403,30 +440,8 @@ export default function FluxoCaixa() {
         accNameLower.includes('emergência') ||
         accNameLower.includes('emergencia')
 
-      if (isRetirement) {
-        setPendingAction({
-          tx: newTx,
-          title: 'Aviso de Retirada (Aposentadoria)',
-          description: 'Você está registrando uma saída do seu fundo de aposentadoria.',
-          reflection: getRandomPhrase(RETIREMENT_WITHDRAWAL_PHRASES),
-        })
-        setOpenAdd(false)
-        return
-      }
-
-      if (isEmergency) {
-        setPendingAction({
-          tx: newTx,
-          title: 'Aviso de Retirada (Reserva de Emergência)',
-          description: 'Você está registrando uma saída da sua reserva de emergência.',
-          reflection: getRandomPhrase(EMERGENCY_WITHDRAWAL_PHRASES),
-        })
-        setOpenAdd(false)
-        return
-      }
-
       const txDate = fd.get('date') as string
-      const txMonthStr = txDate.substring(0, 7) // 'YYYY-MM'
+      const txMonthStr = txDate.substring(0, 7)
       const currentMonthIncome = transactions
         .filter((t) => t.type === 'Revenue' && t.date.startsWith(txMonthStr))
         .reduce((acc, t) => acc + Math.abs(t.amount), 0)
@@ -434,19 +449,28 @@ export default function FluxoCaixa() {
       const incomeToCompare = currentMonthIncome > 0 ? currentMonthIncome : averageIncome
       const highValueThreshold = incomeToCompare * 0.7
 
-      if (Math.abs(amount) > highValueThreshold && highValueThreshold > 0) {
-        setPendingAction({
-          tx: newTx,
+      if (isRetirement) {
+        reflectionInfo = {
+          title: 'Aviso de Retirada (Aposentadoria)',
+          description: 'Sua retirada do fundo de aposentadoria foi registrada.',
+          reflection: getRandomPhrase(RETIREMENT_WITHDRAWAL_PHRASES),
+        }
+      } else if (isEmergency) {
+        reflectionInfo = {
+          title: 'Aviso de Retirada (Reserva de Emergência)',
+          description: 'Sua retirada da reserva de emergência foi registrada.',
+          reflection: getRandomPhrase(EMERGENCY_WITHDRAWAL_PHRASES),
+        }
+      } else if (Math.abs(amount) > highValueThreshold && highValueThreshold > 0) {
+        reflectionInfo = {
           title: 'Alerta de Gasto Elevado',
-          description: 'Esta transação representa mais de 70% da sua renda mensal.',
+          description: 'Sua transação de alto valor foi registrada no fluxo.',
           reflection: getRandomPhrase(HIGH_VALUE_PHRASES),
-        })
-        setOpenAdd(false)
-        return
+        }
       }
     }
 
-    handleSave(newTx)
+    handleSave(newTx, reflectionInfo)
   }
 
   const handleDelete = async (id: string) => {
@@ -1080,21 +1104,27 @@ export default function FluxoCaixa() {
       <DataImportDialog open={openImport} onOpenChange={setOpenImport} importType={importType} />
 
       <ImpulseControlDialog
-        open={!!pendingAction}
+        open={!!postSaveAction}
         onOpenChange={(o) => {
-          if (!o && pendingAction) setPendingAction(null)
-        }}
-        onConfirm={() => {
-          if (pendingAction) {
-            handleSave(pendingAction.tx)
-            setPendingAction(null)
+          if (!o && postSaveAction) {
+            if (savedTxForUI) commitToUI(savedTxForUI)
+            setPostSaveAction(null)
+            setSavedTxForUI(null)
+            resetForm()
           }
         }}
-        title={pendingAction?.title || ''}
-        description={pendingAction?.description || ''}
-        reflectionText={pendingAction?.reflection || ''}
-        confirmText="Confirmar Registro"
+        onConfirm={() => {
+          if (savedTxForUI) commitToUI(savedTxForUI)
+          setPostSaveAction(null)
+          setSavedTxForUI(null)
+          resetForm()
+        }}
+        title={postSaveAction?.title || ''}
+        description={postSaveAction?.description || ''}
+        reflectionText={postSaveAction?.reflection || ''}
+        confirmText="Ciente, Continuar"
         destructive={false}
+        mode="info"
       />
     </div>
   )

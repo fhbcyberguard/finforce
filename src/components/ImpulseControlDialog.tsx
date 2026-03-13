@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Typewriter } from './Typewriter'
-import { AlertTriangle, CheckCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle, Info } from 'lucide-react'
 
 interface ImpulseControlDialogProps {
   open: boolean
@@ -20,7 +20,7 @@ interface ImpulseControlDialogProps {
   reflectionText: string
   confirmText?: string
   destructive?: boolean
-  mode?: 'warning' | 'success'
+  mode?: 'warning' | 'success' | 'info'
 }
 
 export function ImpulseControlDialog({
@@ -36,9 +36,12 @@ export function ImpulseControlDialog({
 }: ImpulseControlDialogProps) {
   const [countdown, setCountdown] = useState(5)
 
+  const isSuccess = mode === 'success'
+  const isInfo = mode === 'info'
+
   useEffect(() => {
     if (open) {
-      if (mode === 'success') {
+      if (isSuccess || isInfo) {
         setCountdown(0)
       } else {
         setCountdown(5)
@@ -57,20 +60,20 @@ export function ImpulseControlDialog({
     }
   }
 
-  const isSuccess = mode === 'success'
-
   return (
     <Dialog
       open={open}
-      onOpenChange={(o) => (isSuccess || countdown === 0 || !o) && onOpenChange(o)}
+      onOpenChange={(o) => (isSuccess || isInfo || countdown === 0 || !o) && onOpenChange(o)}
     >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle
-            className={`flex items-center gap-2 ${isSuccess ? 'text-emerald-500' : 'text-destructive'}`}
+            className={`flex items-center gap-2 ${isSuccess ? 'text-emerald-500' : isInfo ? 'text-primary' : 'text-destructive'}`}
           >
             {isSuccess ? (
               <CheckCircle className="w-5 h-5" />
+            ) : isInfo ? (
+              <Info className="w-5 h-5" />
             ) : (
               <AlertTriangle className="w-5 h-5" />
             )}{' '}
@@ -84,13 +87,13 @@ export function ImpulseControlDialog({
           <DialogDescription className="mt-4">{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="mt-6">
-          {!isSuccess && (
+          {!isSuccess && !isInfo && (
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
           )}
           <Button
-            variant={isSuccess ? 'default' : destructive ? 'destructive' : 'default'}
+            variant={isSuccess || isInfo ? 'default' : destructive ? 'destructive' : 'default'}
             onClick={handleConfirm}
             disabled={countdown > 0}
             className="min-w-[140px] transition-all"

@@ -33,10 +33,16 @@ export default function Login() {
       if (error) throw error
       navigate('/dashboard')
     } catch (error: any) {
+      let errorMsg = error.message || 'Verifique suas credenciais e tente novamente.'
+
+      if (errorMsg.toLowerCase().includes('invalid login credentials')) {
+        errorMsg = 'Credenciais inválidas. Verifique seu e-mail e senha.'
+      }
+
       toast({
         variant: 'destructive',
         title: 'Erro ao entrar',
-        description: error.message || 'Verifique suas credenciais e tente novamente.',
+        description: errorMsg,
       })
     } finally {
       setIsLoading(false)
