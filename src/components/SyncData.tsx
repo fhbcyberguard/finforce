@@ -12,6 +12,7 @@ export function SyncData() {
     setCategoriesFromDB,
     setAccountsFromDB,
     setCreditCardsFromDB,
+    setAssetsFromDB,
   } = useAppStore()
 
   useEffect(() => {
@@ -24,7 +25,7 @@ export function SyncData() {
           name,
           email,
           role,
-          profile:profiles(id, full_name, avatar_url)
+          profile:profiles(id, full_name, avatar_url, profile_type)
         `)
 
       if (familyMembers) {
@@ -36,6 +37,7 @@ export function SyncData() {
           avatar: m.profile?.avatar_url || null,
           profile_id: m.profile?.id || null,
           limit: 0,
+          context: m.profile?.profile_type === 'enterprise' ? 'business' : 'personal',
         }))
         setProfilesFromDB(mappedProfiles)
       }
@@ -61,8 +63,24 @@ export function SyncData() {
           hasAttachment: t.has_attachment || false,
           profile: t.profile || '',
           expenseType: t.expense_type as any,
+          bankBroker: t.bank_broker || undefined,
+          assetName: t.asset_name || undefined,
+          context: t.context || 'personal',
         }))
         setTransactionsFromDB(mappedTxs)
+
+        const mappedAssets = txs
+          .filter((t: any) => t.type === 'Asset')
+          .map((t: any) => ({
+            id: t.id,
+            name: t.asset_name || t.description,
+            value: Number(t.amount),
+            type: t.type,
+            category: t.category,
+            bankBroker: t.bank_broker || '',
+            context: t.context || 'personal',
+          }))
+        setAssetsFromDB(mappedAssets)
       }
 
       // 3. Fetch goals
@@ -80,6 +98,7 @@ export function SyncData() {
           monthlyDeposit: Number(g.monthly_contribution),
           targetDate: g.target_date || new Date().toISOString().split('T')[0],
           icon: g.icon || 'Target',
+          context: g.context || 'personal',
         }))
         setGoalsFromDB(mappedGoals)
       }
@@ -96,6 +115,7 @@ export function SyncData() {
           name: c.name,
           type: c.type,
           icon: c.icon || 'CircleDashed',
+          context: c.context || 'personal',
         }))
         setCategoriesFromDB(mappedCats)
       }
@@ -115,6 +135,7 @@ export function SyncData() {
           account_number: a.account_number || '',
           color: a.color || '',
           connected: a.connected || false,
+          context: a.context || 'personal',
         }))
         setAccountsFromDB(mappedAccounts)
       }
@@ -134,6 +155,7 @@ export function SyncData() {
           dueDate: c.due_day || 1,
           closingDate: c.closing_day || 1,
           accountId: c.account_id || 'none',
+          context: c.context || 'personal',
         }))
         setCreditCardsFromDB(mappedCards)
       }
@@ -182,6 +204,7 @@ export function SyncData() {
     setCategoriesFromDB,
     setAccountsFromDB,
     setCreditCardsFromDB,
+    setAssetsFromDB,
   ])
 
   return null

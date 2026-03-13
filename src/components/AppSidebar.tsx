@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button'
 import { Logo } from './Logo'
 import { useAuth } from '@/hooks/use-auth'
 import useAppStore from '@/stores/useAppStore'
+import { supabase } from '@/lib/supabase/client'
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
@@ -50,12 +51,30 @@ export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { state, toggleSidebar } = useSidebar()
-  const { signOut } = useAuth()
+  const { user, signOut } = useAuth()
   const { currentContext, setCurrentContext } = useAppStore()
 
   const handleLogout = async () => {
     await signOut()
     navigate('/')
+  }
+
+  const handleContextChange = async (v: string) => {
+    const newCtx = v as 'personal' | 'business'
+    setCurrentContext(newCtx)
+    if (user) {
+      const profileType = newCtx === 'business' ? 'enterprise' : 'personal'
+      await supabase.from('profiles').update({ profile_type: profileType }).eq('id', user.id)
+    }
+  }
+
+  const handleToggleCollapsed = async () => {
+    const newCtx = currentContext === 'personal' ? 'business' : 'personal'
+    setCurrentContext(newCtx)
+    if (user) {
+      const profileType = newCtx === 'business' ? 'enterprise' : 'personal'
+      await supabase.from('profiles').update({ profile_type: profileType }).eq('id', user.id)
+    }
   }
 
   return (
@@ -85,25 +104,21 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 flex flex-col gap-4 border-t border-sidebar-border/50">
         {state === 'expanded' ? (
           <div className="flex flex-col gap-4 animate-in fade-in duration-200">
-            <Tabs
-              value={currentContext}
-              onValueChange={(v) => setCurrentContext(v as 'personal' | 'business')}
-              className="w-full"
-            >
+            <Tabs value={currentContext} onValueChange={handleContextChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2 h-10 bg-sidebar-accent">
                 <TabsTrigger
                   value="personal"
-                  className="flex items-center gap-2 text-xs data-[state=active]:bg-sidebar data-[state=active]:shadow-sm"
+                  className="flex items-center gap-2 text-xs data-[state=active]:bg-sidebar data-[state=active]:shadow-sm data-[state=active]:text-primary"
                 >
                   <User className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Pessoal</span>
+                  <span className="truncate font-medium">Pessoal</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="business"
-                  className="flex items-center gap-2 text-xs data-[state=active]:bg-sidebar data-[state=active]:shadow-sm"
+                  className="flex items-center gap-2 text-xs data-[state=active]:bg-sidebar data-[state=active]:shadow-sm data-[state=active]:text-primary"
                 >
                   <Building2 className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Empresa</span>
+                  <span className="truncate font-medium">Empresa</span>
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -124,16 +139,14 @@ export function AppSidebar() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 shrink-0 bg-sidebar-accent hover:bg-sidebar-accent/80"
-              onClick={() =>
-                setCurrentContext(currentContext === 'personal' ? 'business' : 'personal')
-              }
+              className="h-10 w-10 shrink-0 bg-sidebar-accent hover:bg-sidebar-accent/80 transition-colors"
+              onClick={handleToggleCollapsed}
               title={currentContext === 'personal' ? 'Mudar para Empresa' : 'Mudar para Pessoal'}
             >
               {currentContext === 'personal' ? (
-                <User className="h-5 w-5 text-sidebar-foreground" />
+                <User className="h-5 w-5 text-primary" />
               ) : (
-                <Building2 className="h-5 w-5 text-sidebar-foreground" />
+                <Building2 className="h-5 w-5 text-primary" />
               )}
             </Button>
 

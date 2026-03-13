@@ -27,7 +27,7 @@ import { GOAL_DELETION_PHRASES, ADD_GOAL_PHRASES, getRandomPhrase } from '@/lib/
 
 export default function Metas() {
   const { user, profile } = useAuth()
-  const { goals, setGoals } = useAppStore()
+  const { goals, setGoals, currentContext } = useAppStore()
   const [open, setOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null)
@@ -53,6 +53,19 @@ export default function Metas() {
     }
     return 35
   }, [profile])
+
+  const generalGoals = useMemo(() => {
+    return goals.filter((g) => {
+      const n = g.name.toLowerCase()
+      return !(
+        n.includes('aposentadoria') ||
+        n.includes('independência') ||
+        n.includes('independencia') ||
+        n.includes('liberdade') ||
+        n.includes('longo prazo')
+      )
+    })
+  }, [goals])
 
   useEffect(() => {
     if (editingGoal) {
@@ -103,9 +116,10 @@ export default function Metas() {
       targetDate: calculatedTargetDate,
       monthlyDeposit: calculatedMonthlyDep,
       icon,
+      context: currentContext,
     }
 
-    const payload = {
+    const payload: any = {
       user_id: user.id,
       name: newGoal.name,
       target_value: newGoal.targetValue,
@@ -282,7 +296,7 @@ export default function Metas() {
       </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {goals.map((goal) => {
+        {generalGoals.map((goal) => {
           const percent = goal.targetValue > 0 ? (goal.currentValue / goal.targetValue) * 100 : 0
           const remaining = goal.targetValue - goal.currentValue
           const monthsToGoal =
@@ -426,6 +440,11 @@ export default function Metas() {
             </Card>
           )
         })}
+        {generalGoals.length === 0 && (
+          <div className="col-span-full p-12 text-center border border-dashed rounded-lg bg-muted/10 text-muted-foreground">
+            Você ainda não possui metas registradas. Planeje seus sonhos clicando em "Nova Meta".
+          </div>
+        )}
       </div>
 
       <ImpulseControlDialog

@@ -87,6 +87,7 @@ export default function FluxoCaixa() {
     setSelectedYear,
     selectedMonth,
     setSelectedMonth,
+    currentContext,
   } = useAppStore()
 
   const [openAdd, setOpenAdd] = useState(false)
@@ -305,6 +306,7 @@ export default function FluxoCaixa() {
       goal_id: txToSave.goalId || null,
       bank_broker: txToSave.bankBroker || null,
       asset_name: txToSave.assetName || null,
+      context: currentContext,
     }
 
     if (editingTx) {
@@ -412,6 +414,7 @@ export default function FluxoCaixa() {
       expenseType: !isGain && type !== 'Transfer' ? rawExpenseType || 'variable' : undefined,
       bankBroker: type === 'Aporte' ? (fd.get('bankBroker') as string) : undefined,
       assetName: type === 'Aporte' ? (fd.get('assetName') as string) : undefined,
+      context: currentContext,
     }
 
     let reflectionInfo: any = null
@@ -511,10 +514,12 @@ export default function FluxoCaixa() {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div className="w-full lg:w-auto">
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-primary">
-            Visão Empresarial
+            {currentContext === 'business' ? 'Visão Empresarial' : 'Fluxo de Caixa'}
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base mt-1">
-            Gerencie o fluxo de caixa e a saúde financeira do seu negócio.
+            {currentContext === 'business'
+              ? 'Gerencie o fluxo de caixa e a saúde financeira do seu negócio.'
+              : 'Acompanhe as entradas e saídas de sua rotina.'}
           </p>
         </div>
 

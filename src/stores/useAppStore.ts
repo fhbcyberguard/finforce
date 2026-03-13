@@ -65,6 +65,8 @@ export type Asset = {
   name: string
   value: number
   type: string
+  category?: string
+  bankBroker?: string
   context?: ContextType
 }
 
@@ -269,6 +271,7 @@ export default function useAppStore() {
   const setCategoriesFromDB = useCallback((c: Category[]) => updateState({ categories: c }), [])
   const setAccountsFromDB = useCallback((a: Account[]) => updateState({ accounts: a }), [])
   const setCreditCardsFromDB = useCallback((c: CreditCard[]) => updateState({ creditCards: c }), [])
+  const setAssetsFromDB = useCallback((a: Asset[]) => updateState({ assets: a }), [])
 
   const setAccounts = useCallback(
     (a: Account[]) => updateState({ accounts: mergeCtx(state.accounts, a, ctx) }),
@@ -337,6 +340,7 @@ export default function useAppStore() {
       setCategoriesFromDB,
       setAccountsFromDB,
       setCreditCardsFromDB,
+      setAssetsFromDB,
       setAccounts,
       setCreditCards,
       setAssets,
@@ -372,6 +376,7 @@ export default function useAppStore() {
       setCategoriesFromDB,
       setAccountsFromDB,
       setCreditCardsFromDB,
+      setAssetsFromDB,
       setAccounts,
       setCreditCards,
       setAssets,
