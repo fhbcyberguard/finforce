@@ -64,7 +64,7 @@ export function ProfileDeleteFlow({ profile, open, onOpenChange }: ProfileDelete
         onConfirm={() => setPhase(2)}
         title="Atenção: Exclusão Permanente"
         description={`Você está prestes a excluir o perfil de ${profile.name}.`}
-        reflectionText="Excluir este perfil vai remover todo o histórico financeiro ligado a ele. Esta decisão foi dialogada abertamente?"
+        reflectionText="Excluir este perfil removerá todo o histórico financeiro ligado a ele. Esta decisão foi dialogada abertamente?"
         confirmText="Avançar"
         destructive={true}
       />

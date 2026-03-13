@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast'
 import useAppStore, { CreditCard } from '@/stores/useAppStore'
 
 export function CreditCardList() {
-  const { creditCards, setCreditCards } = useAppStore()
+  const { creditCards, setCreditCards, transactions, setTransactions } = useAppStore()
   const { toast } = useToast()
   const [editingCard, setEditingCard] = useState<CreditCard | null>(null)
 
@@ -31,10 +31,17 @@ export function CreditCardList() {
   }
 
   const deleteCard = (id: string) => {
+    const card = creditCards.find((c) => c.id === id)
     setCreditCards(creditCards.filter((c) => c.id !== id))
+
+    if (card) {
+      // Cascade delete associated invoices/transactions
+      setTransactions(transactions.filter((t) => t.cardId !== card.id && t.account !== card.bank))
+    }
+
     toast({
       title: 'Cartão Excluído',
-      description: 'Cartão removido permanentemente.',
+      description: 'Cartão e faturas pendentes associadas foram removidos permanentemente.',
       variant: 'destructive',
     })
   }

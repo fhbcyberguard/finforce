@@ -1,3 +1,5 @@
+import useAppStore from '@/stores/useAppStore'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import KpiCards from '../components/dashboard/KpiCards'
 import Simulator from '../components/dashboard/Simulator'
 import AlertsPanel from '../components/dashboard/AlertsPanel'
@@ -6,13 +8,30 @@ import { SpendingChart } from '../components/dashboard/SpendingChart'
 import { GoalWidget } from '../components/dashboard/GoalWidget'
 
 export default function Index() {
+  const { timeframe, setTimeframe } = useAppStore()
+
   return (
     <div className="space-y-6 animate-slide-in-up">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Visão Geral</h1>
-        <p className="text-muted-foreground">
-          Bem-vindo de volta. Acompanhe seu progresso rumo à independência.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Visão Geral</h1>
+          <p className="text-muted-foreground">
+            Bem-vindo de volta. Acompanhe seu progresso rumo à independência.
+          </p>
+        </div>
+        <ToggleGroup
+          type="single"
+          value={timeframe}
+          onValueChange={(v) => v && setTimeframe(v as 'monthly' | 'annual')}
+          className="bg-muted/50 p-1 rounded-lg self-start sm:self-auto"
+        >
+          <ToggleGroupItem value="monthly" className="px-4 text-xs h-8">
+            Mensal
+          </ToggleGroupItem>
+          <ToggleGroupItem value="annual" className="px-4 text-xs h-8">
+            Anual
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       <KpiCards />

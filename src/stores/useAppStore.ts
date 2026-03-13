@@ -8,12 +8,16 @@ import {
   MOCK_TRANSACTIONS,
 } from '@/lib/mockData'
 
-export type Profile = (typeof MOCK_PROFILES)[0]
+export type Profile = (typeof MOCK_PROFILES)[0] & { isArchived?: boolean }
 export type Account = (typeof MOCK_ACCOUNTS)[0]
 export type CreditCard = (typeof MOCK_CREDIT_CARDS)[0] & { isArchived?: boolean }
 export type Asset = (typeof MOCK_ASSETS)[0]
 export type Goal = (typeof MOCK_GOALS)[0]
-export type Transaction = (typeof MOCK_TRANSACTIONS)[0] & { profile?: string }
+export type Transaction = (typeof MOCK_TRANSACTIONS)[0] & {
+  profile?: string
+  expenseType?: 'fixed' | 'variable'
+  cardId?: string
+}
 
 interface AppState {
   profiles: Profile[]
@@ -24,6 +28,7 @@ interface AppState {
   transactions: Transaction[]
   logoUrl: string
   searchQuery: string
+  timeframe: 'monthly' | 'annual'
 }
 
 const loadData = <T>(key: string, mockData: T): T => {
@@ -44,6 +49,7 @@ const getInitialState = (): AppState => ({
   transactions: loadData('finflow_transactions', MOCK_TRANSACTIONS),
   logoUrl: localStorage.getItem('finflow_logo') || '',
   searchQuery: '',
+  timeframe: 'monthly',
 })
 
 let state: AppState = getInitialState()
@@ -87,5 +93,6 @@ export default function useAppStore() {
     setTransactions: (transactions: Transaction[]) => updateState({ transactions }),
     setLogoUrl: (logoUrl: string) => updateState({ logoUrl }),
     setSearchQuery: (searchQuery: string) => updateState({ searchQuery }),
+    setTimeframe: (timeframe: 'monthly' | 'annual') => updateState({ timeframe }),
   }
 }

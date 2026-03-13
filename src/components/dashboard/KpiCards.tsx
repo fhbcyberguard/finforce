@@ -1,9 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Wallet, TrendingUp, DollarSign, Clock } from 'lucide-react'
+import { Wallet, TrendingUp, DollarSign, Clock, Coins } from 'lucide-react'
 import useAppStore from '@/stores/useAppStore'
 
 export default function KpiCards() {
-  const { assets, transactions } = useAppStore()
+  const { assets, transactions, timeframe } = useAppStore()
+
+  const now = new Date()
+  const currentMonth = now.toISOString().slice(0, 7)
+  const currentYear = now.toISOString().slice(0, 4)
+  const isAnnual = timeframe === 'annual'
+
+  const filteredTransactions = transactions.filter((t) => {
+    if (isAnnual) return t.date.startsWith(currentYear)
+    return t.date.startsWith(currentMonth)
+  })
 
   // Derived calculations for KPIs
   const patrimony = assets.reduce((sum, asset) => sum + asset.value, 0)
@@ -13,16 +23,25 @@ export default function KpiCards() {
     .filter((a) => a.category === 'FIIs' || a.category === 'Ações' || a.category === 'Renda Fixa')
     .reduce((sum, a) => sum + a.value * 0.008, 0)
 
-  // Sum monthly fixed expenses
-  const fixedExpenses =
-    Math.abs(
-      transactions
-        .filter((t) => t.amount < 0 && t.recurrence === 'monthly')
-        .reduce((sum, t) => sum + t.amount, 0),
-    ) || 4200 // Fallback if none configured
+  // Real-time calculated income
+  const rendaMensal = filteredTransactions
+    .filter((t) => t.type === 'Revenue')
+    .reduce((sum, t) => sum + t.amount, 0)
 
-  // Time to freedom calculation (Rule of 300)
-  const targetPatrimony = fixedExpenses * 300
+  // Sum fixed expenses based on explicitly marked transactions or recurrences
+  const fixedExpenses = Math.abs(
+    filteredTransactions
+      .filter(
+        (t) =>
+          t.amount < 0 &&
+          (t.expenseType === 'fixed' || t.recurrence === 'monthly' || t.recurrence === 'yearly'),
+      )
+      .reduce((sum, t) => sum + t.amount, 0),
+  )
+
+  // Time to freedom calculation
+  const monthlyFixedExpenses = isAnnual ? fixedExpenses / 12 || 4200 : fixedExpenses || 4200
+  const targetPatrimony = monthlyFixedExpenses * 300 // Rule of 300 for monthly FI
   const shortfall = targetPatrimony - patrimony
   const averageMonthlyAporte = 2000 // Assumed average contribution
   const yearsToFreedom = shortfall > 0 ? (shortfall / averageMonthlyAporte / 12).toFixed(1) : '0'
@@ -33,21 +52,28 @@ export default function KpiCards() {
       value: `R$ ${patrimony.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: Wallet,
       trend: '+2.4%',
-      desc: 'vs mês anterior',
+      desc: 'vs anterior',
+    },
+    {
+      title: isAnnual ? 'Renda Anual' : 'Renda Mensal',
+      value: `R$ ${rendaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+      icon: Coins,
+      trend: '+5.1%',
+      desc: isAnnual ? 'entradas no ano' : 'entradas no mês',
     },
     {
       title: 'Renda Passiva Mensal',
       value: `R$ ${passiveIncome.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: TrendingUp,
-      trend: '+5.1%',
+      trend: '+1.5%',
       desc: 'estimativa média',
     },
     {
-      title: 'Gastos Fixos',
+      title: isAnnual ? 'Gastos Fixos (Ano)' : 'Gastos Fixos',
       value: `R$ ${fixedExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
       icon: DollarSign,
       trend: '-1.2%',
-      desc: 'despesas recorrentes',
+      desc: 'despesas essenciais',
       trendUpIsBad: true,
     },
     {
@@ -59,7 +85,7 @@ export default function KpiCards() {
   ]
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
       {kpis.map((kpi, i) => (
         <Card
           key={i}

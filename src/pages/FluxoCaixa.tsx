@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Select,
   SelectContent,
@@ -48,7 +49,8 @@ import { CsvImportDialog } from '@/components/fluxo/CsvImportDialog'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 
 export default function FluxoCaixa() {
-  const { transactions, setTransactions, profiles, searchQuery } = useAppStore()
+  const { transactions, setTransactions, profiles, searchQuery, timeframe, setTimeframe } =
+    useAppStore()
   const [openAdd, setOpenAdd] = useState(false)
   const [openImport, setOpenImport] = useState(false)
   const [isPix, setIsPix] = useState(false)
@@ -90,6 +92,10 @@ export default function FluxoCaixa() {
     if (type === 'Expense' || type === 'Pix' || type === 'Transfer') amount = -Math.abs(amount)
     else amount = Math.abs(amount)
 
+    const rawExpenseType = fd.get('expenseType') as 'fixed' | 'variable' | null
+    const expenseType =
+      type === 'Expense' || type === 'Pix' ? rawExpenseType || 'variable' : undefined
+
     const newTx: Transaction = {
       id: editingTx ? editingTx.id : Math.random().toString(),
       date: editingTx ? editingTx.date : new Date().toISOString().split('T')[0],
@@ -101,6 +107,7 @@ export default function FluxoCaixa() {
       recurrence: fd.get('recurrence') as string,
       hasAttachment: !!fileName || (editingTx?.hasAttachment ?? false),
       profile: fd.get('profile') as string,
+      expenseType,
     }
 
     // TCC Trigger Condition: Large Expense
@@ -139,16 +146,26 @@ export default function FluxoCaixa() {
   }
 
   const filteredTransactions = useMemo(() => {
-    if (!searchQuery) return transactions
+    const now = new Date()
+    const currentMonth = now.toISOString().slice(0, 7)
+    const currentYear = now.toISOString().slice(0, 4)
+
+    let list = transactions.filter((t) => {
+      if (timeframe === 'monthly') return t.date.startsWith(currentMonth)
+      if (timeframe === 'annual') return t.date.startsWith(currentYear)
+      return true
+    })
+
+    if (!searchQuery) return list
     const lower = searchQuery.toLowerCase()
-    return transactions.filter(
+    return list.filter(
       (t) =>
         t.description.toLowerCase().includes(lower) ||
         t.category.toLowerCase().includes(lower) ||
         (t.profile && t.profile.toLowerCase().includes(lower)) ||
         t.account.toLowerCase().includes(lower),
     )
-  }, [transactions, searchQuery])
+  }, [transactions, searchQuery, timeframe])
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -157,36 +174,56 @@ export default function FluxoCaixa() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Fluxo de Caixa</h1>
           <p className="text-muted-foreground">Visão detalhada de entradas e saídas.</p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto flex-wrap">
-          <Button variant="outline" className="gap-2" onClick={() => setOpenImport(true)}>
-            <Upload className="w-4 h-4" /> Importar
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" /> Exportar
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => toast({ title: 'Exportando PDF...' })}>
-                Relatório em PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast({ title: 'Exportando CSV...' })}>
-                Dados em CSV
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <Button
-            className="gap-2 w-full sm:w-auto"
-            onClick={() => {
-              resetForm()
-              setOpenAdd(true)
-            }}
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-wrap items-start sm:items-center">
+          <ToggleGroup
+            type="single"
+            value={timeframe}
+            onValueChange={(v) => v && setTimeframe(v as 'monthly' | 'annual')}
+            className="bg-muted/50 p-1 rounded-lg w-full sm:w-auto"
           >
-            <Plus className="w-4 h-4" /> Nova Transação
-          </Button>
+            <ToggleGroupItem value="monthly" className="flex-1 sm:px-4 text-xs h-9">
+              Mensal
+            </ToggleGroupItem>
+            <ToggleGroupItem value="annual" className="flex-1 sm:px-4 text-xs h-9">
+              Anual
+            </ToggleGroupItem>
+          </ToggleGroup>
+
+          <div className="flex gap-2 w-full sm:w-auto flex-wrap justify-end">
+            <Button
+              variant="outline"
+              className="gap-2 flex-1 sm:flex-none"
+              onClick={() => setOpenImport(true)}
+            >
+              <Upload className="w-4 h-4" /> Importar
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 flex-1 sm:flex-none">
+                  <Download className="w-4 h-4" /> Exportar
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => toast({ title: 'Exportando PDF...' })}>
+                  Relatório em PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => toast({ title: 'Exportando CSV...' })}>
+                  Dados em CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              className="gap-2 w-full sm:w-auto"
+              onClick={() => {
+                resetForm()
+                setOpenAdd(true)
+              }}
+            >
+              <Plus className="w-4 h-4" /> Nova Transação
+            </Button>
+          </div>
 
           <Dialog
             open={openAdd}
@@ -269,7 +306,22 @@ export default function FluxoCaixa() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Perfil Responsável</Label>
+                    <Label>Classificação</Label>
+                    <Select name="expenseType" defaultValue={editingTx?.expenseType || 'variable'}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="variable">Gasto Variável</SelectItem>
+                        <SelectItem value="fixed">Gasto Fixo</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 pt-2 items-end">
+                  <div className="space-y-2 col-span-1">
+                    <Label>Perfil</Label>
                     <Select
                       name="profile"
                       required
@@ -287,11 +339,8 @@ export default function FluxoCaixa() {
                       </SelectContent>
                     </Select>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-2 items-end">
-                  <div className="space-y-2">
-                    <Label>Conta Origem/Destino</Label>
+                  <div className="space-y-2 col-span-1">
+                    <Label>Conta</Label>
                     <Select name="account" required defaultValue={editingTx?.account || 'Nubank'}>
                       <SelectTrigger>
                         <SelectValue />
@@ -303,7 +352,7 @@ export default function FluxoCaixa() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 col-span-1">
                     <Label>Recorrência</Label>
                     <Select name="recurrence" defaultValue={editingTx?.recurrence || 'none'}>
                       <SelectTrigger>
@@ -379,6 +428,14 @@ export default function FluxoCaixa() {
                       <Badge variant="secondary" className="text-[10px] font-normal">
                         {tx.category}
                       </Badge>
+                      {(tx.type === 'Expense' || tx.type === 'Pix') && tx.expenseType && (
+                        <Badge
+                          variant="outline"
+                          className={`text-[10px] font-normal ${tx.expenseType === 'fixed' ? 'border-blue-500/50 text-blue-500' : 'border-orange-500/50 text-orange-500'}`}
+                        >
+                          {tx.expenseType === 'fixed' ? 'Fixo' : 'Variável'}
+                        </Badge>
+                      )}
                       <span className="text-xs text-muted-foreground">{tx.account}</span>
                       <span className="text-xs text-muted-foreground">
                         • {new Date(tx.date).toLocaleDateString('pt-BR')}
@@ -431,8 +488,8 @@ export default function FluxoCaixa() {
               </div>
             ))}
             {filteredTransactions.length === 0 && (
-              <div className="p-8 text-center text-muted-foreground">
-                Nenhuma transação encontrada.
+              <div className="p-8 text-center text-muted-foreground bg-muted/10 border border-dashed rounded-lg m-4">
+                Nenhuma transação encontrada no período.
               </div>
             )}
           </div>

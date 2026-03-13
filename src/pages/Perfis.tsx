@@ -19,8 +19,11 @@ export default function Perfis() {
     )
   }, [profiles, searchQuery])
 
+  const activeProfiles = filteredProfiles.filter((p) => !p.isArchived)
+  const archivedProfiles = filteredProfiles.filter((p) => p.isArchived)
+
   return (
-    <div className="space-y-6 animate-slide-in-up">
+    <div className="space-y-6 animate-slide-in-up pb-12">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Perfis da Família</h1>
@@ -31,13 +34,13 @@ export default function Perfis() {
         </Button>
       </div>
 
-      {filteredProfiles.length === 0 ? (
+      {activeProfiles.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-border/50">
-          Nenhum perfil encontrado.
+          Nenhum perfil ativo encontrado.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProfiles.map((profile) => (
+          {activeProfiles.map((profile) => (
             <ProfileCard
               key={profile.id}
               profile={profile}
@@ -45,6 +48,24 @@ export default function Perfis() {
               onDelete={() => setDeletingProfile(profile)}
             />
           ))}
+        </div>
+      )}
+
+      {archivedProfiles.length > 0 && (
+        <div className="pt-8 space-y-4">
+          <h2 className="text-lg font-semibold tracking-tight text-muted-foreground flex items-center gap-2">
+            Perfis Arquivados
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-80">
+            {archivedProfiles.map((profile) => (
+              <ProfileCard
+                key={profile.id}
+                profile={profile}
+                onEdit={() => setEditingProfile(profile)}
+                onDelete={() => setDeletingProfile(profile)}
+              />
+            ))}
+          </div>
         </div>
       )}
 

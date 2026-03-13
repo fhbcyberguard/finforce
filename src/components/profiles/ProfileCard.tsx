@@ -3,7 +3,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Archive, Edit2, Trash2 } from 'lucide-react'
+import { Archive, Edit2, Trash2, ArchiveRestore } from 'lucide-react'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { useToast } from '@/hooks/use-toast'
 import useAppStore, { Profile } from '@/stores/useAppStore'
@@ -20,14 +20,24 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
   const { toast } = useToast()
 
   const handleArchive = () => {
-    setProfiles(profiles.filter((p) => p.id !== profile.id))
-    toast({ title: 'Perfil arquivado', description: 'Histórico preservado, mas acesso revogado.' })
+    setProfiles(profiles.map((p) => (p.id === profile.id ? { ...p, isArchived: true } : p)))
+    toast({
+      title: 'Perfil arquivado',
+      description: 'Histórico preservado, mas acesso ocultado das visões principais.',
+    })
     setArchiveOpen(false)
+  }
+
+  const handleUnarchive = () => {
+    setProfiles(profiles.map((p) => (p.id === profile.id ? { ...p, isArchived: false } : p)))
+    toast({ title: 'Perfil restaurado', description: 'O perfil voltou a ficar ativo no sistema.' })
   }
 
   return (
     <>
-      <Card className="flex flex-col border-border/50 hover:border-primary/30 transition-colors">
+      <Card
+        className={`flex flex-col border-border/50 hover:border-primary/30 transition-colors ${profile.isArchived ? 'grayscale-[0.5]' : ''}`}
+      >
         <CardContent className="pt-6 flex flex-col items-center text-center flex-1">
           <Avatar className="w-20 h-20 mb-4 ring-4 ring-background shadow-lg">
             <AvatarImage src={profile.avatar} />
@@ -53,24 +63,41 @@ export function ProfileCard({ profile, onEdit, onDelete }: ProfileCardProps) {
           >
             <Edit2 className="w-4 h-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setArchiveOpen(true)}
-            className="text-muted-foreground hover:text-amber-500"
-          >
-            <Archive className="w-4 h-4" />
-          </Button>
+
+          {profile.isArchived ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleUnarchive}
+              className="text-muted-foreground hover:text-emerald-500"
+              title="Desarquivar"
+            >
+              <ArchiveRestore className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setArchiveOpen(true)}
+              className="text-muted-foreground hover:text-amber-500"
+              title="Arquivar"
+            >
+              <Archive className="w-4 h-4" />
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="sm"
             onClick={onDelete}
             className="text-muted-foreground hover:text-destructive"
+            title="Excluir Permanentemente"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
         </CardFooter>
       </Card>
+
       <ImpulseControlDialog
         open={archiveOpen}
         onOpenChange={setArchiveOpen}

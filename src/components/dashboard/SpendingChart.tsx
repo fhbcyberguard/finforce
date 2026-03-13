@@ -22,14 +22,23 @@ const COLORS = [
 
 export function SpendingChart() {
   const [view, setView] = useState('bar')
-  const { transactions } = useAppStore()
+  const { transactions, timeframe } = useAppStore()
 
   const { barData, pieData, config } = useMemo(() => {
+    const now = new Date()
+    const currentMonth = now.toISOString().slice(0, 7)
+    const currentYear = now.toISOString().slice(0, 4)
+
     const expenses = transactions.filter((t) => t.amount < 0 && t.type !== 'Transfer')
 
-    // Pie data
+    const currentExpenses = expenses.filter((t) => {
+      if (timeframe === 'annual') return t.date.startsWith(currentYear)
+      return t.date.startsWith(currentMonth)
+    })
+
+    // Pie data uses current timeframe
     const catMap: Record<string, number> = {}
-    expenses.forEach((t) => {
+    currentExpenses.forEach((t) => {
       const topCat = t.category.split(' > ')[0] || 'Outros'
       catMap[topCat] = (catMap[topCat] || 0) + Math.abs(t.amount)
     })
@@ -37,20 +46,26 @@ export function SpendingChart() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
 
-    // Bar data
+    // Bar data uses historical periods based on timeframe
     const monthMap: Record<string, Record<string, number>> = {}
-    expenses.forEach((t) => {
+    const barSource =
+      timeframe === 'annual' ? expenses.filter((t) => t.date.startsWith(currentYear)) : expenses
+
+    barSource.forEach((t) => {
       const topCat = t.category.split(' > ')[0] || 'Outros'
-      const month = t.date.substring(0, 7)
-      if (!monthMap[month]) monthMap[month] = { name: month }
-      monthMap[month][topCat] = (monthMap[month][topCat] || 0) + Math.abs(t.amount)
+      const period = t.date.substring(0, 7)
+      if (!monthMap[period]) monthMap[period] = { name: period }
+      monthMap[period][topCat] = (monthMap[period][topCat] || 0) + Math.abs(t.amount)
     })
+
     const barData = Object.values(monthMap)
       .sort((a, b) => a.name.localeCompare(b.name))
-      .slice(-6)
+      .slice(timeframe === 'annual' ? -12 : -6)
 
     // Config
-    const allCats = Array.from(new Set(expenses.map((t) => t.category.split(' > ')[0] || 'Outros')))
+    const allCats = Array.from(
+      new Set(currentExpenses.map((t) => t.category.split(' > ')[0] || 'Outros')),
+    )
     const config: any = {}
     allCats.forEach((cat, idx) => {
       config[cat] = { label: cat, color: COLORS[idx % COLORS.length] }
@@ -58,14 +73,16 @@ export function SpendingChart() {
     config.value = { label: 'Valor' }
 
     return { barData, pieData, config }
-  }, [transactions])
+  }, [transactions, timeframe])
 
   const chartCats = Object.keys(config).filter((k) => k !== 'value')
 
   return (
     <Card className="border-border/50">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-lg">Análise de Gastos (Real-time)</CardTitle>
+        <CardTitle className="text-lg">
+          Análise de Gastos ({timeframe === 'annual' ? 'Anual' : 'Mensal'})
+        </CardTitle>
         <Tabs value={view} onValueChange={setView}>
           <TabsList className="h-8">
             <TabsTrigger value="bar" className="text-xs px-3">
@@ -81,7 +98,7 @@ export function SpendingChart() {
         <div className="h-[280px] w-full">
           {chartCats.length === 0 ? (
             <div className="h-full flex items-center justify-center text-muted-foreground text-sm border border-dashed rounded-md bg-muted/10">
-              Nenhuma despesa registrada.
+              Nenhuma despesa registrada no período.
             </div>
           ) : view === 'bar' ? (
             <ChartContainer config={config} className="h-full w-full">

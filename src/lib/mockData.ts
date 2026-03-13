@@ -107,17 +107,18 @@ export const MOCK_PROFILES = [
 export const MOCK_TRANSACTIONS = [
   {
     id: '1',
-    date: '2026-03-12',
+    date: new Date().toISOString().split('T')[0],
     description: 'Supermercado Extra',
     amount: -450.2,
     category: 'Alimentação > Supermercado',
     type: 'Expense',
     account: 'Nubank',
     recurrence: 'none',
+    expenseType: 'variable',
   },
   {
     id: '2',
-    date: '2026-03-10',
+    date: new Date().toISOString().split('T')[0],
     description: 'Salário Carlos',
     amount: 8500.0,
     category: 'Renda > Principal',
@@ -127,7 +128,7 @@ export const MOCK_TRANSACTIONS = [
   },
   {
     id: '3',
-    date: '2026-03-08',
+    date: new Date().toISOString().split('T')[0],
     description: 'Transferência Poupança',
     amount: -1500.0,
     category: 'Transferência > Interna',
@@ -137,7 +138,7 @@ export const MOCK_TRANSACTIONS = [
   },
   {
     id: '4',
-    date: '2026-03-05',
+    date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
     description: 'Pix João - Churrasco',
     amount: -120.0,
     category: 'Lazer > Eventos',
@@ -145,6 +146,19 @@ export const MOCK_TRANSACTIONS = [
     account: 'Nubank',
     recurrence: 'none',
     hasAttachment: true,
+    expenseType: 'variable',
+  },
+  {
+    id: '5',
+    date: new Date(Date.now() - 86400000 * 5).toISOString().split('T')[0],
+    description: 'Fatura Itaú Black',
+    amount: -3450.0,
+    category: 'Outros > Cartão de Crédito',
+    type: 'Expense',
+    account: 'Itaú',
+    cardId: '1',
+    recurrence: 'none',
+    expenseType: 'fixed',
   },
 ]
 
@@ -155,6 +169,7 @@ export const MOCK_CATEGORIES = {
   Saúde: ['Farmácia', 'Plano de Saúde', 'Consultas'],
   Lazer: ['Eventos', 'Assinaturas', 'Viagens'],
   Renda: ['Principal', 'Extra', 'Dividendos'],
+  Outros: ['Cartão de Crédito', 'Importado'],
 }
 
 export const MOCK_GOALS = [

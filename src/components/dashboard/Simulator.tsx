@@ -15,14 +15,14 @@ export default function Simulator() {
   // CBT Question Generator
   const getInsight = () => {
     if (idade < 40)
-      return `Aposentar aos ${idade} exige sacrifício extremo agora. Cuidado com o burnout. Está valendo a pena?`
+      return `Aposentar-se aos ${idade} anos exige sacrifício extremo agora. Cuidado com o burnout. Está valendo a pena?`
     if (aporte > 10000)
-      return `Aporte de R$ ${aporte.toLocaleString()} é alto! O que você está deixando de viver hoje para manter esse ritmo?`
+      return `Um aporte de R$ ${aporte.toLocaleString()} é alto! O que você está deixando de viver hoje para manter esse ritmo?`
     if (retorno > 10)
       return `Uma taxa de ${retorno}% a.a. é agressiva e traz risco. Você tem um plano B para cenários de crise na economia?`
     if (rendaDesejada > 30000)
       return `Uma renda de R$ ${rendaDesejada.toLocaleString()} exige um patrimônio massivo. Essa necessidade de luxo reflete seus valores reais?`
-    return `Como um aumento de 5% no seu aporte (R$ ${(aporte * 0.05).toFixed(0)}) hoje afetaria seu nível de estresse em 10 anos?`
+    return `Como um aumento de 5% no seu aporte (R$ ${(aporte * 0.05).toFixed(0)}) hoje afetaria sua tranquilidade em 10 anos?`
   }
 
   return (
