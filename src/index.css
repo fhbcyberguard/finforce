@@ -11,9 +11,8 @@
     --popover: 0 0% 100%;
     --popover-foreground: 214 52% 15%;
 
-    /* Navy (#1E3A5F) & Teal (#2EC4B6) & Green (#59C3C3) & Gold (#F4D03F) Palette */
-    --primary: 174 62% 47%; /* Teal */
-    --primary-foreground: 0 0% 100%;
+    --primary: 183 100% 50.6%; /* #03f2ff */
+    --primary-foreground: 214 52% 15%; /* Dark text for contrast */
     --secondary: 214 52% 24%; /* Navy */
     --secondary-foreground: 0 0% 100%;
     --muted: 214 20% 94%;
@@ -24,7 +23,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 214 20% 88%;
     --input: 214 20% 88%;
-    --ring: 174 62% 47%;
+    --ring: 183 100% 50.6%;
     --radius: 0.5rem;
   }
 
@@ -35,8 +34,9 @@
     --card-foreground: 0 0% 98%;
     --popover: 214 52% 14%;
     --popover-foreground: 0 0% 98%;
-    --primary: 174 62% 47%; /* Teal */
-    --primary-foreground: 0 0% 100%;
+
+    --primary: 183 100% 50.6%; /* #03f2ff */
+    --primary-foreground: 214 52% 10%; /* Dark text for contrast */
     --secondary: 214 52% 24%; /* Navy */
     --secondary-foreground: 0 0% 100%;
     --muted: 214 30% 20%;
@@ -47,7 +47,7 @@
     --destructive-foreground: 0 0% 100%;
     --border: 214 30% 25%;
     --input: 214 30% 25%;
-    --ring: 174 62% 47%;
+    --ring: 183 100% 50.6%;
   }
 }
 
