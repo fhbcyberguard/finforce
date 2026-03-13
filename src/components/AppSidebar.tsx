@@ -23,6 +23,7 @@ import {
   SidebarHeader,
 } from '@/components/ui/sidebar'
 import { useToast } from '@/hooks/use-toast'
+import useAppStore from '@/stores/useAppStore'
 
 const navigation = [
   { title: 'Visão Geral', url: '/dashboard', icon: LayoutDashboard },
@@ -37,6 +38,7 @@ export function AppSidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { toast } = useToast()
+  const { logoUrl } = useAppStore()
 
   const handleLogout = () => {
     toast({
@@ -49,9 +51,13 @@ export function AppSidebar() {
   return (
     <Sidebar variant="inset">
       <SidebarHeader className="p-4 flex flex-row items-center gap-2">
-        <div className="bg-primary/20 p-1.5 rounded-lg text-primary">
-          <Waves className="w-6 h-6" />
-        </div>
+        {logoUrl ? (
+          <img src={logoUrl} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-muted" />
+        ) : (
+          <div className="bg-[#1E3A5F] p-1.5 rounded-lg text-[#2EC4B6]">
+            <Waves className="w-6 h-6" />
+          </div>
+        )}
         <span className="font-bold text-lg tracking-tight">FinFlow</span>
       </SidebarHeader>
       <SidebarContent>
