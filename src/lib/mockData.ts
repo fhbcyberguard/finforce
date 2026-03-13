@@ -57,6 +57,29 @@ export const MOCK_ACCOUNTS = [
   { id: '3', bank: 'XP Investimentos', type: 'Corretora', balance: 0.0, connected: false },
 ]
 
+export const MOCK_CREDIT_CARDS = [
+  {
+    id: '1',
+    bank: 'Itaú',
+    brand: 'Mastercard Black',
+    lastDigits: '4321',
+    totalLimit: 25000,
+    availableLimit: 12450.5,
+    bestPurchaseDay: 5,
+    dueDate: 15,
+  },
+  {
+    id: '2',
+    bank: 'Nubank',
+    brand: 'Mastercard Platinum',
+    lastDigits: '8765',
+    totalLimit: 8500,
+    availableLimit: 1200.0,
+    bestPurchaseDay: 28,
+    dueDate: 5,
+  },
+]
+
 export const MOCK_PROFILES = [
   {
     id: '1',

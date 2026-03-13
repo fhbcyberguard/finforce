@@ -1,0 +1,95 @@
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Lock, CreditCard } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import type { CreditCardType } from './CreditCardList'
+
+interface AddCreditCardFormProps {
+  onAdd: (card: CreditCardType) => void
+}
+
+export function AddCreditCardForm({ onAdd }: AddCreditCardFormProps) {
+  const { toast } = useToast()
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+
+    const newCard: CreditCardType = {
+      id: Math.random().toString(),
+      bank: fd.get('bank') as string,
+      brand: fd.get('brand') as string,
+      lastDigits: fd.get('lastDigits') as string,
+      totalLimit: Number(fd.get('limit')),
+      availableLimit: Number(fd.get('limit')), // Fully available initially
+      dueDate: Number(fd.get('dueDate')),
+      bestPurchaseDay: Number(fd.get('bestDay')),
+    }
+
+    onAdd(newCard)
+    toast({
+      title: 'Cartão Registrado',
+      description: 'O novo cartão já está disponível no seu painel.',
+    })
+    e.currentTarget.reset()
+  }
+
+  return (
+    <Card className="border-border/50 h-full">
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <CreditCard className="w-5 h-5" /> Adicionar Cartão
+        </CardTitle>
+        <CardDescription>
+          Insira apenas os últimos 4 dígitos. Dados protegidos no dispositivo.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <Label>Emissor (Banco/Fintech)</Label>
+            <Input name="bank" placeholder="Ex: Itaú Personnalité" required />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Bandeira</Label>
+              <Input name="brand" placeholder="Mastercard, Visa" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Últimos 4 Dígitos</Label>
+              <div className="relative">
+                <Input
+                  name="lastDigits"
+                  placeholder="1234"
+                  maxLength={4}
+                  required
+                  className="font-mono pl-10"
+                />
+                <Lock className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Limite Global (R$)</Label>
+            <Input name="limit" type="number" step="0.01" placeholder="5000" required />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Dia de Vencimento</Label>
+              <Input name="dueDate" type="number" min="1" max="31" placeholder="10" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Melhor Dia</Label>
+              <Input name="bestDay" type="number" min="1" max="31" placeholder="3" required />
+            </div>
+          </div>
+          <Button type="submit" className="w-full mt-2">
+            Registrar Cartão Seguro
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  )
+}

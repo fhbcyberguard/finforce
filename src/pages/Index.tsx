@@ -1,6 +1,7 @@
 import KpiCards from '../components/dashboard/KpiCards'
 import Simulator from '../components/dashboard/Simulator'
 import AlertsPanel from '../components/dashboard/AlertsPanel'
+import { CreditCardWidget } from '../components/dashboard/CreditCardWidget'
 
 export default function Index() {
   return (
@@ -18,8 +19,9 @@ export default function Index() {
         <div className="lg:col-span-2">
           <Simulator />
         </div>
-        <div>
+        <div className="flex flex-col gap-6">
           <AlertsPanel />
+          <CreditCardWidget />
         </div>
       </div>
     </div>
