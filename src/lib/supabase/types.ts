@@ -9,6 +9,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'categories_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       families: {
         Row: {
           created_at: string | null
@@ -29,6 +64,50 @@ export type Database = {
           owner_id?: string
         }
         Relationships: []
+      }
+      goals: {
+        Row: {
+          created_at: string | null
+          current_value: number | null
+          icon: string | null
+          id: string
+          monthly_contribution: number | null
+          name: string
+          target_date: string | null
+          target_value: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number | null
+          icon?: string | null
+          id?: string
+          monthly_contribution?: number | null
+          name: string
+          target_date?: string | null
+          target_value: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number | null
+          icon?: string | null
+          id?: string
+          monthly_contribution?: number | null
+          name?: string
+          target_date?: string | null
+          target_value?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'goals_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
       }
       hotmart_events: {
         Row: {
@@ -129,6 +208,7 @@ export type Database = {
           date: string
           description: string
           expense_type: string | null
+          goal_id: string | null
           has_attachment: boolean | null
           id: string
           profile: string | null
@@ -144,6 +224,7 @@ export type Database = {
           date: string
           description: string
           expense_type?: string | null
+          goal_id?: string | null
           has_attachment?: boolean | null
           id?: string
           profile?: string | null
@@ -159,6 +240,7 @@ export type Database = {
           date?: string
           description?: string
           expense_type?: string | null
+          goal_id?: string | null
           has_attachment?: boolean | null
           id?: string
           profile?: string | null
@@ -167,6 +249,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: 'transactions_goal_id_fkey'
+            columns: ['goal_id']
+            isOneToOne: false
+            referencedRelation: 'goals'
+            referencedColumns: ['id']
+          },
           {
             foreignKeyName: 'transactions_user_id_fkey'
             columns: ['user_id']
@@ -323,11 +412,28 @@ export const Constants = {
 // --- COLUMN TYPES (actual PostgreSQL types) ---
 // Use this to know the real database type when writing migrations.
 // "string" in TypeScript types above may be uuid, text, varchar, timestamptz, etc.
+// Table: categories
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   name: text (not null)
+//   type: text (not null)
+//   icon: text (nullable, default: 'CircleDashed'::text)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: families
 //   id: uuid (not null, default: gen_random_uuid())
 //   created_at: timestamp with time zone (nullable, default: now())
 //   name: text (not null)
 //   owner_id: uuid (not null)
+// Table: goals
+//   id: uuid (not null, default: gen_random_uuid())
+//   user_id: uuid (not null)
+//   name: text (not null)
+//   target_value: numeric (not null)
+//   current_value: numeric (nullable, default: 0)
+//   monthly_contribution: numeric (nullable, default: 0)
+//   target_date: date (nullable)
+//   created_at: timestamp with time zone (nullable, default: now())
+//   icon: text (nullable, default: 'Target'::text)
 // Table: hotmart_events
 //   id: uuid (not null, default: gen_random_uuid())
 //   payload: jsonb (not null)
@@ -361,11 +467,18 @@ export const Constants = {
 //   recurrence: text (nullable)
 //   has_attachment: boolean (nullable, default: false)
 //   profile: text (nullable)
+//   goal_id: uuid (nullable)
 
 // --- CONSTRAINTS ---
+// Table: categories
+//   PRIMARY KEY categories_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY categories_user_id_fkey: FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
 // Table: families
 //   FOREIGN KEY families_owner_id_fkey: FOREIGN KEY (owner_id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY families_pkey: PRIMARY KEY (id)
+// Table: goals
+//   PRIMARY KEY goals_pkey: PRIMARY KEY (id)
+//   FOREIGN KEY goals_user_id_fkey: FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
 // Table: hotmart_events
 //   PRIMARY KEY hotmart_events_pkey: PRIMARY KEY (id)
 // Table: members
@@ -376,10 +489,20 @@ export const Constants = {
 //   FOREIGN KEY profiles_id_fkey: FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 //   PRIMARY KEY profiles_pkey: PRIMARY KEY (id)
 // Table: transactions
+//   FOREIGN KEY transactions_goal_id_fkey: FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE SET NULL
 //   PRIMARY KEY transactions_pkey: PRIMARY KEY (id)
 //   FOREIGN KEY transactions_user_id_fkey: FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
 
 // --- ROW LEVEL SECURITY POLICIES ---
+// Table: categories
+//   Policy "Users can delete own categories" (DELETE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Users can insert own categories" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Users can update own categories" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Users can view own categories" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
 // Table: families
 //   Policy "Users can insert own families" (INSERT, PERMISSIVE) roles={public}
 //     WITH CHECK: (auth.uid() = owner_id)
@@ -387,6 +510,15 @@ export const Constants = {
 //     USING: (auth.uid() = owner_id)
 //   Policy "Users can view own families" (SELECT, PERMISSIVE) roles={public}
 //     USING: (auth.uid() = owner_id)
+// Table: goals
+//   Policy "Users can delete own goals" (DELETE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Users can insert own goals" (INSERT, PERMISSIVE) roles={public}
+//     WITH CHECK: (auth.uid() = user_id)
+//   Policy "Users can update own goals" (UPDATE, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
+//   Policy "Users can view own goals" (SELECT, PERMISSIVE) roles={public}
+//     USING: (auth.uid() = user_id)
 // Table: members
 //   Policy "Users can manage members of their families" (ALL, PERMISSIVE) roles={public}
 //     USING: (EXISTS ( SELECT 1    FROM families f   WHERE ((f.id = members.family_id) AND (f.owner_id = auth.uid()))))

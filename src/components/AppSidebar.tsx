@@ -8,6 +8,7 @@ import {
   Building2,
   User,
   Target,
+  ShieldCheck,
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
@@ -43,7 +44,7 @@ const bottomNavItems = [{ title: 'Configurações', icon: Settings, url: '/confi
 
 export function AppSidebar() {
   const location = useLocation()
-  const { profile, user } = useAuth()
+  const { profile, user, isMasterAdmin } = useAuth()
   const { currentContext, setCurrentContext } = useAppStore()
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false)
 
@@ -116,6 +117,35 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {isMasterAdmin && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-[#126eda]">Administração</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === '/admin/clients'}
+                    tooltip="Gestão de Clientes"
+                  >
+                    <Link
+                      to="/admin/clients"
+                      className={
+                        location.pathname === '/admin/clients'
+                          ? 'text-[#126eda]'
+                          : 'hover:text-[#126eda] transition-colors'
+                      }
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      <span>Clientes</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarSeparator />
       <SidebarFooter>
