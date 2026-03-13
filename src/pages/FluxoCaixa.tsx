@@ -56,6 +56,20 @@ import { useToast } from '@/hooks/use-toast'
 import { DataImportDialog } from '@/components/fluxo/DataImportDialog'
 import { ImpulseControlDialog } from '@/components/ImpulseControlDialog'
 import { DynamicIcon } from '@/components/ui/dynamic-icon'
+import {
+  RETIREMENT_WITHDRAWAL_PHRASES,
+  EMERGENCY_WITHDRAWAL_PHRASES,
+  HIGH_VALUE_PHRASES,
+  ADD_GOAL_PHRASES,
+  getRandomPhrase,
+} from '@/lib/reflections'
+
+type PendingAction = {
+  tx: Transaction
+  title: string
+  description: string
+  reflection: string
+} | null
 
 export default function FluxoCaixa() {
   const { user } = useAuth()
@@ -89,7 +103,7 @@ export default function FluxoCaixa() {
   const [selectedCard, setSelectedCard] = useState<string>('none')
   const [selectedGoalId, setSelectedGoalId] = useState<string>('')
   const [recurrenceType, setRecurrenceType] = useState('none')
-  const [pendingLargeExpense, setPendingLargeExpense] = useState<Transaction | null>(null)
+  const [pendingAction, setPendingAction] = useState<PendingAction>(null)
 
   const { toast } = useToast()
 
@@ -128,7 +142,7 @@ export default function FluxoCaixa() {
         setIsPix(editingTx.type === 'Pix')
         const hasAcc = editingTx.account && editingTx.account !== 'none'
         const foundAcc = hasAcc
-          ? accounts.find((a) => a.id === editingTx.account || a.bank === editingTx.account)
+          ? accounts.find((a) => a.id === editingTx.account || a.name === editingTx.account)
           : null
         setSelectedAccount(foundAcc ? foundAcc.id : hasAcc ? editingTx.account : 'none')
         setSelectedCard(editingTx.cardId || 'none')
@@ -211,6 +225,16 @@ export default function FluxoCaixa() {
     return { income, expense, balance: income - expense }
   }, [filteredTransactions])
 
+  const averageIncome = useMemo(() => {
+    const incomeTxs = transactions.filter(
+      (t) => t.type === 'Revenue' || t.category.toLowerCase().includes('renda'),
+    )
+    if (incomeTxs.length === 0) return 0
+    const months = new Set(incomeTxs.map((t) => t.date.substring(0, 7))).size
+    const total = incomeTxs.reduce((acc, t) => acc + Math.abs(t.amount), 0)
+    return months > 0 ? total / months : 0
+  }, [transactions])
+
   const handleExport = () => {
     const headers = [
       'Data',
@@ -224,7 +248,7 @@ export default function FluxoCaixa() {
       'Ativo',
     ]
     const rows = filteredTransactions.map((tx) => {
-      const accStr = accounts.find((a) => a.id === tx.account)?.bank || tx.account || ''
+      const accStr = accounts.find((a) => a.id === tx.account)?.name || tx.account || ''
       const cardStr = creditCards.find((c) => c.id === tx.cardId)?.name || ''
       const accOrCard = cardStr ? (accStr ? `${accStr} (${cardStr})` : cardStr) : accStr
       return [
@@ -312,7 +336,19 @@ export default function FluxoCaixa() {
           }
         }
         setTransactions([{ ...txToSave, id: data.id }, ...transactions])
-        toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
+
+        const catLower = txToSave.category.toLowerCase()
+        const acc = accounts.find((a) => a.id === txToSave.account)
+        const accNameLower = (acc?.name || txToSave.account || '').toLowerCase()
+        const isRetirementAddition =
+          (txToSave.type === 'Aporte' || txToSave.type === 'Revenue') &&
+          (catLower.includes('aposentadoria') || accNameLower.includes('aposentadoria'))
+
+        if (isRetirementAddition) {
+          toast({ title: 'Aposentadoria', description: getRandomPhrase(ADD_GOAL_PHRASES) })
+        } else {
+          toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
+        }
       }
     }
     setOpenAdd(false)
@@ -356,10 +392,62 @@ export default function FluxoCaixa() {
       assetName: type === 'Aporte' ? (fd.get('assetName') as string) : undefined,
     }
 
-    if (amount < -1000 && !editingTx && !isGain && type !== 'Transfer') {
-      setPendingLargeExpense(newTx)
-      setOpenAdd(false)
-    } else handleSave(newTx)
+    if (!editingTx && !isGain && type !== 'Transfer') {
+      const catLower = category.toLowerCase()
+      const acc = accounts.find((a) => a.id === selectedAccount)
+      const accNameLower = (acc?.name || selectedAccount || '').toLowerCase()
+
+      const isRetirement =
+        catLower.includes('aposentadoria') || accNameLower.includes('aposentadoria')
+      const isEmergency =
+        catLower.includes('emergência') ||
+        catLower.includes('emergencia') ||
+        accNameLower.includes('emergência') ||
+        accNameLower.includes('emergencia')
+
+      if (isRetirement) {
+        setPendingAction({
+          tx: newTx,
+          title: 'Aviso de Retirada (Aposentadoria)',
+          description: 'Você está registrando uma saída do seu fundo de aposentadoria.',
+          reflection: getRandomPhrase(RETIREMENT_WITHDRAWAL_PHRASES),
+        })
+        setOpenAdd(false)
+        return
+      }
+
+      if (isEmergency) {
+        setPendingAction({
+          tx: newTx,
+          title: 'Aviso de Retirada (Reserva de Emergência)',
+          description: 'Você está registrando uma saída da sua reserva de emergência.',
+          reflection: getRandomPhrase(EMERGENCY_WITHDRAWAL_PHRASES),
+        })
+        setOpenAdd(false)
+        return
+      }
+
+      const currentMonthIncome = summaries.income
+      const highValueThreshold =
+        currentMonthIncome > 0
+          ? currentMonthIncome * 0.7
+          : averageIncome * 0.7 > 0
+            ? averageIncome * 0.7
+            : 2000
+
+      if (Math.abs(amount) > highValueThreshold && highValueThreshold > 0) {
+        setPendingAction({
+          tx: newTx,
+          title: 'Alerta de Gasto Elevado',
+          description: 'Esta transação representa uma grande parte da sua renda.',
+          reflection: getRandomPhrase(HIGH_VALUE_PHRASES),
+        })
+        setOpenAdd(false)
+        return
+      }
+    }
+
+    handleSave(newTx)
   }
 
   const handleDelete = async (id: string) => {
@@ -926,7 +1014,7 @@ export default function FluxoCaixa() {
                     <SelectItem value="none">Nenhuma</SelectItem>
                     {accounts.map((a) => (
                       <SelectItem key={a.id} value={a.id}>
-                        {a.bank}
+                        {a.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -993,20 +1081,20 @@ export default function FluxoCaixa() {
       <DataImportDialog open={openImport} onOpenChange={setOpenImport} importType={importType} />
 
       <ImpulseControlDialog
-        open={!!pendingLargeExpense}
+        open={!!pendingAction}
         onOpenChange={(o) => {
-          if (!o && pendingLargeExpense) setPendingLargeExpense(null)
+          if (!o && pendingAction) setPendingAction(null)
         }}
         onConfirm={() => {
-          if (pendingLargeExpense) {
-            handleSave(pendingLargeExpense)
-            setPendingLargeExpense(null)
+          if (pendingAction) {
+            handleSave(pendingAction.tx)
+            setPendingAction(null)
           }
         }}
-        title="Alerta de Gasto Elevado"
-        description="Você está registrando uma saída de valor substancial."
-        reflectionText="Este gasto foge do seu padrão. Ele realmente reflete suas prioridades ou prejudica o Resultado do seu mês?"
-        confirmText="Confirmar Gasto"
+        title={pendingAction?.title || ''}
+        description={pendingAction?.description || ''}
+        reflectionText={pendingAction?.reflection || ''}
+        confirmText="Confirmar Registro"
         destructive={false}
       />
     </div>

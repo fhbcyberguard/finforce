@@ -23,6 +23,7 @@ import { IconPicker } from '@/components/ui/icon-picker'
 import { DynamicIcon } from '@/components/ui/dynamic-icon'
 import { AreaChart, Area, ReferenceLine, XAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { GOAL_DELETION_PHRASES, ADD_GOAL_PHRASES, getRandomPhrase } from '@/lib/reflections'
 
 export default function Metas() {
   const { user, profile } = useAuth()
@@ -30,6 +31,7 @@ export default function Metas() {
   const [open, setOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [goalToDelete, setGoalToDelete] = useState<string | null>(null)
+  const [deleteReflection, setDeleteReflection] = useState('')
   const { toast } = useToast()
 
   const [calcMode, setCalcMode] = useState<'date' | 'deposit'>('date')
@@ -122,7 +124,7 @@ export default function Metas() {
       const { data, error } = await supabase.from('goals').insert(payload).select().single()
       if (!error && data) {
         setGoals([{ ...newGoal, id: data.id }, ...goals])
-        toast({ title: 'Meta Criada', description: 'Seu novo plano foi salvo com sucesso.' })
+        toast({ title: 'Meta Criada', description: getRandomPhrase(ADD_GOAL_PHRASES) })
       } else {
         toast({ title: 'Erro', description: 'Não foi possível salvar.', variant: 'destructive' })
       }
@@ -318,7 +320,10 @@ export default function Metas() {
                       size="icon"
                       variant="ghost"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setGoalToDelete(goal.id)}
+                      onClick={() => {
+                        setGoalToDelete(goal.id)
+                        setDeleteReflection(getRandomPhrase(GOAL_DELETION_PHRASES))
+                      }}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -420,7 +425,7 @@ export default function Metas() {
         onConfirm={confirmDelete}
         title="Desistir da Meta?"
         description="Você está prestes a excluir este planejamento."
-        reflectionText="Esta meta deixou de ser importante ou precisa de um novo plano? Pense nos seus valores de longo prazo."
+        reflectionText={deleteReflection}
         confirmText="Sim, Excluir"
       />
     </div>

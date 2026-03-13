@@ -7,10 +7,9 @@ export function Typewriter({ text, speed = 50 }: { text: string; speed?: number 
     setDisplayedText('')
     let i = 0
     const timer = setInterval(() => {
-      if (i < text.length) {
-        setDisplayedText((prev) => prev + text.charAt(i))
-        i++
-      } else {
+      setDisplayedText(text.slice(0, i + 1))
+      i++
+      if (i >= text.length) {
         clearInterval(timer)
       }
     }, speed)
