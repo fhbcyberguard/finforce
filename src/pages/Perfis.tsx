@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { ImpulseControlDialog } from '../components/ImpulseControlDialog'
 
 const profileSchema = z.object({
   name: z.string().min(1, 'O nome é obrigatório'),
@@ -67,7 +68,6 @@ export default function Perfis() {
 
   const handleArchive = () => {
     setProfiles(profiles.filter((p) => p.id !== archiveId))
-    setArchiveId(null)
     toast({ title: 'Perfil arquivado', description: 'Histórico preservado, mas acesso revogado.' })
   }
 
@@ -148,33 +148,15 @@ export default function Perfis() {
         </div>
       )}
 
-      <Dialog open={!!archiveId} onOpenChange={(o) => !o && setArchiveId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-destructive flex items-center gap-2">
-              <Archive className="w-5 h-5" /> Arquivar Perfil?
-            </DialogTitle>
-            <div className="pt-4 pb-2 text-sm text-muted-foreground italic border-l-2 border-primary pl-4 ml-1">
-              <Typewriter
-                text="Antes de prosseguir: Qual o real motivo para ocultar este histórico? Manter dados passados ajuda na clareza financeira de longo prazo da família."
-                speed={30}
-              />
-            </div>
-            <DialogDescription className="mt-4">
-              O perfil será movido para "Arquivados". Transações anteriores continuarão existindo
-              para cálculos de patrimônio, mas o acesso será revogado.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setArchiveId(null)}>
-              Cancelar
-            </Button>
-            <Button variant="destructive" onClick={handleArchive}>
-              Sim, Arquivar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ImpulseControlDialog
+        open={!!archiveId}
+        onOpenChange={(o) => !o && setArchiveId(null)}
+        onConfirm={handleArchive}
+        title="Arquivar Perfil da Família?"
+        description="O perfil será movido para Arquivados. Transações anteriores continuarão existindo para cálculos de patrimônio, mas o acesso ao app será revogado."
+        reflectionText="Antes de prosseguir: Qual o real motivo para revogar este acesso? Manter a transparência financeira ajuda no engajamento de toda a família rumo à independência."
+        confirmText="Arquivar Perfil"
+      />
 
       <Dialog open={!!editingProfile} onOpenChange={(o) => !o && setEditingProfile(null)}>
         <DialogContent>
@@ -189,7 +171,7 @@ export default function Perfis() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nome</FormLabel>
+                    <FormLabel>Nome Customizado</FormLabel>
                     <FormControl>
                       <Input placeholder="Nome do perfil" {...field} />
                     </FormControl>
@@ -203,7 +185,7 @@ export default function Perfis() {
                   name="role"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Papel na Família</FormLabel>
+                      <FormLabel>Nível de Permissão</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -215,8 +197,10 @@ export default function Perfis() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Admin">Administrador</SelectItem>
-                          <SelectItem value="Dependente">Dependente</SelectItem>
+                          <SelectItem value="Admin">Controle Total</SelectItem>
+                          <SelectItem value="Edição">Edição Parcial</SelectItem>
+                          <SelectItem value="Visualização">Apenas Visão</SelectItem>
+                          <SelectItem value="Dependente">Dependente (Limite)</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -240,7 +224,7 @@ export default function Perfis() {
               {showReflection && (
                 <div className="pt-2 pb-2 mt-2 text-sm text-amber-500 italic border-l-2 border-amber-500 pl-4 bg-amber-500/10 rounded-r-md">
                   <Typewriter
-                    text="Atenção: Remover o papel de Administrador revogará o acesso total deste perfil às configurações da família. Essa decisão foi conversada?"
+                    text="Atenção: Remover o acesso de Controle Total revogará privilégios críticos deste perfil. Essa decisão foi conversada em família?"
                     speed={25}
                   />
                 </div>

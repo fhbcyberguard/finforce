@@ -8,6 +8,7 @@ import {
   Settings,
   Waves,
   LogOut,
+  ShieldAlert,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -23,7 +24,7 @@ import {
 import { useToast } from '@/hooks/use-toast'
 
 const navigation = [
-  { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
+  { title: 'Visão Geral', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Patrimônio', url: '/patrimonio', icon: PieChart },
   { title: 'Fluxo de Caixa', url: '/fluxo', icon: ArrowRightLeft },
   { title: 'Cartões e Contas', url: '/contas', icon: CreditCard },
@@ -73,6 +74,18 @@ export function AppSidebar() {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={location.pathname === '/producer-admin'}
+                  className="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+                >
+                  <Link to="/producer-admin" className="flex items-center gap-3">
+                    <ShieldAlert className="w-4 h-4" />
+                    <span>Admin Produtor</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild

@@ -9,6 +9,7 @@ import Contas from './pages/Contas'
 import Perfis from './pages/Perfis'
 import FluxoCaixa from './pages/FluxoCaixa'
 import Configuracoes from './pages/Configuracoes'
+import ProducerAdmin from './pages/ProducerAdmin'
 import NotFound from './pages/NotFound'
 import Login from './pages/Login'
 import Registro from './pages/Registro'
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/contas" element={<Contas />} />
             <Route path="/perfis" element={<Perfis />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
+            <Route path="/producer-admin" element={<ProducerAdmin />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

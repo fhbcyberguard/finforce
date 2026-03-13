@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { MOCK_ASSETS } from '@/lib/mockData'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -22,10 +22,12 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { ImpulseControlDialog } from '../ImpulseControlDialog'
 
 export default function AssetList({ className }: { className?: string }) {
   const [assets, setAssets] = useState(MOCK_ASSETS || [])
   const [open, setOpen] = useState(false)
+  const [assetToDelete, setAssetToDelete] = useState<string | null>(null)
   const { toast } = useToast()
 
   const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,9 +45,14 @@ export default function AssetList({ className }: { className?: string }) {
     toast({ title: 'Ativo adicionado', description: 'O ativo foi incluído no seu patrimônio.' })
   }
 
+  const confirmDelete = () => {
+    setAssets(assets.filter((a) => a.id !== assetToDelete))
+    toast({ title: 'Ativo removido', description: 'O ativo foi retirado da sua carteira.' })
+  }
+
   return (
     <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-lg">Meus Ativos</CardTitle>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -97,11 +104,11 @@ export default function AssetList({ className }: { className?: string }) {
         </Dialog>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
+        <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 mt-2">
           {assets.map((asset) => (
             <div
               key={asset.id}
-              className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+              className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors relative overflow-hidden"
             >
               <div>
                 <p className="font-medium">{asset.name}</p>
@@ -112,13 +119,36 @@ export default function AssetList({ className }: { className?: string }) {
                   <span className="text-xs text-muted-foreground">{asset.rate}</span>
                 </div>
               </div>
-              <div className="text-right">
+              <div className="text-right transition-transform group-hover:-translate-x-8">
                 <p className="font-mono font-medium">R$ {asset.value.toLocaleString('pt-BR')}</p>
               </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="absolute right-2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                onClick={() => setAssetToDelete(asset.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           ))}
+          {assets.length === 0 && (
+            <p className="text-center text-sm text-muted-foreground py-8">
+              Nenhum ativo registrado.
+            </p>
+          )}
         </div>
       </CardContent>
+
+      <ImpulseControlDialog
+        open={!!assetToDelete}
+        onOpenChange={(o) => !o && setAssetToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Excluir Ativo / Meta?"
+        description="Você está prestes a remover este ativo da sua carteira."
+        reflectionText="Esta meta não é mais importante ou você precisa de um novo plano? Lembre-se do impacto disso no seu ponto de liberdade no longo prazo."
+        confirmText="Sim, Excluir"
+      />
     </Card>
   )
 }

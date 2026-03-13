@@ -5,10 +5,51 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import { Building2, CreditCard, Lock, ShieldCheck, RefreshCw } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Building2, CreditCard, Lock, ShieldCheck, RefreshCw, Archive, Plus } from 'lucide-react'
+import { ImpulseControlDialog } from '../components/ImpulseControlDialog'
+import { useToast } from '@/hooks/use-toast'
 
 export default function Contas() {
   const [openFinance, setOpenFinance] = useState(false)
+  const [accounts, setAccounts] = useState(MOCK_ACCOUNTS)
+  const [openAddAcc, setOpenAddAcc] = useState(false)
+  const [accountToArchive, setAccountToArchive] = useState<string | null>(null)
+  const { toast } = useToast()
+
+  const handleAddAccount = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const fd = new FormData(e.currentTarget)
+    const newAcc = {
+      id: Math.random().toString(),
+      bank: fd.get('bank') as string,
+      type: fd.get('type') as string,
+      balance: Number(fd.get('balance')),
+      connected: false,
+    }
+    setAccounts([...accounts, newAcc])
+    setOpenAddAcc(false)
+    toast({ title: 'Conta Adicionada', description: 'Nova instituição vinculada com sucesso.' })
+  }
+
+  const confirmArchive = () => {
+    setAccounts(accounts.filter((a) => a.id !== accountToArchive))
+    toast({ title: 'Conta Arquivada', description: 'O histórico foi preservado para relatórios.' })
+  }
 
   return (
     <div className="space-y-6 animate-slide-in-up">
@@ -55,33 +96,83 @@ export default function Contas() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row justify-between items-center pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Building2 className="w-5 h-5" /> Contas Conectadas
+              <Building2 className="w-5 h-5" /> Minhas Contas
             </CardTitle>
+            <Dialog open={openAddAcc} onOpenChange={setOpenAddAcc}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="ghost" className="h-8 gap-1">
+                  <Plus className="w-3 h-3" /> Nova
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Adicionar Instituição</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddAccount} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Nome do Banco / Instituição</Label>
+                    <Input name="bank" required placeholder="Ex: Inter, C6 Bank" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Tipo de Conta</Label>
+                      <Select name="type" defaultValue="Conta Corrente">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Conta Corrente">Conta Corrente</SelectItem>
+                          <SelectItem value="Conta Poupança">Conta Poupança</SelectItem>
+                          <SelectItem value="Conta Investimento">Investimento</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Saldo Inicial (R$)</Label>
+                      <Input name="balance" type="number" step="0.01" required placeholder="0.00" />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" className="w-full">
+                      Salvar Conta
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {MOCK_ACCOUNTS.map((acc) => (
+          <CardContent className="space-y-4 pt-4">
+            {accounts.map((acc) => (
               <div
                 key={acc.id}
-                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors relative overflow-hidden"
               >
                 <div>
                   <p className="font-medium">{acc.bank}</p>
                   <p className="text-xs text-muted-foreground">{acc.type}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right transition-transform group-hover:-translate-x-10">
                   <p className="font-mono font-medium">R$ {acc.balance.toFixed(2)}</p>
                   <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-0.5">
                     {acc.connected ? (
                       <>
-                        <RefreshCw className="w-3 h-3 text-emerald-500" /> Sincronizado
+                        <RefreshCw className="w-3 h-3 text-emerald-500" /> Sync
                       </>
                     ) : (
                       'Manual'
                     )}
                   </p>
                 </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute right-2 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-opacity"
+                  onClick={() => setAccountToArchive(acc.id)}
+                >
+                  <Archive className="w-4 h-4" />
+                </Button>
               </div>
             ))}
           </CardContent>
@@ -90,34 +181,63 @@ export default function Contas() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <CreditCard className="w-5 h-5" /> Adicionar Cartão
+              <CreditCard className="w-5 h-5" /> Adicionar Cartão Seguro
             </CardTitle>
-            <CardDescription>Insira apenas os últimos 4 dígitos por segurança.</CardDescription>
+            <CardDescription>
+              Insira apenas os últimos 4 dígitos. Nunca pedimos CVV.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                toast({ title: 'Cartão Salvo' })
+              }}
+            >
               <div className="space-y-2">
-                <Label>Nome da Instituição (Banco/Emissor)</Label>
-                <Input placeholder="Ex: Itaú, Nubank" />
+                <Label>Emissor (Banco/Fintech)</Label>
+                <Input placeholder="Ex: Itaú Personnalité" required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Bandeira</Label>
-                  <Input placeholder="Mastercard, Visa" />
+                  <Input placeholder="Mastercard, Visa" required />
                 </div>
                 <div className="space-y-2">
                   <Label>Últimos 4 Dígitos</Label>
                   <div className="relative">
-                    <Input placeholder="1234" maxLength={4} className="font-mono pl-10" />
+                    <Input placeholder="1234" maxLength={4} required className="font-mono pl-10" />
                     <Lock className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
                   </div>
                 </div>
               </div>
-              <Button className="w-full mt-4">Salvar Cartão Seguro</Button>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Limite Global (R$)</Label>
+                  <Input type="number" placeholder="5000" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Dia Vencimento</Label>
+                  <Input type="number" min="1" max="31" placeholder="10" required />
+                </div>
+              </div>
+              <Button type="submit" className="w-full mt-2">
+                Registrar Cartão
+              </Button>
             </form>
           </CardContent>
         </Card>
       </div>
+
+      <ImpulseControlDialog
+        open={!!accountToArchive}
+        onOpenChange={(o) => !o && setAccountToArchive(null)}
+        onConfirm={confirmArchive}
+        title="Arquivar Conta Bancária"
+        description="Esta conta não aparecerá mais nos saldos diários, mas suas transações passadas serão mantidas no histórico de patrimônio."
+        reflectionText="Atenção: Ocultar dados financeiros reais pode criar uma falsa sensação de organização. Você tem certeza que deseja remover esta conta da sua visão diária?"
+      />
     </div>
   )
 }

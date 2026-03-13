@@ -64,3 +64,42 @@ export const MOCK_PROFILES = [
     avatar: 'https://img.usecurling.com/ppl/thumbnail?gender=male&seed=7',
   },
 ]
+
+export const MOCK_TRANSACTIONS = [
+  {
+    id: '1',
+    date: '2026-03-12',
+    description: 'Supermercado Extra',
+    amount: -450.2,
+    category: 'Alimentação',
+    type: 'Expense',
+    account: 'Nubank',
+  },
+  {
+    id: '2',
+    date: '2026-03-10',
+    description: 'Salário Carlos',
+    amount: 8500.0,
+    category: 'Renda Principal',
+    type: 'Revenue',
+    account: 'Itaú',
+  },
+  {
+    id: '3',
+    date: '2026-03-08',
+    description: 'Transferência Poupança',
+    amount: -1500.0,
+    category: 'Investimento',
+    type: 'Transfer',
+    account: 'Itaú',
+  },
+  {
+    id: '4',
+    date: '2026-03-05',
+    description: 'Pix João - Churrasco',
+    amount: -120.0,
+    category: 'Lazer',
+    type: 'Pix',
+    account: 'Nubank',
+  },
+]
