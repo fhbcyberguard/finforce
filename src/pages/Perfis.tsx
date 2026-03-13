@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { Plus, Archive, ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import useAppStore, { Profile } from '@/stores/useAppStore'
 import { ProfileCard } from '@/components/profiles/ProfileCard'
 import { ProfileEditDialog } from '@/components/profiles/ProfileEditDialog'
@@ -10,9 +11,8 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/use-auth'
 
 export default function Perfis() {
-  const { user } = useAuth()
-  const { profiles, setProfilesFromDB, searchQuery, currentContext, subscriptionPlan } =
-    useAppStore()
+  const { user, profile: userProfile } = useAuth()
+  const { profiles, setProfilesFromDB, searchQuery, currentContext } = useAppStore()
   const [editingProfile, setEditingProfile] = useState<Partial<Profile> | null>(null)
   const [deletingProfile, setDeletingProfile] = useState<Profile | null>(null)
   const [archivedOpen, setArchivedOpen] = useState(false)
@@ -84,15 +84,24 @@ export default function Perfis() {
   const activeProfiles = filteredProfiles.filter((p) => !p.isArchived)
   const archivedProfiles = filteredProfiles.filter((p) => p.isArchived)
 
-  const limit = subscriptionPlan === 'basic' ? 1 : subscriptionPlan === 'medium' ? 5 : Infinity
+  const plan = userProfile?.plan || 'basic'
+  const limit = plan === 'premium' ? Infinity : 1
   const canAddProfile = activeProfiles.length < limit
 
   return (
     <div className="space-y-6 animate-slide-in-up pb-12">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
-          <p className="text-muted-foreground">{description}</p>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>
+            <Badge
+              variant={plan === 'premium' ? 'default' : 'secondary'}
+              className="uppercase text-[10px] font-bold tracking-wider"
+            >
+              Plano {plan === 'premium' ? 'Premium' : 'Básico'}
+            </Badge>
+          </div>
+          <p className="text-muted-foreground mt-1">{description}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           <Button className="gap-2" onClick={() => setEditingProfile({})} disabled={!canAddProfile}>

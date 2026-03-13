@@ -141,10 +141,13 @@ export default function Registro() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+              <Button type="submit" className="w-full mt-4" disabled={isLoading}>
                 {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                 Criar Conta
               </Button>
+              <p className="text-xs text-center text-muted-foreground mt-3">
+                Solicite o reembolso em até 7 dias se não estiver satisfeito.
+              </p>
             </form>
           </Form>
           <p className="text-sm text-center text-muted-foreground mt-6">

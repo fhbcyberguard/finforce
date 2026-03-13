@@ -7,6 +7,8 @@ export interface Profile {
   full_name: string | null
   updated_at: string | null
   avatar_url: string | null
+  email?: string | null
+  plan?: string
 }
 
 interface AuthContextType {

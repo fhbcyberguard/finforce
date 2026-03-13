@@ -52,7 +52,7 @@ export default function Landing() {
             Entrar
           </Link>
           <Button asChild size="sm">
-            <Link to="/registro">Começar Grátis</Link>
+            <Link to="/registro">Começar</Link>
           </Button>
         </nav>
       </header>
@@ -64,15 +64,16 @@ export default function Landing() {
                 Lançamento Exclusivo
               </div>
               <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl max-w-4xl text-balance">
-                Sua Jornada para a Independência Financeira Começa Aqui.
+                Controle, invista e proteja seu dinheiro em um único lugar.
               </h1>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl leading-relaxed">
-                Integre engenharia financeira, psicologia comportamental (TCC) e segurança bancária
-                em uma única plataforma para sua família ou empresa.
+                O FinFlow combina engenharia financeira, psicologia comportamental e segurança
+                bancária para ajudar você e sua família a tomar decisões financeiras mais
+                inteligentes.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-8">
                 <Button asChild size="lg" className="h-12 px-8 text-base">
-                  <Link to="/registro">Comece Agora</Link>
+                  <Link to="#features">Ver Como Funciona</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="h-12 px-8 text-base">
                   <Link to="#pricing">Ver Planos</Link>
