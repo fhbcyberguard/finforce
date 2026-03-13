@@ -3,14 +3,14 @@ export const MOCK_ALERTS = [
     id: 1,
     title: 'Fatura Cartão Black',
     amount: 3450.0,
-    dueDate: new Date(Date.now() + 86400000 * 1),
+    dueDate: new Date(Date.now() + 86400000 * 2), // D-2 Alert
     type: 'urgent',
   },
   {
     id: 2,
     title: 'Conta de Luz',
     amount: 185.4,
-    dueDate: new Date(Date.now() + 86400000 * 2),
+    dueDate: new Date(Date.now() + 86400000 * 2), // D-2 Alert
     type: 'urgent',
   },
   {
@@ -31,13 +31,29 @@ export const MOCK_ASSETS = [
     value: 25000,
     rate: 'IPCA + 5.5%',
   },
-  { id: '3', name: 'FII HGLG11', category: 'Variável', value: 15000, rate: 'Div 0.8% a.m' },
-  { id: '4', name: 'Ações WEGE3', category: 'Variável', value: 8500, rate: '-' },
+  { id: '3', name: 'FII HGLG11', category: 'FIIs', value: 15000, rate: 'Div 0.8% a.m' },
+  { id: '4', name: 'Ações WEGE3', category: 'Ações', value: 8500, rate: '-' },
 ]
 
 export const MOCK_ACCOUNTS = [
-  { id: '1', bank: 'Nubank', type: 'Conta Corrente', balance: 12450.0, connected: true },
-  { id: '2', bank: 'Itaú', type: 'Conta Investimento', balance: 4500.0, connected: true },
+  {
+    id: '1',
+    bank: 'Nubank',
+    type: 'Conta Corrente',
+    balance: 12450.0,
+    connected: true,
+    agency: '0001',
+    account: '12345-6',
+  },
+  {
+    id: '2',
+    bank: 'Itaú',
+    type: 'Conta Investimento',
+    balance: 4500.0,
+    connected: true,
+    agency: '7890',
+    account: '98765-4',
+  },
   { id: '3', bank: 'XP Investimentos', type: 'Corretora', balance: 0.0, connected: false },
 ]
 
@@ -71,35 +87,97 @@ export const MOCK_TRANSACTIONS = [
     date: '2026-03-12',
     description: 'Supermercado Extra',
     amount: -450.2,
-    category: 'Alimentação',
+    category: 'Alimentação > Supermercado',
     type: 'Expense',
     account: 'Nubank',
+    recurrence: 'none',
   },
   {
     id: '2',
     date: '2026-03-10',
     description: 'Salário Carlos',
     amount: 8500.0,
-    category: 'Renda Principal',
+    category: 'Renda > Principal',
     type: 'Revenue',
     account: 'Itaú',
+    recurrence: 'monthly',
   },
   {
     id: '3',
     date: '2026-03-08',
     description: 'Transferência Poupança',
     amount: -1500.0,
-    category: 'Investimento',
+    category: 'Transferência > Interna',
     type: 'Transfer',
     account: 'Itaú',
+    recurrence: 'none',
   },
   {
     id: '4',
     date: '2026-03-05',
     description: 'Pix João - Churrasco',
     amount: -120.0,
-    category: 'Lazer',
+    category: 'Lazer > Eventos',
     type: 'Pix',
     account: 'Nubank',
+    recurrence: 'none',
+    hasAttachment: true,
+  },
+]
+
+export const MOCK_CATEGORIES = {
+  Alimentação: ['Supermercado', 'Delivery', 'Restaurante'],
+  Moradia: ['Aluguel', 'Luz', 'Água', 'Internet'],
+  Transporte: ['Combustível', 'Aplicativo', 'Manutenção'],
+  Saúde: ['Farmácia', 'Plano de Saúde', 'Consultas'],
+  Lazer: ['Eventos', 'Assinaturas', 'Viagens'],
+  Renda: ['Principal', 'Extra', 'Dividendos'],
+}
+
+export const MOCK_ACCESS_LOGS = [
+  {
+    id: 1,
+    device: 'MacBook Pro',
+    location: 'São Paulo, BR',
+    ip: '192.168.1.10',
+    date: '2026-03-13 09:41',
+  },
+  {
+    id: 2,
+    device: 'iPhone 13',
+    location: 'São Paulo, BR',
+    ip: '172.20.10.2',
+    date: '2026-03-12 18:20',
+  },
+  {
+    id: 3,
+    device: 'Windows Desktop',
+    location: 'Rio de Janeiro, BR',
+    ip: '200.150.40.1',
+    date: '2026-03-10 14:05',
+  },
+]
+
+export const MOCK_TICKETS = [
+  {
+    id: 'TK-1042',
+    user: 'carlos@familia.com',
+    subject: 'Dúvida sobre simulador',
+    status: 'Aberto',
+    date: '2026-03-12',
+  },
+  {
+    id: 'TK-1041',
+    user: 'marina.silva@email.com',
+    subject: 'Problema na sincronização Nubank',
+    status: 'Em Progresso',
+    date: '2026-03-11',
+  },
+  {
+    id: 'TK-1038',
+    user: 'joao.pedro@teste.com',
+    subject: 'Como mudar o e-mail?',
+    status: 'Resolvido',
+    date: '2026-03-09',
   },
 ]

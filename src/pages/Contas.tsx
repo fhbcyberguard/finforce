@@ -39,6 +39,8 @@ export default function Contas() {
       bank: fd.get('bank') as string,
       type: fd.get('type') as string,
       balance: Number(fd.get('balance')),
+      agency: fd.get('agency') as string,
+      account: fd.get('account') as string,
       connected: false,
     }
     setAccounts([...accounts, newAcc])
@@ -48,7 +50,10 @@ export default function Contas() {
 
   const confirmArchive = () => {
     setAccounts(accounts.filter((a) => a.id !== accountToArchive))
-    toast({ title: 'Conta Arquivada', description: 'O histórico foi preservado para relatórios.' })
+    toast({
+      title: 'Conta Arquivada',
+      description: 'O histórico foi preservado para relatórios anuais.',
+    })
   }
 
   return (
@@ -117,6 +122,16 @@ export default function Contas() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
+                      <Label>Agência (Opcional)</Label>
+                      <Input name="agency" placeholder="0001" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Conta (Opcional)</Label>
+                      <Input name="account" placeholder="12345-6" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
                       <Label>Tipo de Conta</Label>
                       <Select name="type" defaultValue="Conta Corrente">
                         <SelectTrigger>
@@ -151,7 +166,11 @@ export default function Contas() {
               >
                 <div>
                   <p className="font-medium">{acc.bank}</p>
-                  <p className="text-xs text-muted-foreground">{acc.type}</p>
+                  <p className="text-xs text-muted-foreground flex gap-2">
+                    <span>{acc.type}</span>
+                    {acc.agency && <span>• Ag: {acc.agency}</span>}
+                    {acc.account && <span>• Cc: {acc.account}</span>}
+                  </p>
                 </div>
                 <div className="text-right transition-transform group-hover:-translate-x-10">
                   <p className="font-mono font-medium">R$ {acc.balance.toFixed(2)}</p>
@@ -184,7 +203,7 @@ export default function Contas() {
               <CreditCard className="w-5 h-5" /> Adicionar Cartão Seguro
             </CardTitle>
             <CardDescription>
-              Insira apenas os últimos 4 dígitos. Nunca pedimos CVV.
+              Insira apenas os últimos 4 dígitos. Nunca pedimos CVV ou número completo.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -218,7 +237,7 @@ export default function Contas() {
                   <Input type="number" placeholder="5000" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Dia Vencimento</Label>
+                  <Label>Dia Vencimento da Fatura</Label>
                   <Input type="number" min="1" max="31" placeholder="10" required />
                 </div>
               </div>

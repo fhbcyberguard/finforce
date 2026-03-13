@@ -10,17 +10,18 @@ export default function Simulator() {
   const [aporte, setAporte] = useState(2000)
   const [retorno, setRetorno] = useState(8.5)
   const [idade, setIdade] = useState(55)
+  const [rendaDesejada, setRendaDesejada] = useState(10000)
 
-  // CBT Question Generator based on inputs
+  // CBT Question Generator
   const getInsight = () => {
     if (idade < 40)
-      return `Aposentar aos ${idade} exige sacrifício. Como está seu equilíbrio entre vida e poupança hoje? Cuidado com o burnout.`
+      return `Aposentar aos ${idade} exige sacrifício extremo agora. Cuidado com o burnout. Está valendo a pena?`
     if (aporte > 10000)
-      return `Ótimo aporte de R$ ${aporte.toLocaleString()}! O que você deixaria de fazer hoje para manter esse ritmo sem sacrificar sua saúde mental?`
+      return `Aporte de R$ ${aporte.toLocaleString()} é alto! O que você está deixando de viver hoje para manter esse ritmo?`
     if (retorno > 10)
-      return `Uma taxa de ${retorno}% ao ano é agressiva. Você tem um plano de contingência caso o mercado passe por uma longa crise?`
-    if (idade > 70)
-      return `Uma aposentadoria aos ${idade} pode trazer mais conforto hoje. Você está priorizando a qualidade de vida presente de forma consciente?`
+      return `Uma taxa de ${retorno}% a.a. é agressiva e traz risco. Você tem um plano B para cenários de crise na economia?`
+    if (rendaDesejada > 30000)
+      return `Uma renda de R$ ${rendaDesejada.toLocaleString()} exige um patrimônio massivo. Essa necessidade de luxo reflete seus valores reais?`
     return `Como um aumento de 5% no seu aporte (R$ ${(aporte * 0.05).toFixed(0)}) hoje afetaria seu nível de estresse em 10 anos?`
   }
 
@@ -31,7 +32,7 @@ export default function Simulator() {
           <div>
             <CardTitle>Simulador: Ponto de Liberdade</CardTitle>
             <CardDescription>
-              Projete o cruzamento entre seu patrimônio e custo de vida.
+              Projete o cruzamento entre seu patrimônio e custo de vida desejado.
             </CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={() => {}} className="hidden md:flex">
@@ -40,8 +41,8 @@ export default function Simulator() {
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center flex-1">
-          <div className="md:col-span-4 h-full flex flex-col justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start flex-1">
+          <div className="md:col-span-4 h-full flex flex-col">
             <SimulatorControls
               aporte={aporte}
               setAporte={setAporte}
@@ -49,10 +50,17 @@ export default function Simulator() {
               setRetorno={setRetorno}
               idade={idade}
               setIdade={setIdade}
+              rendaDesejada={rendaDesejada}
+              setRendaDesejada={setRendaDesejada}
             />
           </div>
           <div className="md:col-span-8">
-            <SimulatorChart aporte={aporte} retorno={retorno} idade={idade} />
+            <SimulatorChart
+              aporte={aporte}
+              retorno={retorno}
+              idade={idade}
+              rendaDesejada={rendaDesejada}
+            />
           </div>
         </div>
 

@@ -10,6 +10,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select'
 import {
   Dialog,
@@ -27,40 +29,41 @@ import {
   Repeat,
   ArrowRightLeft,
   Upload,
+  Paperclip,
 } from 'lucide-react'
-import { MOCK_TRANSACTIONS } from '@/lib/mockData'
+import { MOCK_TRANSACTIONS, MOCK_CATEGORIES } from '@/lib/mockData'
 import { useToast } from '@/hooks/use-toast'
 
 export default function FluxoCaixa() {
   const [transactions, setTransactions] = useState(MOCK_TRANSACTIONS)
   const [openAdd, setOpenAdd] = useState(false)
   const [isPix, setIsPix] = useState(false)
+  const [fileName, setFileName] = useState('')
   const { toast } = useToast()
 
   const handleAdd = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     const type = fd.get('type') as string
-    const amountStr = fd.get('amount') as string
-    let amount = Number(amountStr)
+    let amount = Number(fd.get('amount'))
 
-    if (type === 'Expense' || type === 'Pix' || type === 'Transfer') {
-      amount = -Math.abs(amount)
-    } else {
-      amount = Math.abs(amount)
-    }
+    if (type === 'Expense' || type === 'Pix' || type === 'Transfer') amount = -Math.abs(amount)
+    else amount = Math.abs(amount)
 
     const newTx = {
       id: Math.random().toString(),
       date: new Date().toISOString().split('T')[0],
       description: fd.get('description') as string,
-      amount: amount,
+      amount,
       category: fd.get('category') as string,
-      type: type,
+      type,
       account: fd.get('account') as string,
+      recurrence: fd.get('recurrence') as string,
+      hasAttachment: !!fileName,
     }
     setTransactions([newTx, ...transactions])
     setOpenAdd(false)
+    setFileName('')
     toast({ title: 'Transação adicionada', description: 'O fluxo de caixa foi atualizado.' })
   }
 
@@ -84,9 +87,7 @@ export default function FluxoCaixa() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Fluxo de Caixa</h1>
-          <p className="text-muted-foreground">
-            Visão detalhada de entradas e saídas (Motor Avançado).
-          </p>
+          <p className="text-muted-foreground">Visão detalhada de entradas e saídas.</p>
         </div>
         <Dialog open={openAdd} onOpenChange={setOpenAdd}>
           <DialogTrigger asChild>
@@ -132,8 +133,24 @@ export default function FluxoCaixa() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Categoria Pessoal</Label>
-                  <Input name="category" placeholder="Ex: Moradia" required />
+                  <Label>Categoria</Label>
+                  <Select name="category" required defaultValue="Moradia > Luz">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[200px]">
+                      {Object.entries(MOCK_CATEGORIES).map(([parent, subs]) => (
+                        <SelectGroup key={parent}>
+                          <SelectLabel>{parent}</SelectLabel>
+                          {subs.map((sub) => (
+                            <SelectItem key={sub} value={`${parent} > ${sub}`}>
+                              {sub}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Conta Origem/Destino</Label>
@@ -150,25 +167,48 @@ export default function FluxoCaixa() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4 pt-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="recurrence"
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <Label
-                    htmlFor="recurrence"
-                    className="flex items-center gap-1 font-normal cursor-pointer"
-                  >
-                    <Repeat className="w-3 h-3" /> Transação Recorrente
-                  </Label>
+              <div className="grid grid-cols-2 gap-4 pt-2 items-end">
+                <div className="space-y-2">
+                  <Label>Recorrência</Label>
+                  <Select name="recurrence" defaultValue="none">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Uma vez</SelectItem>
+                      <SelectItem value="weekly">Semanal</SelectItem>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                      <SelectItem value="yearly">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 {isPix && (
-                  <div className="flex items-center gap-2 ml-auto">
-                    <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1">
-                      <Upload className="w-3 h-3" /> Anexar Recibo
-                    </Button>
+                  <div className="space-y-2">
+                    <Label className="opacity-0">Anexo</Label>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full relative overflow-hidden"
+                        onClick={() => {
+                          const input = document.createElement('input')
+                          input.type = 'file'
+                          input.accept = 'image/*,.pdf'
+                          input.onchange = (e) => {
+                            const target = e.target as HTMLInputElement
+                            if (target.files?.length) setFileName(target.files[0].name)
+                          }
+                          input.click()
+                        }}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        {fileName ? (
+                          <span className="truncate max-w-[100px]">{fileName}</span>
+                        ) : (
+                          'Anexar Recibo'
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -194,7 +234,12 @@ export default function FluxoCaixa() {
                 <div className="flex items-center gap-4">
                   <div className="p-2 rounded-full bg-secondary/20">{getIcon(tx.type)}</div>
                   <div>
-                    <p className="font-medium text-sm sm:text-base">{tx.description}</p>
+                    <p className="font-medium text-sm sm:text-base flex items-center gap-2">
+                      {tx.description}
+                      {tx.recurrence !== 'none' && (
+                        <Repeat className="w-3 h-3 text-muted-foreground" />
+                      )}
+                    </p>
                     <div className="flex flex-wrap items-center gap-2 mt-1">
                       <Badge variant="secondary" className="text-[10px] font-normal">
                         {tx.category}
@@ -210,9 +255,9 @@ export default function FluxoCaixa() {
                   <p className={`font-mono font-medium ${tx.amount > 0 ? 'text-emerald-500' : ''}`}>
                     {tx.amount > 0 ? '+' : ''}R$ {Math.abs(tx.amount).toFixed(2)}
                   </p>
-                  {tx.type === 'Pix' && (
+                  {(tx.type === 'Pix' || tx.hasAttachment) && (
                     <span className="text-[10px] text-muted-foreground flex items-center justify-end gap-1 mt-1">
-                      <Receipt className="w-3 h-3" /> c/ recibo
+                      <Paperclip className="w-3 h-3" /> anexo
                     </span>
                   )}
                 </div>

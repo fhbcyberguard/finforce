@@ -1,14 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTheme } from 'next-themes'
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -22,6 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import {
   Save,
@@ -32,12 +26,9 @@ import {
   Shield,
   User,
   LogOut,
-  CreditCard,
-  Lock,
-  Building2,
   CodeSquare,
 } from 'lucide-react'
-import { MOCK_ACCOUNTS, MOCK_PROFILES } from '@/lib/mockData'
+import { MOCK_ACCOUNTS, MOCK_PROFILES, MOCK_TRANSACTIONS } from '@/lib/mockData'
 import { SecuritySettings } from '../components/settings/SecuritySettings'
 
 export default function Configuracoes() {
@@ -46,13 +37,15 @@ export default function Configuracoes() {
   const navigate = useNavigate()
 
   const [notificacoesD2, setNotificacoesD2] = useState(true)
-  const [notificacoesEmail, setNotificacoesEmail] = useState(true)
-  const [notificacoesSMS, setNotificacoesSMS] = useState(false)
   const [showJson, setShowJson] = useState(false)
+  const [sessionName, setSessionName] = useState('Visão Geral')
 
   const handleSavePersonalization = (e: React.FormEvent) => {
     e.preventDefault()
-    toast({ title: 'Personalizações salvas', description: 'Nomenclaturas atualizadas.' })
+    toast({
+      title: 'Personalizações salvas',
+      description: 'Nomenclaturas atualizadas (Ex: Dashboard -> ' + sessionName + ').',
+    })
   }
 
   const handleLogout = () => {
@@ -67,8 +60,8 @@ export default function Configuracoes() {
     limit: 0,
     avatar: '',
   }
-  const connectedAccounts = MOCK_ACCOUNTS ? MOCK_ACCOUNTS.filter((a) => a.connected) : []
 
+  // Strictly follows the requested JSON structure
   const generateSystemState = () => {
     return JSON.stringify(
       {
@@ -81,11 +74,11 @@ export default function Configuracoes() {
         dashboard_resumo: {
           alertas_d2: 3,
           saude_patrimonio: 'Equilibrado',
-          saldo_consolidado: 16950.0,
+          saldo_consolidado: MOCK_ACCOUNTS.reduce((acc, curr) => acc + curr.balance, 0),
         },
         contas_cadastradas: MOCK_ACCOUNTS.length,
         cartoes_cadastrados: 2,
-        transacoes_mes: 4,
+        transacoes_mes: MOCK_TRANSACTIONS.length,
       },
       null,
       2,
@@ -102,24 +95,19 @@ export default function Configuracoes() {
       <Tabs defaultValue="conta" className="w-full">
         <TabsList className="grid grid-cols-2 md:flex h-auto w-full md:w-auto bg-muted p-1 gap-1 mb-6 flex-wrap">
           <TabsTrigger value="conta" className="flex items-center gap-2">
-            <User className="w-4 h-4" />
-            Conta
+            <User className="w-4 h-4" /> Conta
           </TabsTrigger>
           <TabsTrigger value="aparencia" className="flex items-center gap-2">
-            <Palette className="w-4 h-4" />
-            Aparência
+            <Palette className="w-4 h-4" /> Aparência
           </TabsTrigger>
           <TabsTrigger value="notificacoes" className="flex items-center gap-2">
-            <Bell className="w-4 h-4" />
-            Alertas
+            <Bell className="w-4 h-4" /> Alertas
           </TabsTrigger>
           <TabsTrigger value="personalizacao" className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4" />
-            Sistema
+            <SlidersHorizontal className="w-4 h-4" /> Sistema
           </TabsTrigger>
           <TabsTrigger value="seguranca" className="flex items-center gap-2">
-            <Shield className="w-4 h-4" />
-            Segurança
+            <Shield className="w-4 h-4" /> Segurança
           </TabsTrigger>
         </TabsList>
 
@@ -179,7 +167,7 @@ export default function Configuracoes() {
                 <Label htmlFor="notif-d2" className="flex flex-col space-y-1">
                   <span className="text-base">Alertas D-2</span>
                   <span className="font-normal text-sm text-muted-foreground">
-                    Receba avisos 2 dias antes de vencimentos.
+                    Receba avisos 2 dias antes de vencimentos de faturas via App/Email.
                   </span>
                 </Label>
                 <Switch
@@ -195,18 +183,18 @@ export default function Configuracoes() {
         <TabsContent value="personalizacao" className="space-y-6">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg">Customização do Sistema</CardTitle>
+              <CardTitle className="text-lg">Customização de Nomenclatura</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSavePersonalization} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label>Nome da Sessão de Ativos</Label>
-                    <Input defaultValue="Patrimônio" />
+                    <Label>Nome do Painel Principal (Dashboard)</Label>
+                    <Input value={sessionName} onChange={(e) => setSessionName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Categoria Padrão (Entradas)</Label>
-                    <Input defaultValue="Salário" />
+                    <Label>Nome da Sessão de Ativos</Label>
+                    <Input defaultValue="Patrimônio" />
                   </div>
                 </div>
                 <Button type="submit" className="gap-2">
@@ -216,11 +204,10 @@ export default function Configuracoes() {
             </CardContent>
           </Card>
 
-          {/* Dev/Diagnostics Output */}
           <Card className="border-dashed border-2 bg-muted/10">
             <CardHeader>
               <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
-                <CodeSquare className="w-4 h-4" /> Ferramentas de Diagnóstico
+                <CodeSquare className="w-4 h-4" /> Diagnóstico e Integridade
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -240,7 +227,9 @@ export default function Configuracoes() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Estado do Sistema Gerado</DialogTitle>
-            <DialogDescription>Snapshot atual para auditoria ou suporte.</DialogDescription>
+            <DialogDescription>
+              Snapshot atual para auditoria, integridade de dados ou suporte.
+            </DialogDescription>
           </DialogHeader>
           <div className="bg-zinc-950 p-4 rounded-md overflow-auto max-h-[400px]">
             <pre className="text-xs text-green-400 font-mono">{generateSystemState()}</pre>

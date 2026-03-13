@@ -3,41 +3,64 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 export default function EnrichmentCalculator() {
   const [initial, setInitial] = useState(100000)
   const [monthly, setMonthly] = useState(2000)
+  const [rateType, setRateType] = useState('fixed') // fixed, cdi, ipca
   const [rate, setRate] = useState(8.5)
   const [target, setTarget] = useState(1000000)
-  const [result, setResult] = useState<{ months: number; years: number } | null>(null)
+  const [result, setResult] = useState<{ months: number; years: number; finalRate: number } | null>(
+    null,
+  )
 
   const calculate = () => {
-    const r = Math.pow(1 + rate / 100, 1 / 12) - 1
+    // Basic mock conversion for rate types (in a real app, fetch CDI/IPCA from API)
+    let effectiveRate = rate
+    if (rateType === 'cdi') effectiveRate = (rate / 100) * 10.5 // Assuming base CDI 10.5%
+    if (rateType === 'ipca') effectiveRate = rate + 4.5 // Assuming IPCA 4.5%
+
+    const r = Math.pow(1 + effectiveRate / 100, 1 / 12) - 1
     const pmt = monthly
     const pv = initial
     const fv = target
 
     if (pv >= fv) {
-      setResult({ months: 0, years: 0 })
+      setResult({ months: 0, years: 0, finalRate: effectiveRate })
       return
     }
 
     if (r === 0) {
       const months = (fv - pv) / pmt
-      setResult({ months: Math.max(0, Math.ceil(months)), years: Math.max(0, months / 12) })
+      setResult({
+        months: Math.max(0, Math.ceil(months % 12)),
+        years: Math.max(0, Math.floor(months / 12)),
+        finalRate: 0,
+      })
       return
     }
 
     const num = (fv + pmt / r) / (pv + pmt / r)
     if (num <= 0) {
-      setResult({ months: 0, years: 0 })
+      setResult({ months: 0, years: 0, finalRate: effectiveRate })
       return
     }
 
-    const months = Math.log(num) / Math.log(1 + r)
+    const totalMonths = Math.log(num) / Math.log(1 + r)
+    const years = Math.floor(totalMonths / 12)
+    const remainingMonths = Math.ceil(totalMonths % 12)
+
     setResult({
-      months: Math.max(0, Math.ceil(months)),
-      years: Math.max(0, +(months / 12).toFixed(1)),
+      months: remainingMonths,
+      years: years,
+      finalRate: effectiveRate,
     })
   }
 
@@ -65,7 +88,20 @@ export default function EnrichmentCalculator() {
             />
           </div>
           <div className="space-y-2">
-            <Label>Taxa Anual (%)</Label>
+            <Label>Tipo de Rentabilidade</Label>
+            <Select value={rateType} onValueChange={setRateType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="fixed">Taxa Fixa Anual (%)</SelectItem>
+                <SelectItem value="cdi">% do CDI</SelectItem>
+                <SelectItem value="ipca">IPCA + Taxa Fixa (%)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Valor da Taxa/Percentual</Label>
             <Input
               type="number"
               value={rate}
@@ -73,7 +109,7 @@ export default function EnrichmentCalculator() {
               onChange={(e) => setRate(Number(e.target.value))}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 md:col-span-2">
             <Label>Valor Alvo (R$)</Label>
             <Input
               type="number"
@@ -89,12 +125,13 @@ export default function EnrichmentCalculator() {
         {result !== null && (
           <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/20 text-center animate-fade-in">
             <p className="text-sm text-muted-foreground mb-1">
-              Tempo estimado para atingir R$ {target.toLocaleString('pt-BR')}:
+              Tempo estimado para atingir R$ {target.toLocaleString('pt-BR')} (Considerando ~
+              {result.finalRate.toFixed(2)}% a.a):
             </p>
             <p className="text-3xl font-bold text-primary">
               {result.years} anos{' '}
               <span className="text-lg font-medium text-muted-foreground">
-                ({result.months} meses)
+                e {result.months} meses
               </span>
             </p>
           </div>
