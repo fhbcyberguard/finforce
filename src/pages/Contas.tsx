@@ -4,7 +4,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import {
   Dialog,
@@ -21,17 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Building2, ShieldCheck, RefreshCw, Archive, Plus, Edit2, Trash2 } from 'lucide-react'
-import { ImpulseControlDialog } from '../components/ImpulseControlDialog'
+import { Building2, Plus, Edit2, Trash2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { CreditCardsSection } from '../components/contas/CreditCardsSection'
 
 export default function Contas() {
-  const [openFinance, setOpenFinance] = useState(false)
   const { accounts, setAccounts } = useAppStore()
   const [openAddAcc, setOpenAddAcc] = useState(false)
   const [editingAcc, setEditingAcc] = useState<Account | null>(null)
-  const [accountToArchive, setAccountToArchive] = useState<string | null>(null)
   const { toast } = useToast()
 
   const handleSaveAccount = (e: React.FormEvent<HTMLFormElement>) => {
@@ -44,7 +40,7 @@ export default function Contas() {
       balance: Number(fd.get('balance')),
       agency: fd.get('agency') as string,
       account: fd.get('account') as string,
-      connected: editingAcc ? editingAcc.connected : false,
+      connected: false, // Force manual connection state as Open Finance is removed
     }
 
     if (editingAcc) {
@@ -71,36 +67,6 @@ export default function Contas() {
           Gestão segura de métodos de pagamento e conexões bancárias.
         </p>
       </div>
-
-      <Card className="border-secondary/20 bg-secondary/5">
-        <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="bg-secondary/20 p-3 rounded-full mt-1">
-              <ShieldCheck className="w-6 h-6 text-secondary" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg flex items-center gap-2">
-                Open Finance
-                <span
-                  className={`text-xs px-2 py-0.5 rounded-full ${openFinance ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'}`}
-                >
-                  {openFinance ? 'Conectado' : 'Aguardando'}
-                </span>
-              </h3>
-              <p className="text-sm text-muted-foreground max-w-xl mt-1">
-                Conecte seus bancos para sincronização automática. Dados protegidos por
-                criptografia.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Label htmlFor="of-toggle" className="text-sm text-muted-foreground">
-              Sincronização Ativa
-            </Label>
-            <Switch id="of-toggle" checked={openFinance} onCheckedChange={setOpenFinance} />
-          </div>
-        </CardContent>
-      </Card>
 
       <Tabs defaultValue="cards" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
@@ -223,15 +189,6 @@ export default function Contas() {
                     </div>
                     <div className="text-right transition-transform group-hover:-translate-x-16">
                       <p className="font-mono font-medium">R$ {acc.balance.toFixed(2)}</p>
-                      <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-0.5">
-                        {acc.connected ? (
-                          <>
-                            <RefreshCw className="w-3 h-3 text-emerald-500" /> Sync
-                          </>
-                        ) : (
-                          'Manual'
-                        )}
-                      </p>
                     </div>
                     <div className="absolute right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity">
                       <Button
