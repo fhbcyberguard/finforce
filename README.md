@@ -1,6 +1,6 @@
-# Projeto Criado com o Skip
+# Projeto Fin Force: Planejamento Financeiro Inteligente
 
-Este projeto foi criado de ponta a ponta com o [Skip](https://goskip.dev).
+Este projeto foi criado Drowp.
 
 ## 🚀 Stack Tecnológica
 
