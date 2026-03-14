@@ -1,24 +1,16 @@
-import { cn } from '@/lib/utils'
-import logoImg from '@/assets/finforce-logo-0eb9e.png'
+import { cn } from "@/lib/utils";
+import logoImg from "../assets/copia-de-logo-drowp-horizontal-3e587.png";
 
-interface LogoProps {
-  className?: string
-  collapsed?: boolean
-}
+type LogoProps = {
+  className?: string;
+};
 
-export function Logo({ className, collapsed }: LogoProps) {
+export function Logo({ className }: LogoProps) {
   return (
-    <div
-      className={cn('flex items-center', collapsed ? 'justify-center w-8' : 'w-auto', className)}
-    >
-      <img
-        src={logoImg}
-        alt="FinForce"
-        className={cn(
-          'h-8 origin-left transition-all duration-300',
-          collapsed ? 'w-8 object-cover object-left' : 'w-auto object-contain',
-        )}
-      />
-    </div>
-  )
+    <img
+      src={logoImg}
+      alt="Drowp"
+      className={cn("h-8 w-auto", className)}
+    />
+  );
 }
